@@ -15,7 +15,26 @@ import {
   Star,
   ChevronUp,
   ChevronDown,
+  Flame,
+  Shield,
+  Layers,
+  Droplets,
 } from "lucide-react"
+
+function traitIcon(trait: string, className = "h-4 w-4") {
+  switch (trait) {
+    case "Thermophilic":
+      return <Flame className={className} />
+    case "Metal-tolerant":
+      return <Shield className={className} />
+    case "Biofilm-forming":
+      return <Layers className={className} />
+    case "Halophobic":
+      return <Droplets className={className} />
+    default:
+      return <Layers className={className} />
+  }
+}
 
 // --- inlined from app/simulator/types.ts ---
 type Microbe = {
@@ -44,14 +63,16 @@ type ScenarioData = {
   }
 }
 
-type GameResult = {
+type SiteResult = {
   selectedMicrobes: Microbe[]
-  optimalCombos: Microbe[][]
   playerScore: number
   maxScore: number
   scenarioName: string
   conditionResults: [boolean, boolean, boolean, boolean, boolean]
   timeSpent: number
+  pool: Pool
+  scenarioRequirements: ScenarioRequirements
+  optimalCombos: Microbe[][]
 }
 
 type ScenarioAttributeRanges = {
@@ -264,14 +285,23 @@ function hashHue(str: string) {
 }
 
 function traitColor(trait: string) {
-  return `hsl(${hashHue(trait)} 52% 40%)`
+  switch (trait) {
+    case "Thermophilic":
+      return "#f97316"
+    case "Metal-tolerant":
+      return "#6366f1"
+    case "Biofilm-forming":
+      return "#10b981"
+    case "Halophobic":
+      return "#0ea5e9"
+    default:
+      return `hsl(${hashHue(trait)} 52% 40%)`
+  }
 }
 
-function traitAbbrev(trait: string) {
-  const parts = trait.split(/[\s-]+/).filter(Boolean)
-  if (parts.length >= 2)
-    return (parts[0]![0] + parts[1]![0]).slice(0, 2).toUpperCase()
-  return trait.slice(0, 2).toUpperCase()
+function traitChipBg(trait: string) {
+  const c = traitColor(trait)
+  return c.startsWith("#") ? `${c}22` : `color-mix(in srgb, ${c} 18%, transparent)`
 }
 
 function pickRandomScenarioPool(data: ScenarioData): { scenarioName: string; pool: Pool } {
@@ -288,6 +318,24 @@ function pickRandomScenarioPool(data: ScenarioData): { scenarioName: string; poo
   }
   const pool = pools[Math.floor(Math.random() * pools.length)]!
   return { scenarioName, pool }
+}
+
+function pickThreeUniqueScenarioPools(data: ScenarioData): { scenarioName: string; pool: Pool }[] {
+  const picks: { scenarioName: string; pool: Pool }[] = []
+  const seen = new Set<string>()
+  let guard = 0
+  while (picks.length < 3 && guard < 2000) {
+    guard++
+    const { scenarioName, pool } = pickRandomScenarioPool(data)
+    const key = `${scenarioName}::${pool.pool_id}`
+    if (seen.has(key)) continue
+    seen.add(key)
+    picks.push({ scenarioName, pool })
+  }
+  if (picks.length < 3) {
+    throw new Error("Could not pick 3 unique scenario pools")
+  }
+  return picks
 }
 
 function resolveOptimalCombos(pool: Pool): Microbe[][] {
@@ -400,12 +448,12 @@ function attributeKeyIcon(attribute: string) {
 
 function Tooltip({ children, text }: { children: ReactNode; text: string }) {
   return (
-    <div className="relative group">
+    <span className="group relative inline-flex">
       {children}
-      <div className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-1 max-w-xs -translate-x-1/2 rounded bg-gray-900 px-2 py-1 text-left text-xs text-white opacity-0 transition-opacity group-hover:opacity-100 whitespace-normal">
+      <span className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-1 max-w-xs -translate-x-1/2 rounded bg-gray-900 px-2 py-1 text-left text-xs text-white opacity-0 transition-opacity whitespace-normal group-hover:opacity-100">
         {text}
-      </div>
-    </div>
+      </span>
+    </span>
   )
 }
 
@@ -442,7 +490,7 @@ function MicrobeAttributeRow({
   return (
     <div className="flex min-w-0 flex-wrap items-center gap-2 text-[12px] leading-none">
       <Tooltip text="Mobility">
-        <div className="flex items-center gap-0.5">
+        <span className="inline-flex items-center gap-0.5">
           <svg className="h-3.5 w-3.5 shrink-0 text-gray-500" viewBox="0 0 16 16" fill="currentColor">
             <rect x="1" y="1" width="4" height="4" />
             <rect x="6" y="1" width="4" height="4" />
@@ -455,38 +503,48 @@ function MicrobeAttributeRow({
             <rect x="11" y="11" width="4" height="4" />
           </svg>
           {valueSpan("Mobility", Mobility)}
-        </div>
+        </span>
       </Tooltip>
       <Tooltip text="Agility">
-        <div className="flex items-center gap-0.5">
+        <span className="inline-flex items-center gap-0.5">
           <svg className="h-3.5 w-3.5 shrink-0 text-yellow-500" viewBox="0 0 16 16" fill="currentColor">
             <path d="M9 1L4 9h4l-1 6 5-8H8l1-6z" />
           </svg>
           {valueSpan("Agility", Agility)}
-        </div>
+        </span>
       </Tooltip>
       <Tooltip text="Size">
-        <div className="flex items-center gap-0.5">
+        <span className="inline-flex items-center gap-0.5">
           <svg className="h-3.5 w-3.5 shrink-0 text-blue-400" viewBox="0 0 16 16" fill="currentColor">
             <path d="M1 15L1 1L15 15H1Z" opacity="0.6" />
             <path d="M1 1L15 15" stroke="currentColor" strokeWidth="1.5" fill="none" />
           </svg>
           {valueSpan("Size", Size)}
-        </div>
+        </span>
       </Tooltip>
     </div>
   )
 }
 
-function TraitBadgeChip({ trait }: { trait: string }) {
+function TraitBadgeChip({
+  trait,
+  chipClassName = "h-6 w-6",
+}: {
+  trait: string
+  chipClassName?: string
+}) {
+  const tc = traitColor(trait)
   return (
     <Tooltip text={trait}>
-      <div
-        className="flex h-6 w-6 shrink-0 cursor-default items-center justify-center rounded-full text-[9px] font-bold leading-none text-white"
-        style={{ backgroundColor: traitColor(trait) }}
+      <span
+        className={`inline-flex shrink-0 cursor-default items-center justify-center rounded-full ${chipClassName}`}
+        style={{
+          backgroundColor: traitChipBg(trait),
+          color: tc,
+        }}
       >
-        {traitAbbrev(trait)}
-      </div>
+        {traitIcon(trait, "h-3.5 w-3.5")}
+      </span>
     </Tooltip>
   )
 }
@@ -549,16 +607,18 @@ function attributeIconForName(name: string) {
 function ResultAttributeRow({
   attributes,
   inviableAttributes = [],
+  className = "",
 }: {
   attributes: { name: string; value: number }[]
   inviableAttributes?: string[]
+  className?: string
 }) {
   const inv = new Set(inviableAttributes)
   return (
-    <div className="flex w-full flex-col gap-0.5 px-1 text-[12px]">
+    <div className={`flex w-full flex-col gap-0.5 px-1 ${className || "text-[12px]"}`}>
       {attributes.map(({ name, value }) => (
-        <div key={name} className="flex items-center justify-between">
-          <div className="flex items-center gap-1">
+        <div key={name} className="flex w-full min-w-0 items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-1">
             {attributeIconForName(name)}
             <span className="text-gray-600">{name}</span>
           </div>
@@ -575,7 +635,7 @@ function ResultAttributeRow({
               ⓘ {value}
             </span>
           ) : (
-            <span className="font-medium tabular-nums text-gray-700">{value}</span>
+            <span className="shrink-0 font-medium tabular-nums text-gray-700">{value}</span>
           )}
         </div>
       ))}
@@ -584,13 +644,17 @@ function ResultAttributeRow({
 }
 
 function OptimalGridTraitBadge({ trait }: { trait: string }) {
+  const tc = traitColor(trait)
   return (
     <div
       title={trait}
-      className="flex h-[22px] w-[22px] shrink-0 cursor-default items-center justify-center rounded-full text-[10px] font-bold leading-none text-white"
-      style={{ backgroundColor: traitColor(trait) }}
+      className="inline-flex h-[24px] w-[24px] shrink-0 cursor-default items-center justify-center rounded-full"
+      style={{
+        backgroundColor: traitChipBg(trait),
+        color: tc,
+      }}
     >
-      {traitAbbrev(trait)}
+      {traitIcon(trait, "h-3.5 w-3.5")}
     </div>
   )
 }
@@ -648,25 +712,147 @@ function SlotAttributeRow({
 }
 
 function SlotTraitBadge({ trait }: { trait: string }) {
+  const tc = traitColor(trait)
   return (
     <Tooltip text={trait}>
-      <div
-        className="flex size-[28px] shrink-0 cursor-default items-center justify-center rounded-full text-[10px] font-bold leading-none text-white"
-        style={{ backgroundColor: traitColor(trait) }}
+      <span
+        className="inline-flex size-[28px] shrink-0 cursor-default items-center justify-center rounded-full"
+        style={{
+          backgroundColor: traitChipBg(trait),
+          color: tc,
+        }}
       >
-        {traitAbbrev(trait)}
-      </div>
+        {traitIcon(trait, "h-3.5 w-3.5")}
+      </span>
     </Tooltip>
   )
 }
 
 // --- inlined from components/SimulatorResult.tsx ---
 type SimulatorResultProps = {
-  result: GameResult
-  scenarioRequirements: ScenarioRequirements
-  pool: Pool
-  onPlayAgain: () => void
+  siteResults: SiteResult[]
   scenariosFile: ScenariosFile
+  onPlayAgain: () => void
+}
+
+function buildSiteChecklist(sr: SiteResult): { label: string; pass: boolean; detail?: string }[] {
+  const { means } = scoreCombo(sr.selectedMicrobes, sr.scenarioRequirements)
+  const req = sr.scenarioRequirements
+  return [
+    {
+      label: "Mobility mean in range",
+      pass: sr.conditionResults[0],
+      detail: `Required: ${req.attributes.Mobility.min}–${req.attributes.Mobility.max} · Actual: ${means.mobility.toFixed(2)}`,
+    },
+    {
+      label: "Agility mean in range",
+      pass: sr.conditionResults[1],
+      detail: `Required: ${req.attributes.Agility.min}–${req.attributes.Agility.max} · Actual: ${means.agility.toFixed(2)}`,
+    },
+    {
+      label: "Size mean in range",
+      pass: sr.conditionResults[2],
+      detail: `Required: ${req.attributes.Size.min}–${req.attributes.Size.max} · Actual: ${means.size.toFixed(2)}`,
+    },
+    {
+      label: `${req.desired_trait} present`,
+      pass: sr.conditionResults[3],
+    },
+    {
+      label: `${req.undesired_trait} avoided`,
+      pass: sr.conditionResults[4],
+    },
+  ]
+}
+
+function playerFoundOptimalForSite(sr: SiteResult): boolean {
+  const playerKey = sortedIdsKey(sr.selectedMicrobes.map((m) => m.id))
+  return sr.pool.best_combinations.some((bc) => bc.length === 3 && sortedIdsKey(bc) === playerKey)
+}
+
+function OptimalCombinationGridForSite({
+  sr,
+  scenariosFile,
+  sectionCard,
+}: {
+  sr: SiteResult
+  scenariosFile: ScenariosFile
+  sectionCard: string
+}) {
+  const primaryOptimal = sr.optimalCombos[0] ?? []
+  const optimalScore =
+    primaryOptimal.length === 3 ? scoreCombo(primaryOptimal, sr.scenarioRequirements).score : 0
+  const optimalMemberIds = new Set<string>()
+  for (const combo of sr.pool.best_combinations) {
+    if (combo.length !== 3) continue
+    combo.forEach((id) => optimalMemberIds.add(id))
+  }
+  const playerFoundOptimal = playerFoundOptimalForSite(sr)
+  const badgeBase =
+    "absolute top-[-12px] z-10 whitespace-nowrap rounded px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white shadow"
+
+  return (
+    <>
+      {playerFoundOptimal ? (
+        <p className="mb-4 text-base font-semibold text-emerald-600">🎉 You found the optimal combination!</p>
+      ) : null}
+      <div className={`mx-auto ${sectionCard}`}>
+        <div className="mt-6 grid w-full gap-4 [grid-template-columns:repeat(5,1fr)]">
+          {Array.from({ length: GRID_MICROBE_SLOTS }, (_, idx) => {
+            const m = sr.pool.microbes[idx]
+            if (!m) {
+              return (
+                <div
+                  key={`result-empty-${sr.pool.pool_id}-${idx}`}
+                  className="min-h-[140px] w-full min-w-[160px] rounded-xl bg-gray-50"
+                  aria-hidden
+                />
+              )
+            }
+            const isOptimalMicrobe = optimalMemberIds.has(m.id)
+            const isPlayerSelected = sr.selectedMicrobes.some((s) => s.id === m.id)
+            const cat = categorizeMicrobe(m, sr.scenarioRequirements)
+            return (
+              <div
+                key={m.id}
+                className={`relative flex min-h-[140px] w-full min-w-[160px] flex-col overflow-visible rounded-xl border-2 bg-white p-2 shadow-md ${
+                  isOptimalMicrobe
+                    ? "border-[#16a34a] bg-[#f0fdf4]"
+                    : isPlayerSelected
+                      ? "border-[#e2e8f0] border-l-[3px] border-l-[#2563eb] opacity-50"
+                      : "border-[#e2e8f0] opacity-50"
+                }`}
+              >
+                {isOptimalMicrobe && isPlayerSelected ? (
+                  <>
+                    <span className={`${badgeBase} left-1/4 -translate-x-1/2 bg-[#16a34a]`}>OPTIMAL</span>
+                    <span className={`${badgeBase} left-3/4 -translate-x-1/2 bg-[#2563eb]`}>YOUR PICK</span>
+                  </>
+                ) : isOptimalMicrobe ? (
+                  <span className={`${badgeBase} left-1/2 -translate-x-1/2 bg-[#16a34a]`}>OPTIMAL</span>
+                ) : isPlayerSelected ? (
+                  <span className={`${badgeBase} left-1/2 -translate-x-1/2 bg-[#2563eb]`}>YOUR PICK</span>
+                ) : null}
+                <p className="mb-1 line-clamp-2 w-full text-center text-[13px] font-bold text-gray-800">{m.name}</p>
+                <div className="mt-auto flex w-full flex-col items-center gap-1.5 pt-1">
+                  <ResultAttributeRow
+                    attributes={microbeAttributePairs(m, scenariosFile.attributes)}
+                    inviableAttributes={cat.inviableAttributes}
+                  />
+                  <OptimalGridTraitBadge trait={m.trait} />
+                </div>
+              </div>
+            )
+          })}
+        </div>
+        <p
+          className={`mt-4 border-t border-[#e2e8f0] pt-4 text-lg tabular-nums ${optimalScoreLineClass(optimalScore)}`}
+        >
+          Optimal score: {optimalScore}/100
+        </p>
+      </div>
+    </>
+  )
 }
 
 function formatMmSs(totalSeconds: number) {
@@ -692,56 +878,10 @@ function sortedIdsKey(ids: string[]) {
   return [...ids].sort().join("\0")
 }
 
-function SimulatorResult({
-  result,
-  scenarioRequirements,
-  pool,
-  onPlayAgain,
-  scenariosFile,
-}: SimulatorResultProps) {
-  const { means } = scoreCombo(result.selectedMicrobes, scenarioRequirements)
-  const primaryOptimal = result.optimalCombos[0] ?? []
-  const optimalScore =
-    primaryOptimal.length === 3 ? scoreCombo(primaryOptimal, scenarioRequirements).score : 0
-
-  const playerKey = sortedIdsKey(result.selectedMicrobes.map((m) => m.id))
-  const playerFoundOptimal = pool.best_combinations.some(
-    (bc) => bc.length === 3 && sortedIdsKey(bc) === playerKey
-  )
-
-  const checklist: { label: string; pass: boolean; detail?: string }[] = [
-    {
-      label: "Mobility mean in range",
-      pass: result.conditionResults[0],
-      detail: `mean ${means.mobility.toFixed(2)} (need ${scenarioRequirements.attributes.Mobility.min}–${scenarioRequirements.attributes.Mobility.max})`,
-    },
-    {
-      label: "Agility mean in range",
-      pass: result.conditionResults[1],
-      detail: `mean ${means.agility.toFixed(2)} (need ${scenarioRequirements.attributes.Agility.min}–${scenarioRequirements.attributes.Agility.max})`,
-    },
-    {
-      label: "Size mean in range",
-      pass: result.conditionResults[2],
-      detail: `mean ${means.size.toFixed(2)} (need ${scenarioRequirements.attributes.Size.min}–${scenarioRequirements.attributes.Size.max})`,
-    },
-    {
-      label: "Desired trait present",
-      pass: result.conditionResults[3],
-      detail: scenarioRequirements.desired_trait,
-    },
-    {
-      label: "Undesired trait absent",
-      pass: result.conditionResults[4],
-      detail: scenarioRequirements.undesired_trait,
-    },
-  ]
-
-  const optimalMemberIds = new Set<string>()
-  for (const combo of pool.best_combinations) {
-    if (combo.length !== 3) continue
-    combo.forEach((id) => optimalMemberIds.add(id))
-  }
+function SimulatorResult({ siteResults, scenariosFile, onPlayAgain }: SimulatorResultProps) {
+  const totalPlayer = siteResults.reduce((s, r) => s + r.playerScore, 0)
+  const totalMax = siteResults.reduce((s, r) => s + r.maxScore, 0)
+  const totalTime = siteResults.reduce((s, r) => s + r.timeSpent, 0)
 
   const accentHeading =
     "border-l-4 border-[#4ECDC4] pl-3 text-lg font-bold text-[#1a202c]"
@@ -749,11 +889,15 @@ function SimulatorResult({
   const statCard =
     "rounded-xl border border-[#e2e8f0] border-l-4 border-l-[#4ECDC4] bg-white p-5 text-center shadow-sm"
 
+  const breakdownBorderClass = (player: number, max: number) => {
+    if (player === max) return "border-l-emerald-500"
+    if (player >= 60) return "border-l-amber-400"
+    return "border-l-red-500"
+  }
+
   return (
     <div className="min-h-screen w-full bg-[#f8fffe] text-gray-900">
-      <header
-        className="fixed top-0 right-0 left-0 z-40 flex h-14 shrink-0 items-center justify-between bg-[rgba(20,30,50,0.9)] px-6"
-      >
+      <header className="fixed top-0 right-0 left-0 z-40 flex h-14 shrink-0 items-center justify-between bg-[rgba(20,30,50,0.9)] px-6">
         <h1 className="min-w-0 shrink truncate pr-4 text-lg font-bold text-white sm:text-xl">
           Simulation Complete!
         </h1>
@@ -774,231 +918,237 @@ function SimulatorResult({
         </div>
       </header>
 
-      <div className="mx-auto max-w-5xl px-4 pb-12 pt-[calc(3.5rem+1rem)] sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 pb-12 pt-[calc(3.5rem+1rem)] sm:px-6 lg:px-8">
         <div className="mb-8 grid gap-4 sm:grid-cols-3">
           <div className={statCard}>
-            <p className="text-sm font-medium text-gray-500">Your Score</p>
+            <p className="text-sm font-medium text-gray-500">Total Score</p>
             <p
-              className={`mt-1 text-3xl font-bold tabular-nums ${scoreDisplayColorClass(result.playerScore)}`}
+              className={`mt-1 text-3xl font-bold tabular-nums ${scoreDisplayColorClass(totalPlayer / 3)}`}
             >
-              {result.playerScore}/100
+              {totalPlayer}/300
             </p>
           </div>
           <div className={statCard}>
             <p className="text-sm font-medium text-gray-500">Max Possible Score</p>
             <p
-              className={`mt-1 text-3xl font-bold tabular-nums ${scoreDisplayColorClass(result.maxScore)}`}
+              className={`mt-1 text-3xl font-bold tabular-nums ${scoreDisplayColorClass(totalMax / 3)}`}
             >
-              {result.maxScore}/100
+              {totalMax}/300
             </p>
           </div>
           <div className={statCard}>
             <p className="text-sm font-medium text-gray-500">Time Spent</p>
-            <p className="mt-1 text-3xl font-bold tabular-nums text-gray-800">{formatMmSs(result.timeSpent)}</p>
+            <p className="mt-1 text-3xl font-bold tabular-nums text-gray-800">{formatMmSs(totalTime)}</p>
           </div>
         </div>
 
-        <p className="mb-8 text-center text-base text-gray-600">
-          You scored {result.playerScore}/100 on {result.scenarioName}. The optimal score was {result.maxScore}/100.
-          {playerFoundOptimal ? " You found the optimal combination! 🎉" : ""}
-        </p>
-
-        <section className={`mb-10 ${sectionCard}`}>
-          <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
-            <div>
-              <h2 className={`mb-4 ${accentHeading}`}>Site &amp; Your Selection</h2>
-              <p className="mb-3 text-sm text-gray-600">
-                <span className="font-medium text-[#1a202c]">{result.scenarioName}</span>
-              </p>
-              <div className="mb-6 flex flex-wrap gap-2">
-                <span className="inline-flex rounded-full border border-[#cceeea] bg-[#eefcfb] px-2.5 py-1 text-xs font-medium text-[#1a202c]">
-                  Mobility{" "}
-                  {scenarioRequirements.attributes.Mobility.min}–
-                  {scenarioRequirements.attributes.Mobility.max}
-                </span>
-                <span className="inline-flex rounded-full border border-[#cceeea] bg-[#eefcfb] px-2.5 py-1 text-xs font-medium text-[#1a202c]">
-                  Agility {scenarioRequirements.attributes.Agility.min}–
-                  {scenarioRequirements.attributes.Agility.max}
-                </span>
-                <span className="inline-flex rounded-full border border-[#cceeea] bg-[#eefcfb] px-2.5 py-1 text-xs font-medium text-[#1a202c]">
-                  Size {scenarioRequirements.attributes.Size.min}–{scenarioRequirements.attributes.Size.max}
-                </span>
-                <span className="inline-flex rounded-full border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-800">
-                  Desired: {scenarioRequirements.desired_trait}
-                </span>
-                <span className="inline-flex rounded-full border border-red-300 bg-red-50 px-2.5 py-1 text-xs font-medium text-red-800">
-                  Undesired: {scenarioRequirements.undesired_trait}
+        <div className="mb-8 space-y-2">
+          {siteResults.map((sr, i) => (
+            <div
+              key={`${sr.pool.pool_id}-breakdown-${i}`}
+              className={`rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm border-l-4 ${breakdownBorderClass(sr.playerScore, sr.maxScore)}`}
+            >
+              <div
+                className="grid items-center gap-2"
+                style={{ gridTemplateColumns: "1fr auto auto" }}
+              >
+                <div className="min-w-0">
+                  <div className="font-semibold text-gray-900">Site {i + 1}</div>
+                  <div className="text-sm text-gray-500">{sr.scenarioName}</div>
+                </div>
+                <span className="text-sm tabular-nums text-gray-400">{formatMmSs(sr.timeSpent)}</span>
+                <span
+                  className={`text-sm font-semibold tabular-nums ${scoreDisplayColorClass(sr.playerScore)}`}
+                >
+                  {sr.playerScore}/{sr.maxScore}
                 </span>
               </div>
+            </div>
+          ))}
+        </div>
 
-              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-                {result.selectedMicrobes.map((m) => {
-                  const cat = categorizeMicrobe(m, scenarioRequirements)
-                  const badgeTone =
-                    cat.category === "positive"
-                      ? "bg-emerald-100 text-emerald-800 ring-1 ring-emerald-200"
-                      : cat.category === "negative"
-                        ? "bg-red-100 text-red-800 ring-1 ring-red-200"
-                        : "bg-gray-100 text-gray-700 ring-1 ring-gray-200"
-                  const categoryLabel =
-                    cat.category === "positive"
-                      ? "Positive"
-                      : cat.category === "negative"
-                        ? "Negative"
-                        : "Neutral"
-                  return (
+        <div className="space-y-4">
+          {siteResults.map((sr, siteIdx) => {
+            const checklist = buildSiteChecklist(sr)
+            const req = sr.scenarioRequirements
+            return (
+              <details
+                key={`site-detail-${sr.pool.pool_id}-${siteIdx}`}
+                open={siteIdx === 0}
+                className="group rounded-xl border border-[#e2e8f0] bg-white p-4 shadow-sm open:pb-6 open:[&>summary>svg]:rotate-180"
+              >
+                <summary className="flex cursor-pointer list-none items-center justify-between text-lg font-bold text-[#1a202c] [&::-webkit-details-marker]:hidden">
+                  <span>Site {siteIdx + 1}</span>
+                  <ChevronDown className="h-5 w-5 shrink-0 text-gray-400 transition-transform duration-200 group-open:rotate-180" />
+                </summary>
+
+                <div className="mt-6 space-y-6">
+                  <section className={sectionCard}>
                     <div
-                      key={m.id}
-                      className="flex min-w-0 flex-1 basis-[calc(33.333%-0.5rem)] flex-col rounded-xl border border-[#e2e8f0] bg-white px-3 py-2 shadow-sm"
+                      className="flex flex-col gap-6 lg:grid lg:items-stretch lg:gap-8"
+                      style={{ gridTemplateColumns: "65% 35%" }}
                     >
-                      <p className="truncate font-bold text-[#1a202c]">{m.name}</p>
-                      <div className="mt-1">
-                        <ResultAttributeRow
-                          attributes={microbeAttributePairs(m, scenariosFile.attributes)}
-                          inviableAttributes={cat.inviableAttributes}
-                        />
-                      </div>
-                      <div className="mt-2 flex flex-wrap items-center gap-2">
-                        <TraitBadgeChip trait={m.trait} />
-                        <div className="flex items-center gap-1">
-                          {cat.inviableAttributes.length > 0 ? (
-                            <span
-                              className="cursor-default text-sm"
-                              title="An inviable microbe cannot mathematically contribute to a valid average for one or more attributes, regardless of what other microbes are selected."
-                            >
-                              ⚠️
-                            </span>
-                          ) : null}
-                          <span
-                            className={`inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${badgeTone}`}
-                          >
-                            {categoryLabel}
+                      <div className="min-w-0">
+                        <h2 className={`mb-4 ${accentHeading}`}>Site &amp; Your Selection</h2>
+                        <p className="mb-3 text-sm text-gray-600">
+                          <span className="font-medium text-[#1a202c]">{sr.scenarioName}</span>
+                        </p>
+                        <div className="mb-6 flex flex-wrap gap-2">
+                          <span className="inline-flex rounded-full border border-[#cceeea] bg-[#eefcfb] px-2.5 py-1 text-xs font-medium text-[#1a202c]">
+                            Mobility {req.attributes.Mobility.min}–{req.attributes.Mobility.max}
+                          </span>
+                          <span className="inline-flex rounded-full border border-[#cceeea] bg-[#eefcfb] px-2.5 py-1 text-xs font-medium text-[#1a202c]">
+                            Agility {req.attributes.Agility.min}–{req.attributes.Agility.max}
+                          </span>
+                          <span className="inline-flex rounded-full border border-[#cceeea] bg-[#eefcfb] px-2.5 py-1 text-xs font-medium text-[#1a202c]">
+                            Size {req.attributes.Size.min}–{req.attributes.Size.max}
+                          </span>
+                          <span className="inline-flex rounded-full border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-800">
+                            Desired: {req.desired_trait}
+                          </span>
+                          <span className="inline-flex rounded-full border border-red-300 bg-red-50 px-2.5 py-1 text-xs font-medium text-red-800">
+                            Undesired: {req.undesired_trait}
                           </span>
                         </div>
+
+                        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                          {sr.selectedMicrobes.map((m) => {
+                            const cat = categorizeMicrobe(m, req)
+                            const badgeTone =
+                              cat.category === "positive"
+                                ? "bg-emerald-100 text-emerald-800 ring-1 ring-emerald-200"
+                                : cat.category === "negative"
+                                  ? "bg-red-100 text-red-800 ring-1 ring-red-200"
+                                  : "bg-gray-100 text-gray-700 ring-1 ring-gray-200"
+                            const categoryLabel =
+                              cat.category === "positive"
+                                ? "Positive"
+                                : cat.category === "negative"
+                                  ? "Negative"
+                                  : "Neutral"
+                            return (
+                              <div
+                                key={m.id}
+                                className="flex min-w-[180px] flex-1 basis-[calc(33.333%-0.5rem)] flex-col rounded-xl border border-[#e2e8f0] bg-white p-4 shadow-sm"
+                              >
+                                <p className="line-clamp-2 text-base font-bold text-[#1a202c]">{m.name}</p>
+                                <div className="mt-1 w-full">
+                                  <ResultAttributeRow
+                                    attributes={microbeAttributePairs(m, scenariosFile.attributes)}
+                                    inviableAttributes={cat.inviableAttributes}
+                                    className="text-[13px]"
+                                  />
+                                </div>
+                                <div className="mt-2 flex flex-wrap items-center gap-2">
+                                  <TraitBadgeChip trait={m.trait} chipClassName="h-7 w-7" />
+                                  <div className="flex items-center gap-1">
+                                    {cat.inviableAttributes.length > 0 ? (
+                                      <span
+                                        className="cursor-default text-sm"
+                                        title="An inviable microbe cannot mathematically contribute to a valid average for one or more attributes, regardless of what other microbes are selected."
+                                      >
+                                        ⚠️
+                                      </span>
+                                    ) : null}
+                                    <span
+                                      className={`inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${badgeTone}`}
+                                    >
+                                      {categoryLabel}
+                                    </span>
+                                  </div>
+                                </div>
+                                <p className="mt-2 text-[13px] leading-snug text-gray-500">{cat.reason}</p>
+                              </div>
+                            )
+                          })}
+                        </div>
                       </div>
-                      <p className="mt-2 text-[11px] leading-snug text-gray-500">{cat.reason}</p>
+
+                      <div className="flex h-full min-h-0 min-w-0 flex-col">
+                        <h2 className={`mb-4 shrink-0 ${accentHeading}`}>Condition Checklist</h2>
+                        <ul className="flex min-h-0 flex-1 flex-col gap-1 rounded-xl border border-[#e2e8f0] bg-[#f8fffe] p-3">
+                          {checklist.map((row) => (
+                            <li
+                              key={row.label}
+                              className={`flex min-h-0 flex-1 flex-col gap-0.5 rounded-lg border px-2 py-1 sm:flex-row sm:items-center sm:gap-2 ${row.pass ? "border-[#e2e8f0] border-l-4 border-l-[#4ECDC4] bg-white" : "border-red-200 bg-red-50/50"}`}
+                            >
+                              <span className="shrink-0 leading-none" aria-hidden>
+                                {row.pass ? (
+                                  <svg
+                                    className="h-4 w-4 shrink-0 text-emerald-500"
+                                    viewBox="0 0 16 16"
+                                    fill="currentColor"
+                                  >
+                                    <circle cx="8" cy="8" r="8" className="text-emerald-100" fill="currentColor" opacity="0.2" />
+                                    <path
+                                      d="M5 8l2 2 4-4"
+                                      stroke="#059669"
+                                      strokeWidth="1.5"
+                                      fill="none"
+                                      strokeLinecap="round"
+                                    />
+                                  </svg>
+                                ) : (
+                                  <svg className="h-4 w-4 shrink-0 text-red-500" viewBox="0 0 16 16" fill="currentColor">
+                                    <circle cx="8" cy="8" r="8" fill="currentColor" opacity="0.15" />
+                                    <path
+                                      d="M5 5l6 6M11 5l-6 6"
+                                      stroke="#dc2626"
+                                      strokeWidth="1.5"
+                                      fill="none"
+                                      strokeLinecap="round"
+                                    />
+                                  </svg>
+                                )}
+                              </span>
+                              <span
+                                className={`shrink-0 text-sm font-medium ${row.pass ? "text-[#0f766e]" : "text-red-900"}`}
+                              >
+                                {row.label}
+                              </span>
+                              {row.detail ? (
+                                <span
+                                  className={`whitespace-nowrap text-[11px] sm:ml-auto ${row.pass ? "text-[#115e59]" : "text-red-800/90"}`}
+                                >
+                                  {(() => {
+                                    const parts = row.detail!.split("· Actual: ")
+                                    if (parts.length === 2) {
+                                      return (
+                                        <>
+                                          {parts[0]}· Actual:{" "}
+                                          <span className="font-bold">{parts[1]}</span>
+                                        </>
+                                      )
+                                    }
+                                    return row.detail
+                                  })()}
+                                </span>
+                              ) : null}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
                     </div>
-                  )
-                })}
-              </div>
-            </div>
+                  </section>
 
-            <div className="flex flex-col lg:justify-center">
-              <h2 className={`mb-4 ${accentHeading}`}>Condition Checklist</h2>
-              <ul className="space-y-2.5 rounded-xl border border-[#e2e8f0] bg-[#f8fffe] p-4">
-                {checklist.map((row) => (
-                  <li
-                    key={row.label}
-                    className={`flex flex-col gap-0.5 rounded-lg border px-3 py-2 sm:flex-row sm:items-center sm:gap-2 ${row.pass ? "border-[#e2e8f0] border-l-4 border-l-[#4ECDC4] bg-white" : "border-red-200 bg-red-50/50"}`}
-                  >
-                    <span className="text-lg shrink-0" aria-hidden>
-                      {row.pass ? "✅" : "❌"}
-                    </span>
-                    <span
-                      className={`shrink-0 font-medium ${row.pass ? "text-[#0f766e]" : "text-red-900"}`}
-                    >
-                      {row.label}
-                    </span>
-                    {row.detail ? (
-                      <span className={`text-sm sm:ml-auto ${row.pass ? "text-[#115e59]" : "text-red-800/90"}`}>
-                        {row.detail}
-                      </span>
-                    ) : null}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </section>
-
-        <section>
-          <h2 className={`mb-6 ${accentHeading}`}>🏆 Optimal Combination</h2>
-
-          {playerFoundOptimal ? (
-            <p className="mb-4 text-base font-semibold text-emerald-600">🎉 You found the optimal combination!</p>
-          ) : null}
-
-          <div className={`mx-auto ${sectionCard}`}>
-            <div className="mt-6 grid w-full gap-4 [grid-template-columns:repeat(5,1fr)]">
-              {Array.from({ length: GRID_MICROBE_SLOTS }, (_, idx) => {
-                const m = pool.microbes[idx]
-                if (!m) {
-                  return (
-                    <div
-                      key={`result-empty-${idx}`}
-                      className="min-h-[200px] w-full min-w-[160px] rounded-xl bg-gray-50"
-                      aria-hidden
+                  <section>
+                    <h2 className={`mb-6 ${accentHeading}`}>🏆 Optimal Combination</h2>
+                    <OptimalCombinationGridForSite
+                      sr={sr}
+                      scenariosFile={scenariosFile}
+                      sectionCard={sectionCard}
                     />
-                  )
-                }
-                const MicrobeSvg = microbeComponents[idx] ?? MicrobeBlob1
-                const blobColor = MICROBE_PALETTE[idx % MICROBE_PALETTE.length] ?? "#808080"
-                const isOptimalMicrobe = optimalMemberIds.has(m.id)
-                const isPlayerSelected = result.selectedMicrobes.some((s) => s.id === m.id)
-                const cat = categorizeMicrobe(m, scenarioRequirements)
-                const badgeBase =
-                  "absolute top-[-12px] z-10 whitespace-nowrap rounded px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white shadow"
-                return (
-                  <div
-                    key={m.id}
-                    className={`relative flex min-h-[200px] w-full min-w-[160px] flex-col overflow-visible rounded-xl border-2 bg-white p-2 shadow-md ${
-                      isOptimalMicrobe
-                        ? "border-[#16a34a] bg-[#f0fdf4]"
-                        : isPlayerSelected
-                          ? "border-[#e2e8f0] border-l-[3px] border-l-[#2563eb] opacity-50"
-                          : "border-[#e2e8f0] opacity-50"
-                    }`}
-                  >
-                    {isOptimalMicrobe && isPlayerSelected ? (
-                      <>
-                        <span
-                          className={`${badgeBase} left-1/4 -translate-x-1/2 bg-[#16a34a]`}
-                        >
-                          OPTIMAL
-                        </span>
-                        <span
-                          className={`${badgeBase} left-3/4 -translate-x-1/2 bg-[#2563eb]`}
-                        >
-                          YOUR PICK
-                        </span>
-                      </>
-                    ) : isOptimalMicrobe ? (
-                      <span className={`${badgeBase} left-1/2 -translate-x-1/2 bg-[#16a34a]`}>
-                        OPTIMAL
-                      </span>
-                    ) : isPlayerSelected ? (
-                      <span className={`${badgeBase} left-1/2 -translate-x-1/2 bg-[#2563eb]`}>
-                        YOUR PICK
-                      </span>
-                    ) : null}
-                    <p className="mb-1 line-clamp-2 w-full text-center text-[13px] font-bold text-gray-800">
-                      {m.name}
-                    </p>
-                    <div className="mb-1 flex shrink-0 justify-center [&_svg]:block [&_svg]:h-12 [&_svg]:w-12">
-                      <MicrobeSvg color={blobColor} />
-                    </div>
-                    <div className="mt-auto flex w-full flex-col items-center gap-1.5 pt-1">
-                      <ResultAttributeRow
-                        attributes={microbeAttributePairs(m, scenariosFile.attributes)}
-                        inviableAttributes={cat.inviableAttributes}
-                      />
-                      <OptimalGridTraitBadge trait={m.trait} />
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
+                  </section>
+                </div>
+              </details>
+            )
+          })}
+        </div>
 
-          <p className={`mt-6 text-lg tabular-nums ${optimalScoreLineClass(optimalScore)}`}>
-            Optimal score: {optimalScore}/100
-          </p>
-        </section>
-
-        {result.maxScore < 100 ? (
+        {siteResults.some((r) => r.maxScore < 100) ? (
           <p className="mx-auto mt-10 max-w-2xl text-center text-xs text-gray-500">
             Note: perfect scores (100) are not always achievable. The max possible score shown reflects the best
-            achievable result for this pool.
+            achievable result for each pool.
           </p>
         ) : null}
       </div>
@@ -1022,20 +1172,27 @@ export default function SimulatorPage() {
   const [selectedMicrobes, setSelectedMicrobes] = useState<Microbe[]>([])
   const [keyExpanded, setKeyExpanded] = useState(false)
   const [timeRemaining, setTimeRemaining] = useState(TIMER_START)
-  const [gameResult, setGameResult] = useState<GameResult | null>(null)
+  const [currentSite, setCurrentSite] = useState(1)
+  const [siteResults, setSiteResults] = useState<SiteResult[]>([])
+  const [gameSites, setGameSites] = useState<{ scenarioName: string; pool: Pool }[]>([])
+  const [timeAtSiteStart, setTimeAtSiteStart] = useState(TIMER_START)
 
-  const startRound = useCallback((pools: ScenarioData, file: ScenariosFile) => {
-    const picked = pickRandomScenarioPool(pools)
-    const req = lookupScenario(file, picked.scenarioName)
+  const startGame = useCallback((pools: ScenarioData, file: ScenariosFile) => {
+    const picks = pickThreeUniqueScenarioPools(pools)
+    const first = picks[0]!
+    const req = lookupScenario(file, first.scenarioName)
     if (!req) {
-      throw new Error(`No scenario in scenarios.json matching «${picked.scenarioName}»`)
+      throw new Error(`No scenario in scenarios.json matching «${first.scenarioName}»`)
     }
-    setPool(picked.pool)
+    setGameSites(picks)
+    setCurrentSite(1)
+    setSiteResults([])
+    setPool(first.pool)
     setScenarioRequirements(req)
     setSelectedMicrobes([])
     setTimeRemaining(TIMER_START)
+    setTimeAtSiteStart(TIMER_START)
     setGamePhase("playing")
-    setGameResult(null)
     setKeyExpanded(false)
   }, [])
 
@@ -1064,14 +1221,14 @@ export default function SimulatorPage() {
       }
       setPoolsData(poolsJson)
       setScenariosFile(scenariosJson)
-      startRound(poolsJson, scenariosJson)
+      startGame(poolsJson, scenariosJson)
       setBootState("ready")
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Failed to load game data"
       setFetchError(msg)
       setBootState("error")
     }
-  }, [startRound])
+  }, [startGame])
 
   useEffect(() => {
     void loadData()
@@ -1087,26 +1244,57 @@ export default function SimulatorPage() {
 
   const handlePlayAgain = useCallback(() => {
     if (!poolsData || !scenariosFile) return
-    startRound(poolsData, scenariosFile)
-  }, [poolsData, scenariosFile, startRound])
+    startGame(poolsData, scenariosFile)
+  }, [poolsData, scenariosFile, startGame])
 
   const handleSubmit = useCallback(() => {
     if (!pool || !scenarioRequirements || selectedMicrobes.length !== 3) return
-    const elapsed = TIMER_START - timeRemaining
+    if (gameSites.length < 3 || !scenariosFile) return
+
+    const timeSpentThisSite = Math.max(0, timeAtSiteStart - timeRemaining)
     const { score, conditionResults } = scoreCombo(selectedMicrobes, scenarioRequirements)
     const optimalCombos = resolveOptimalCombos(pool)
 
-    setGameResult({
+    const siteEntry: SiteResult = {
       selectedMicrobes: [...selectedMicrobes],
-      optimalCombos,
       playerScore: score,
       maxScore: pool.max_score,
       scenarioName: scenarioRequirements.name,
       conditionResults,
-      timeSpent: elapsed,
-    })
+      timeSpent: timeSpentThisSite,
+      pool,
+      scenarioRequirements,
+      optimalCombos,
+    }
+
+    if (currentSite < 3) {
+      const nextPick = gameSites[currentSite]!
+      const req = lookupScenario(scenariosFile, nextPick.scenarioName)
+      if (!req) {
+        throw new Error(`No scenario in scenarios.json matching «${nextPick.scenarioName}»`)
+      }
+      setSiteResults((prev) => [...prev, siteEntry])
+      setTimeAtSiteStart(timeRemaining)
+      setCurrentSite((c) => c + 1)
+      setPool(nextPick.pool)
+      setScenarioRequirements(req)
+      setSelectedMicrobes([])
+      setKeyExpanded(false)
+      return
+    }
+
+    setSiteResults((prev) => [...prev, siteEntry])
     setGamePhase("result")
-  }, [pool, scenarioRequirements, selectedMicrobes, timeRemaining])
+  }, [
+    pool,
+    scenarioRequirements,
+    selectedMicrobes,
+    timeRemaining,
+    timeAtSiteStart,
+    currentSite,
+    gameSites,
+    scenariosFile,
+  ])
 
   const addMicrobe = (microbe: Microbe) => {
     if (selectedMicrobes.length >= 3 || selectedMicrobes.some((m) => m.id === microbe.id)) {
@@ -1171,15 +1359,9 @@ export default function SimulatorPage() {
     )
   }
 
-  if (gamePhase === "result" && gameResult) {
+  if (gamePhase === "result" && siteResults.length === 3) {
     return (
-      <SimulatorResult
-        result={gameResult}
-        scenarioRequirements={scenarioRequirements}
-        pool={pool}
-        onPlayAgain={handlePlayAgain}
-        scenariosFile={scenariosFile}
-      />
+      <SimulatorResult siteResults={siteResults} scenariosFile={scenariosFile} onPlayAgain={handlePlayAgain} />
     )
   }
 
@@ -1199,26 +1381,31 @@ export default function SimulatorPage() {
       {/* Top Bar — v0 */}
       <div className="absolute top-0 right-0 left-0 z-20 flex h-14 items-center justify-between bg-[rgba(20,30,50,0.9)] px-6">
         <div className="flex items-center gap-1">
-          <div className="flex items-center">
-            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-500 text-xs font-bold text-white">
-              1
-            </div>
-            <span className="ml-1 mr-3 text-sm text-white">Site 1</span>
-          </div>
-          <div className="h-0.5 w-8 bg-gray-500" />
-          <div className="mx-1 flex items-center">
-            <div className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-gray-500 text-xs font-bold text-gray-400">
-              2
-            </div>
-            <span className="mr-3 ml-1 text-sm text-gray-400">Site 2</span>
-          </div>
-          <div className="h-0.5 w-8 bg-gray-500" />
-          <div className="mx-1 flex items-center">
-            <div className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-gray-500 text-xs font-bold text-gray-400">
-              3
-            </div>
-            <span className="ml-1 text-sm text-gray-400">Site 3</span>
-          </div>
+          {[1, 2, 3].map((n, idx) => {
+            const completed = currentSite > n
+            const active = currentSite === n
+            const dotClass = completed
+              ? "bg-emerald-500"
+              : active
+                ? "bg-blue-500"
+                : "border-2 border-gray-500 bg-transparent"
+            const labelClass =
+              completed || active ? "text-white" : "text-gray-400"
+            return (
+              <div key={n} className="flex items-center">
+                {idx > 0 ? <div className="mx-1 h-0.5 w-6 bg-gray-600" aria-hidden /> : null}
+                <div className="flex items-center gap-2">
+                  <div
+                    className={`h-3 w-3 shrink-0 rounded-full ${dotClass}`}
+                    title={
+                      completed ? "Completed" : active ? "Current site" : "Upcoming"
+                    }
+                  />
+                  <span className={`text-sm ${labelClass}`}>Site {n}</span>
+                </div>
+              </div>
+            )
+          })}
         </div>
 
         <div className="flex flex-col items-center">
@@ -1267,7 +1454,7 @@ export default function SimulatorPage() {
 
       {/* Site Information Panel — v0 */}
       <div className="absolute top-20 right-6 z-10 w-56 rounded-lg bg-[#FFF9C4] p-4 shadow-lg">
-        <h3 className="mb-3 text-sm font-bold text-gray-800 uppercase">Site 1 Information</h3>
+        <h3 className="mb-3 text-sm font-bold text-gray-800 uppercase">Site {currentSite} Information</h3>
         <p className="mb-3 text-xs font-medium text-gray-700">{scenarioRequirements.name}</p>
         <div className="mb-3">
           <div className="mb-1 flex items-center gap-1">
@@ -1294,11 +1481,23 @@ export default function SimulatorPage() {
           <div className="space-y-0.5 pl-3 text-sm">
             <p>
               <span className="text-gray-700">Desired:</span>{" "}
-              <span className="font-medium text-green-600">{scenarioRequirements.desired_trait}</span>
+              <span
+                className="inline-flex items-center gap-1 font-medium"
+                style={{ color: traitColor(scenarioRequirements.desired_trait) }}
+              >
+                {traitIcon(scenarioRequirements.desired_trait, "h-3 w-3 shrink-0")}
+                {scenarioRequirements.desired_trait}
+              </span>
             </p>
             <p>
               <span className="text-gray-700">Undesired:</span>{" "}
-              <span className="font-medium text-red-600">{scenarioRequirements.undesired_trait}</span>
+              <span
+                className="inline-flex items-center gap-1 font-medium"
+                style={{ color: traitColor(scenarioRequirements.undesired_trait) }}
+              >
+                {traitIcon(scenarioRequirements.undesired_trait, "h-3 w-3 shrink-0")}
+                {scenarioRequirements.undesired_trait}
+              </span>
             </p>
           </div>
         </div>
@@ -1438,10 +1637,7 @@ export default function SimulatorPage() {
                 <div className="space-y-1 text-sm text-white">
                   {keyTraits.map((trait) => (
                     <div key={trait} className="flex items-center gap-2">
-                      <div
-                        className="h-4 w-4 shrink-0 rounded-full"
-                        style={{ backgroundColor: traitColor(trait) }}
-                      />
+                      <div style={{ color: traitColor(trait) }}>{traitIcon(trait, "h-4 w-4 shrink-0")}</div>
                       <span>{trait}</span>
                     </div>
                   ))}
