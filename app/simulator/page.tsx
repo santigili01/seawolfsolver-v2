@@ -18,9 +18,6 @@ import {
   Zap,
   Settings,
   LogOut,
-  Plus,
-  Minus,
-  X,
   HelpCircle,
   Star,
   ChevronUp,
@@ -152,7 +149,7 @@ const MICROBE_PALETTE = [
 ]
 
 const MicrobeBlob1 = ({ color = "#FF6B6B" }: { color?: string }) => (
-  <svg viewBox="0 0 80 80" className="w-12 h-12">
+  <svg viewBox="0 0 80 80" className="h-16 w-16">
     <ellipse cx="40" cy="40" rx="30" ry="25" fill={color} />
     <circle cx="30" cy="35" r="4" fill="white" opacity="0.6" />
     <path d="M15 40 Q5 35 8 25" stroke={color} strokeWidth="3" fill="none" />
@@ -161,7 +158,7 @@ const MicrobeBlob1 = ({ color = "#FF6B6B" }: { color?: string }) => (
 )
 
 const MicrobeBlob2 = ({ color = "#4ECDC4" }: { color?: string }) => (
-  <svg viewBox="0 0 80 80" className="w-12 h-12">
+  <svg viewBox="0 0 80 80" className="h-16 w-16">
     <path
       d="M40 10 Q70 20 65 50 Q60 75 40 70 Q20 75 15 50 Q10 20 40 10"
       fill={color}
@@ -174,7 +171,7 @@ const MicrobeBlob2 = ({ color = "#4ECDC4" }: { color?: string }) => (
 )
 
 const MicrobeBlob3 = ({ color = "#FFE66D" }: { color?: string }) => (
-  <svg viewBox="0 0 80 80" className="w-12 h-12">
+  <svg viewBox="0 0 80 80" className="h-16 w-16">
     <circle cx="40" cy="40" r="20" fill={color} />
     <circle cx="25" cy="25" r="8" fill={color} />
     <circle cx="55" cy="25" r="6" fill={color} />
@@ -184,7 +181,7 @@ const MicrobeBlob3 = ({ color = "#FFE66D" }: { color?: string }) => (
 )
 
 const MicrobeBlob4 = ({ color = "#95E1D3" }: { color?: string }) => (
-  <svg viewBox="0 0 80 80" className="w-12 h-12">
+  <svg viewBox="0 0 80 80" className="h-16 w-16">
     <ellipse cx="40" cy="45" rx="25" ry="20" fill={color} />
     <path d="M20 30 Q15 15 25 10" stroke={color} strokeWidth="3" fill="none" />
     <path d="M60 30 Q65 15 55 10" stroke={color} strokeWidth="3" fill="none" />
@@ -193,7 +190,7 @@ const MicrobeBlob4 = ({ color = "#95E1D3" }: { color?: string }) => (
 )
 
 const MicrobeBlob5 = ({ color = "#F38181" }: { color?: string }) => (
-  <svg viewBox="0 0 80 80" className="w-12 h-12">
+  <svg viewBox="0 0 80 80" className="h-16 w-16">
     <path d="M40 15 L55 30 L55 50 L40 65 L25 50 L25 30 Z" fill={color} />
     <circle cx="40" cy="40" r="8" fill="white" opacity="0.3" />
     <path d="M40 15 L40 5" stroke={color} strokeWidth="2" />
@@ -203,7 +200,7 @@ const MicrobeBlob5 = ({ color = "#F38181" }: { color?: string }) => (
 )
 
 const MicrobeBlob6 = ({ color = "#AA96DA" }: { color?: string }) => (
-  <svg viewBox="0 0 80 80" className="w-12 h-12">
+  <svg viewBox="0 0 80 80" className="h-16 w-16">
     <ellipse cx="40" cy="40" rx="28" ry="18" fill={color} />
     <path d="M12 40 Q5 40 8 50" stroke={color} strokeWidth="3" fill="none" />
     <path d="M68 40 Q75 40 72 50" stroke={color} strokeWidth="3" fill="none" />
@@ -213,7 +210,7 @@ const MicrobeBlob6 = ({ color = "#AA96DA" }: { color?: string }) => (
 )
 
 const MicrobeBlob7 = ({ color = "#FCBAD3" }: { color?: string }) => (
-  <svg viewBox="0 0 80 80" className="w-12 h-12">
+  <svg viewBox="0 0 80 80" className="h-16 w-16">
     <circle cx="40" cy="40" r="22" fill={color} />
     <circle cx="40" cy="40" r="12" fill="white" opacity="0.2" />
     <path
@@ -226,7 +223,7 @@ const MicrobeBlob7 = ({ color = "#FCBAD3" }: { color?: string }) => (
 )
 
 const MicrobeBlob8 = ({ color = "#A8D8EA" }: { color?: string }) => (
-  <svg viewBox="0 0 80 80" className="w-12 h-12">
+  <svg viewBox="0 0 80 80" className="h-16 w-16">
     <path d="M25 40 Q25 20 40 20 Q55 20 55 40 Q55 60 40 60 Q25 60 25 40" fill={color} />
     <ellipse cx="40" cy="40" rx="8" ry="12" fill="white" opacity="0.3" />
     <circle cx="18" cy="35" r="5" fill={color} />
@@ -235,7 +232,7 @@ const MicrobeBlob8 = ({ color = "#A8D8EA" }: { color?: string }) => (
 )
 
 const MicrobeBlob9 = ({ color = "#C3EDC0" }: { color?: string }) => (
-  <svg viewBox="0 0 80 80" className="w-12 h-12">
+  <svg viewBox="0 0 80 80" className="h-16 w-16">
     <ellipse cx="40" cy="42" rx="22" ry="18" fill={color} />
     <path d="M30 24 Q28 12 35 8" stroke={color} strokeWidth="3" fill="none" />
     <path d="M50 24 Q52 12 45 8" stroke={color} strokeWidth="3" fill="none" />
@@ -244,7 +241,7 @@ const MicrobeBlob9 = ({ color = "#C3EDC0" }: { color?: string }) => (
 )
 
 const MicrobeBlob10 = ({ color = "#FFD93D" }: { color?: string }) => (
-  <svg viewBox="0 0 80 80" className="w-12 h-12">
+  <svg viewBox="0 0 80 80" className="h-16 w-16">
     <circle cx="40" cy="40" r="18" fill={color} />
     <circle cx="22" cy="30" r="6" fill={color} />
     <circle cx="58" cy="30" r="6" fill={color} />
@@ -316,7 +313,7 @@ function attributeKeyIcon(attribute: string) {
   switch (attribute) {
     case "Mobility":
       return (
-        <svg className="h-3 w-3 text-gray-400" viewBox="0 0 16 16" fill="currentColor">
+        <svg className="h-4 w-4 text-gray-400" viewBox="0 0 16 16" fill="currentColor">
           <rect x="1" y="1" width="4" height="4" />
           <rect x="6" y="1" width="4" height="4" />
           <rect x="11" y="1" width="4" height="4" />
@@ -326,18 +323,18 @@ function attributeKeyIcon(attribute: string) {
       )
     case "Agility":
       return (
-        <svg className="h-3 w-3 text-yellow-500" viewBox="0 0 16 16" fill="currentColor">
+        <svg className="h-4 w-4 text-yellow-500" viewBox="0 0 16 16" fill="currentColor">
           <path d="M9 1L4 9h4l-1 6 5-8H8l1-6z" />
         </svg>
       )
     case "Size":
       return (
-        <svg className="h-3 w-3 text-blue-400" viewBox="0 0 16 16" fill="currentColor">
+        <svg className="h-4 w-4 text-blue-400" viewBox="0 0 16 16" fill="currentColor">
           <path d="M1 15L1 1L15 15H1Z" opacity="0.6" />
         </svg>
       )
     default:
-      return <span className="inline-block h-3 w-3 rounded-sm bg-gray-500" aria-hidden />
+      return <span className="inline-block h-4 w-4 rounded-sm bg-gray-500" aria-hidden />
   }
 }
 
@@ -365,10 +362,10 @@ function MicrobeAttributeRow({
   Size: number
 }) {
   return (
-    <div className="flex min-w-0 flex-wrap items-center gap-2 text-xs leading-none">
+    <div className="flex min-w-0 flex-wrap items-center gap-2 text-[12px] leading-none">
       <Tooltip text="Mobility">
         <div className="flex items-center gap-0.5">
-          <svg className="h-3 w-3 shrink-0 text-gray-500" viewBox="0 0 16 16" fill="currentColor">
+          <svg className="h-3.5 w-3.5 shrink-0 text-gray-500" viewBox="0 0 16 16" fill="currentColor">
             <rect x="1" y="1" width="4" height="4" />
             <rect x="6" y="1" width="4" height="4" />
             <rect x="11" y="1" width="4" height="4" />
@@ -384,7 +381,7 @@ function MicrobeAttributeRow({
       </Tooltip>
       <Tooltip text="Agility">
         <div className="flex items-center gap-0.5">
-          <svg className="h-3 w-3 shrink-0 text-yellow-500" viewBox="0 0 16 16" fill="currentColor">
+          <svg className="h-3.5 w-3.5 shrink-0 text-yellow-500" viewBox="0 0 16 16" fill="currentColor">
             <path d="M9 1L4 9h4l-1 6 5-8H8l1-6z" />
           </svg>
           <span className="tabular-nums leading-none text-gray-700">{Agility}</span>
@@ -392,7 +389,7 @@ function MicrobeAttributeRow({
       </Tooltip>
       <Tooltip text="Size">
         <div className="flex items-center gap-0.5">
-          <svg className="h-3 w-3 shrink-0 text-blue-400" viewBox="0 0 16 16" fill="currentColor">
+          <svg className="h-3.5 w-3.5 shrink-0 text-blue-400" viewBox="0 0 16 16" fill="currentColor">
             <path d="M1 15L1 1L15 15H1Z" opacity="0.6" />
             <path d="M1 1L15 15" stroke="currentColor" strokeWidth="1.5" fill="none" />
           </svg>
@@ -407,7 +404,7 @@ function TraitBadgeChip({ trait }: { trait: string }) {
   return (
     <Tooltip text={trait}>
       <div
-        className="flex h-5 w-5 shrink-0 cursor-default items-center justify-center rounded-full text-[8px] font-bold leading-none text-white"
+        className="flex h-6 w-6 shrink-0 cursor-default items-center justify-center rounded-full text-[9px] font-bold leading-none text-white"
         style={{ backgroundColor: traitColor(trait) }}
       >
         {traitAbbrev(trait)}
@@ -427,9 +424,9 @@ function SlotAttributeRow({
   Size: number
 }) {
   return (
-    <div className="flex min-w-0 flex-wrap items-center justify-center gap-x-2 gap-y-0 text-[11px] leading-none">
-      <Tooltip text="Mobility">
-        <div className="flex items-center gap-0.5">
+    <div className="flex w-full flex-col gap-0.5 px-1 text-[11px] leading-none">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-1">
           <svg className="size-[11px] shrink-0 text-gray-500" viewBox="0 0 16 16" fill="currentColor">
             <rect x="1" y="1" width="4" height="4" />
             <rect x="6" y="1" width="4" height="4" />
@@ -441,26 +438,29 @@ function SlotAttributeRow({
             <rect x="6" y="11" width="4" height="4" />
             <rect x="11" y="11" width="4" height="4" />
           </svg>
-          <span className="tabular-nums text-gray-700">{Mobility}</span>
+          <span className="text-gray-600">Mobility</span>
         </div>
-      </Tooltip>
-      <Tooltip text="Agility">
-        <div className="flex items-center gap-0.5">
+        <span className="font-bold tabular-nums text-gray-800">{Mobility}</span>
+      </div>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-1">
           <svg className="size-[11px] shrink-0 text-yellow-500" viewBox="0 0 16 16" fill="currentColor">
             <path d="M9 1L4 9h4l-1 6 5-8H8l1-6z" />
           </svg>
-          <span className="tabular-nums text-gray-700">{Agility}</span>
+          <span className="text-gray-600">Agility</span>
         </div>
-      </Tooltip>
-      <Tooltip text="Size">
-        <div className="flex items-center gap-0.5">
+        <span className="font-bold tabular-nums text-gray-800">{Agility}</span>
+      </div>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-1">
           <svg className="size-[11px] shrink-0 text-blue-400" viewBox="0 0 16 16" fill="currentColor">
             <path d="M1 15L1 1L15 15H1Z" opacity="0.6" />
             <path d="M1 1L15 15" stroke="currentColor" strokeWidth="1.5" fill="none" />
           </svg>
-          <span className="tabular-nums text-gray-700">{Size}</span>
+          <span className="text-gray-600">Size</span>
         </div>
-      </Tooltip>
+        <span className="font-bold tabular-nums text-gray-800">{Size}</span>
+      </div>
     </div>
   )
 }
@@ -469,7 +469,7 @@ function SlotTraitBadge({ trait }: { trait: string }) {
   return (
     <Tooltip text={trait}>
       <div
-        className="flex size-[22px] shrink-0 cursor-default items-center justify-center rounded-full text-[8px] font-bold leading-none text-white"
+        className="flex size-[28px] shrink-0 cursor-default items-center justify-center rounded-full text-[10px] font-bold leading-none text-white"
         style={{ backgroundColor: traitColor(trait) }}
       >
         {traitAbbrev(trait)}
@@ -1052,7 +1052,7 @@ export default function SimulatorPage() {
       </div>
 
       {/* Selection Slots + Submit — v0 layout */}
-      <div className="absolute top-[12%] left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-3">
+      <div className="absolute top-[14%] left-1/2 z-10 flex -translate-x-1/2 flex-col items-center">
         <div className="flex gap-4">
           {[0, 1, 2].map((slotIndex) => {
             const sel = selectedMicrobes[slotIndex]
@@ -1060,7 +1060,7 @@ export default function SimulatorPage() {
               return (
                 <div
                   key={`slot-empty-${slotIndex}`}
-                  className="flex h-[160px] w-[160px] items-center justify-center rounded-xl border-2 border-dashed border-white/50 bg-white/30 transition-all hover:bg-white/40"
+                  className="flex h-[220px] w-[160px] items-center justify-center rounded-xl border-2 border-dashed border-white/50 bg-white/30 transition-all hover:bg-white/40"
                   aria-label={`Selection slot empty ${slotIndex + 1}`}
                 >
                   <span className="h-8 w-8 shrink-0 rounded border-2 border-dashed border-white/40" aria-hidden />
@@ -1073,27 +1073,19 @@ export default function SimulatorPage() {
             return (
               <div
                 key={`${sel.id}-slot-${slotIndex}`}
-                className="relative flex h-[160px] w-[160px] shrink-0 flex-col rounded-xl border-2 border-solid border-blue-400 bg-white shadow-lg"
+                onClick={() => removeMicrobe(sel.id)}
+                className="relative flex h-[220px] w-[160px] shrink-0 cursor-pointer flex-col items-center text-center rounded-xl border-2 border-solid border-blue-400 bg-white shadow-lg"
               >
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    removeMicrobe(sel.id)
-                  }}
-                  className="absolute top-1 right-1 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-[#2563eb] text-white shadow-sm hover:bg-[#1d4ed8]"
-                  aria-label={`Remove ${sel.name} from selection`}
-                >
-                  <X className="h-3.5 w-3.5" strokeWidth={2.5} />
-                </button>
-                <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-1 px-2 pb-1 pt-2">
-                  <div className="flex shrink-0 items-center justify-center [&_svg]:block [&_svg]:h-10 [&_svg]:w-10">
+                <div className="flex min-h-0 w-full flex-1 flex-col items-center justify-between gap-1 px-2 py-2 text-center [&_svg]:block [&_svg]:h-10 [&_svg]:w-10">
+                  <div className="flex shrink-0 items-center justify-center">
                     <Svg color={col} />
                   </div>
                   <p className="line-clamp-2 w-full text-center text-[13px] font-bold leading-tight text-gray-800">
                     {sel.name}
                   </p>
-                  <SlotAttributeRow Mobility={sel.Mobility} Agility={sel.Agility} Size={sel.Size} />
+                  <div className="flex w-full flex-col items-center text-center">
+                    <SlotAttributeRow Mobility={sel.Mobility} Agility={sel.Agility} Size={sel.Size} />
+                  </div>
                   <SlotTraitBadge trait={sel.trait} />
                 </div>
               </div>
@@ -1104,7 +1096,7 @@ export default function SimulatorPage() {
           type="button"
           disabled={selectedMicrobes.length !== 3}
           onClick={handleSubmit}
-          className={`rounded-lg px-6 py-2 font-medium transition-all ${
+          className={`mt-5 rounded-lg px-6 py-2 font-medium transition-all ${
             selectedMicrobes.length === 3
               ? "cursor-pointer bg-[rgba(20,30,50,0.9)] text-white hover:bg-[rgba(30,40,60,0.95)]"
               : "cursor-not-allowed bg-gray-500/50 text-gray-300"
@@ -1115,8 +1107,8 @@ export default function SimulatorPage() {
       </div>
 
       {/* Microbe Grid — v0 layout + index-stable selection holes */}
-      <div className="absolute bottom-8 left-1/2 z-10 -translate-x-1/2">
-        <div className="grid w-[848px] grid-cols-5 gap-3">
+      <div className="absolute bottom-10 left-1/2 z-10 -translate-x-1/2">
+        <div className="grid w-[864px] gap-4 [grid-template-columns:repeat(5,160px)]">
           {Array.from({ length: GRID_MICROBE_SLOTS }, (_, idx) => {
             const microbe = microbes[idx]
             if (!microbe) {
@@ -1126,7 +1118,12 @@ export default function SimulatorPage() {
             const blobColor = MICROBE_PALETTE[idx % MICROBE_PALETTE.length] ?? "#808080"
             const isSel = selectedIds.has(microbe.id)
             if (isSel) {
-              return <div key={microbe.id} className="h-[160px] w-[160px]" />
+              return (
+                <div
+                  key={microbe.id}
+                  className="h-[160px] w-[160px] rounded-xl border-2 border-dashed border-white/30 bg-white/20"
+                />
+              )
             }
             return (
               <button
@@ -1135,11 +1132,13 @@ export default function SimulatorPage() {
                 className="flex h-[160px] w-[160px] cursor-pointer flex-col rounded-xl border-2 border-transparent bg-white p-2 text-left shadow-lg transition-all hover:shadow-xl"
                 onClick={() => addMicrobe(microbe)}
               >
-                <div className="mb-1 w-full truncate text-xs font-semibold text-gray-800">{microbe.name}</div>
-                <div className="mb-1 flex shrink-0 justify-center [&_svg]:h-10 [&_svg]:w-10">
+                <div className="mb-1 w-full text-center text-sm font-bold text-gray-800 line-clamp-1">
+                  {microbe.name}
+                </div>
+                <div className="mb-1 flex shrink-0 justify-center">
                   <MicrobeSvg color={blobColor} />
                 </div>
-                <div className="mt-auto flex items-center justify-between gap-1">
+                <div className="mt-auto flex w-full items-center justify-between gap-1 px-1">
                   <MicrobeAttributeRow
                     Mobility={microbe.Mobility}
                     Agility={microbe.Agility}
@@ -1171,19 +1170,6 @@ export default function SimulatorPage() {
           {keyExpanded ? (
             <div className="space-y-3 px-4 pb-4">
               <div>
-                <p className="mb-1 text-xs text-gray-400">Actions</p>
-                <div className="space-y-1 text-sm text-white">
-                  <div className="flex items-center gap-2">
-                    <Plus className="h-3 w-3" />
-                    <span>Add Microbe</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Minus className="h-3 w-3" />
-                    <span>Remove Microbe</span>
-                  </div>
-                </div>
-              </div>
-              <div>
                 <p className="mb-1 text-xs text-gray-400">Attributes</p>
                 <div className="space-y-1 text-sm text-white">
                   {scenariosFile.attributes.map((attr) => (
@@ -1200,7 +1186,7 @@ export default function SimulatorPage() {
                   {keyTraits.map((trait) => (
                     <div key={trait} className="flex items-center gap-2">
                       <div
-                        className="h-3 w-3 shrink-0 rounded-full"
+                        className="h-4 w-4 shrink-0 rounded-full"
                         style={{ backgroundColor: traitColor(trait) }}
                       />
                       <span>{trait}</span>
