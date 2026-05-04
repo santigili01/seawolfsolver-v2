@@ -930,7 +930,8 @@ export default function SimulatorPage() {
     )
   }
 
-  const trayReserveClass = "h-[200px] w-[180px] shrink-0 opacity-0 pointer-events-none"
+  const trayReserveClass =
+    "h-[160px] w-[160px] shrink-0 opacity-0 pointer-events-none"
 
   return (
     <div className="relative h-screen w-full overflow-hidden bg-gradient-to-br from-[#4ECDC4] to-[#2BA8A0]">
@@ -1051,15 +1052,15 @@ export default function SimulatorPage() {
       </div>
 
       {/* Selection Slots + Submit — v0 layout */}
-      <div className="absolute top-1/3 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center">
-        <div className="mb-4 flex gap-4">
+      <div className="absolute top-[12%] left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-3">
+        <div className="flex gap-4">
           {[0, 1, 2].map((slotIndex) => {
             const sel = selectedMicrobes[slotIndex]
             if (!sel) {
               return (
                 <div
                   key={`slot-empty-${slotIndex}`}
-                  className="flex h-[120px] w-44 items-center justify-center rounded-xl border-2 border-dashed border-white/50 bg-white/30 transition-all hover:bg-white/40"
+                  className="flex h-[160px] w-[160px] items-center justify-center rounded-xl border-2 border-dashed border-white/50 bg-white/30 transition-all hover:bg-white/40"
                   aria-label={`Selection slot empty ${slotIndex + 1}`}
                 >
                   <span className="h-8 w-8 shrink-0 rounded border-2 border-dashed border-white/40" aria-hidden />
@@ -1072,7 +1073,7 @@ export default function SimulatorPage() {
             return (
               <div
                 key={`${sel.id}-slot-${slotIndex}`}
-                className="relative flex h-[120px] w-44 shrink-0 flex-col rounded-xl border-2 border-solid border-blue-400 bg-white shadow-lg"
+                className="relative flex h-[160px] w-[160px] shrink-0 flex-col rounded-xl border-2 border-solid border-blue-400 bg-white shadow-lg"
               >
                 <button
                   type="button"
@@ -1115,7 +1116,7 @@ export default function SimulatorPage() {
 
       {/* Microbe Grid — v0 layout + index-stable selection holes */}
       <div className="absolute bottom-8 left-1/2 z-10 -translate-x-1/2">
-        <div className="grid grid-cols-5 gap-5">
+        <div className="grid w-[848px] grid-cols-5 gap-3">
           {Array.from({ length: GRID_MICROBE_SLOTS }, (_, idx) => {
             const microbe = microbes[idx]
             if (!microbe) {
@@ -1124,28 +1125,21 @@ export default function SimulatorPage() {
             const MicrobeSvg = microbeComponents[idx] ?? MicrobeBlob1
             const blobColor = MICROBE_PALETTE[idx % MICROBE_PALETTE.length] ?? "#808080"
             const isSel = selectedIds.has(microbe.id)
+            if (isSel) {
+              return <div key={microbe.id} className="h-[160px] w-[160px]" />
+            }
             return (
               <button
                 key={microbe.id}
                 type="button"
-                className={`flex h-[200px] w-[180px] cursor-pointer flex-col rounded-xl p-3 text-left shadow-lg transition-all hover:shadow-xl ${
-                  isSel
-                    ? "border-2 border-[#2563eb] bg-[rgba(37,99,235,0.08)]"
-                    : "border-2 border-transparent bg-white"
-                }`}
-                onClick={() => {
-                  if (isSel) {
-                    removeMicrobe(microbe.id)
-                  } else {
-                    addMicrobe(microbe)
-                  }
-                }}
+                className="flex h-[160px] w-[160px] cursor-pointer flex-col rounded-xl border-2 border-transparent bg-white p-2 text-left shadow-lg transition-all hover:shadow-xl"
+                onClick={() => addMicrobe(microbe)}
               >
-                <div className="mb-2 w-full truncate text-sm font-semibold text-gray-800">{microbe.name}</div>
-                <div className="mb-2 flex shrink-0 justify-center">
+                <div className="mb-1 w-full truncate text-xs font-semibold text-gray-800">{microbe.name}</div>
+                <div className="mb-1 flex shrink-0 justify-center [&_svg]:h-10 [&_svg]:w-10">
                   <MicrobeSvg color={blobColor} />
                 </div>
-                <div className="mt-auto flex items-center justify-between">
+                <div className="mt-auto flex items-center justify-between gap-1">
                   <MicrobeAttributeRow
                     Mobility={microbe.Mobility}
                     Agility={microbe.Agility}
