@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import type { ReactNode } from "react"
-import { Activity, Gauge, Maximize2, Target, Trophy, XOctagon, Zap } from "lucide-react"
+import { Activity, Maximize2, Target, Trophy, XOctagon, Zap } from "lucide-react"
 
 import type { GameResult, Pool, ScenarioRequirements, Microbe } from "@/app/simulator/types"
 import { scoreCombo } from "@/lib/simulator-scoring"
@@ -104,7 +104,7 @@ export function SimulatorResult({
           </div>
           <div className="rounded-xl border border-gray-200 bg-gray-50/80 p-5 text-center shadow-sm">
             <p className="text-sm font-medium text-gray-500">Max Possible Score</p>
-            <p className="mt-1 text-3xl font-bold tabular-nums text-gray-800">
+            <p className={`mt-1 text-3xl font-bold tabular-nums ${scoreColorClass(result.maxScore)}`}>
               {result.maxScore}/100
             </p>
           </div>
@@ -115,6 +115,11 @@ export function SimulatorResult({
             </p>
           </div>
         </div>
+
+        <p className="mb-8 text-center text-base text-gray-600">
+          You scored {result.playerScore}/100 on {result.scenarioName}. The optimal score was {result.maxScore}/100.
+          {playerFoundOptimal ? " You found the optimal combination! 🎉" : ""}
+        </p>
 
         <div className="mb-12 flex flex-wrap justify-center gap-3">
           <button
@@ -136,12 +141,8 @@ export function SimulatorResult({
           <h2 className="text-lg font-semibold text-gray-900 mb-2">Site information</h2>
           <p className="text-gray-600 mb-4">
             <span className="font-medium text-gray-800">{result.scenarioName}</span>
-            <span className="mx-2 text-gray-300">·</span>
-            <span className="text-gray-600">
-              Scenario #{scenarioRequirements.id}
-            </span>
           </p>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
             <InfoCard
               icon={<Activity className="h-5 w-5" />}
               label="Mobility range"
@@ -166,11 +167,6 @@ export function SimulatorResult({
               icon={<XOctagon className="h-5 w-5" />}
               label="Undesired trait"
               value={scenarioRequirements.undesired_trait}
-            />
-            <InfoCard
-              icon={<Gauge className="h-5 w-5" />}
-              label="Difficulty"
-              value={scenarioRequirements.difficulty}
             />
           </div>
         </section>

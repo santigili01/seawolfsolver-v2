@@ -9,13 +9,6 @@ import {
 } from "react"
 import Link from "next/link"
 import {
-  Activity,
-  Gauge,
-  Maximize2,
-  Target,
-  Trophy,
-  XOctagon,
-  Zap,
   Settings,
   LogOut,
   HelpCircle,
@@ -309,6 +302,73 @@ function lookupScenario(scenariosFile: ScenariosFile, poolScenarioKey: string): 
   return scenariosFile.scenarios.find((s) => s.name === poolScenarioKey) ?? null
 }
 
+const INVIABLE_ATTRIBUTE_TITLE =
+  "Inviable: even with the best possible partners, this microbe cannot keep the average within range for this attribute"
+
+function getInviableAttributes(microbe: Microbe, req: ScenarioRequirements): string[] {
+  const inviable: string[] = []
+  const attrs = [
+    { name: "Mobility", value: microbe.Mobility, range: req.attributes.Mobility },
+    { name: "Agility", value: microbe.Agility, range: req.attributes.Agility },
+    { name: "Size", value: microbe.Size, range: req.attributes.Size },
+  ]
+  for (const attr of attrs) {
+    const minSum = attr.value + 1 + 1
+    const maxSum = attr.value + 10 + 10
+    const requiredMin = attr.range.min * 3
+    const requiredMax = attr.range.max * 3
+    if (maxSum < requiredMin || minSum > requiredMax) {
+      inviable.push(attr.name)
+    }
+  }
+  return inviable
+}
+
+function categorizeMicrobe(
+  microbe: Microbe,
+  req: ScenarioRequirements,
+): {
+  category: "positive" | "negative" | "neutral"
+  reason: string
+  inviableAttributes: string[]
+} {
+  const inviableAttributes = getInviableAttributes(microbe, req)
+  const isInviable = inviableAttributes.length > 0
+  const hasDesired = microbe.trait === req.desired_trait
+  const hasUndesired = microbe.trait === req.undesired_trait
+
+  if (isInviable || hasUndesired) {
+    const reasons: string[] = []
+    if (isInviable) {
+      reasons.push(
+        `Inviable on ${inviableAttributes.join(", ")} — cannot contribute to a valid combination`,
+      )
+    }
+    if (hasUndesired) {
+      reasons.push(`Has undesired trait (${microbe.trait})`)
+    }
+    return {
+      category: "negative",
+      reason: reasons.join(". "),
+      inviableAttributes,
+    }
+  }
+
+  if (hasDesired) {
+    return {
+      category: "positive",
+      reason: `Has desired trait (${microbe.trait})`,
+      inviableAttributes: [],
+    }
+  }
+
+  return {
+    category: "neutral",
+    reason: "No desired or undesired trait, viable on all attributes",
+    inviableAttributes: [],
+  }
+}
+
 function attributeKeyIcon(attribute: string) {
   switch (attribute) {
     case "Mobility":
@@ -342,7 +402,7 @@ function Tooltip({ children, text }: { children: ReactNode; text: string }) {
   return (
     <div className="relative group">
       {children}
-      <div className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-1 -translate-x-1/2 whitespace-nowrap rounded bg-gray-900 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">
+      <div className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-1 max-w-xs -translate-x-1/2 rounded bg-gray-900 px-2 py-1 text-left text-xs text-white opacity-0 transition-opacity group-hover:opacity-100 whitespace-normal">
         {text}
       </div>
     </div>
@@ -356,11 +416,29 @@ function MicrobeAttributeRow({
   Mobility,
   Agility,
   Size,
+  inviableAttributes = [],
+  highlightInviable = false,
 }: {
   Mobility: number
   Agility: number
   Size: number
+  inviableAttributes?: string[]
+  highlightInviable?: boolean
 }) {
+  const inv = inviableAttributes
+  const valueSpan = (name: "Mobility" | "Agility" | "Size", value: number) =>
+    highlightInviable && inv.includes(name) ? (
+      <span
+        className="tabular-nums leading-none"
+        style={{ color: "#dc2626", fontWeight: "bold" }}
+        title={INVIABLE_ATTRIBUTE_TITLE}
+      >
+        • {value}
+      </span>
+    ) : (
+      <span className="tabular-nums leading-none text-gray-700">{value}</span>
+    )
+
   return (
     <div className="flex min-w-0 flex-wrap items-center gap-2 text-[12px] leading-none">
       <Tooltip text="Mobility">
@@ -376,7 +454,7 @@ function MicrobeAttributeRow({
             <rect x="6" y="11" width="4" height="4" />
             <rect x="11" y="11" width="4" height="4" />
           </svg>
-          <span className="tabular-nums leading-none text-gray-700">{Mobility}</span>
+          {valueSpan("Mobility", Mobility)}
         </div>
       </Tooltip>
       <Tooltip text="Agility">
@@ -384,7 +462,7 @@ function MicrobeAttributeRow({
           <svg className="h-3.5 w-3.5 shrink-0 text-yellow-500" viewBox="0 0 16 16" fill="currentColor">
             <path d="M9 1L4 9h4l-1 6 5-8H8l1-6z" />
           </svg>
-          <span className="tabular-nums leading-none text-gray-700">{Agility}</span>
+          {valueSpan("Agility", Agility)}
         </div>
       </Tooltip>
       <Tooltip text="Size">
@@ -393,7 +471,7 @@ function MicrobeAttributeRow({
             <path d="M1 15L1 1L15 15H1Z" opacity="0.6" />
             <path d="M1 1L15 15" stroke="currentColor" strokeWidth="1.5" fill="none" />
           </svg>
-          <span className="tabular-nums leading-none text-gray-700">{Size}</span>
+          {valueSpan("Size", Size)}
         </div>
       </Tooltip>
     </div>
@@ -410,6 +488,110 @@ function TraitBadgeChip({ trait }: { trait: string }) {
         {traitAbbrev(trait)}
       </div>
     </Tooltip>
+  )
+}
+
+function microbeAttributeValue(microbe: Microbe, name: string): number {
+  switch (name) {
+    case "Mobility":
+      return microbe.Mobility
+    case "Agility":
+      return microbe.Agility
+    case "Size":
+      return microbe.Size
+    default:
+      return 0
+  }
+}
+
+function microbeAttributePairs(microbe: Microbe, attributeNames: string[]): { name: string; value: number }[] {
+  return attributeNames.map((name) => ({
+    name,
+    value: microbeAttributeValue(microbe, name),
+  }))
+}
+
+function attributeIconForName(name: string) {
+  switch (name) {
+    case "Mobility":
+      return (
+        <svg className="h-2.5 w-2.5 shrink-0 text-gray-500" viewBox="0 0 16 16" fill="currentColor">
+          <rect x="1" y="1" width="4" height="4" />
+          <rect x="6" y="1" width="4" height="4" />
+          <rect x="11" y="1" width="4" height="4" />
+          <rect x="1" y="6" width="4" height="4" />
+          <rect x="6" y="6" width="4" height="4" />
+          <rect x="11" y="6" width="4" height="4" />
+          <rect x="1" y="11" width="4" height="4" />
+          <rect x="6" y="11" width="4" height="4" />
+          <rect x="11" y="11" width="4" height="4" />
+        </svg>
+      )
+    case "Agility":
+      return (
+        <svg className="h-2.5 w-2.5 shrink-0 text-yellow-500" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M9 1L4 9h4l-1 6 5-8H8l1-6z" />
+        </svg>
+      )
+    case "Size":
+      return (
+        <svg className="h-2.5 w-2.5 shrink-0 text-blue-400" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M1 15L1 1L15 15H1Z" opacity="0.6" />
+          <path d="M1 1L15 15" stroke="currentColor" strokeWidth="1.5" fill="none" />
+        </svg>
+      )
+    default:
+      return <span className="inline-block h-2.5 w-2.5 shrink-0 rounded-sm bg-gray-400" aria-hidden />
+  }
+}
+
+/** Result screen — vertical attribute rows (selection cards + optimal grid). */
+function ResultAttributeRow({
+  attributes,
+  inviableAttributes = [],
+}: {
+  attributes: { name: string; value: number }[]
+  inviableAttributes?: string[]
+}) {
+  const inv = new Set(inviableAttributes)
+  return (
+    <div className="flex w-full flex-col gap-0.5 px-1 text-[12px]">
+      {attributes.map(({ name, value }) => (
+        <div key={name} className="flex items-center justify-between">
+          <div className="flex items-center gap-1">
+            {attributeIconForName(name)}
+            <span className="text-gray-600">{name}</span>
+          </div>
+          {inv.has(name) ? (
+            <span
+              style={{
+                color: "#dc2626",
+                fontWeight: "bold",
+                textDecoration: "underline dotted",
+                cursor: "help",
+              }}
+              title={INVIABLE_ATTRIBUTE_TITLE}
+            >
+              ⓘ {value}
+            </span>
+          ) : (
+            <span className="font-medium tabular-nums text-gray-700">{value}</span>
+          )}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function OptimalGridTraitBadge({ trait }: { trait: string }) {
+  return (
+    <div
+      title={trait}
+      className="flex h-[22px] w-[22px] shrink-0 cursor-default items-center justify-center rounded-full text-[10px] font-bold leading-none text-white"
+      style={{ backgroundColor: traitColor(trait) }}
+    >
+      {traitAbbrev(trait)}
+    </div>
   )
 }
 
@@ -484,6 +666,7 @@ type SimulatorResultProps = {
   scenarioRequirements: ScenarioRequirements
   pool: Pool
   onPlayAgain: () => void
+  scenariosFile: ScenariosFile
 }
 
 function formatMmSs(totalSeconds: number) {
@@ -493,41 +676,20 @@ function formatMmSs(totalSeconds: number) {
   return `${mins}:${secs.toString().padStart(2, "0")}`
 }
 
-function resultScoreColorClass(score: number) {
+function scoreDisplayColorClass(score: number) {
   if (score >= 100) return "text-emerald-600"
   if (score >= 80) return "text-amber-600"
   return "text-red-600"
 }
 
-function microbeContribution(
-  m: Microbe,
-  req: ScenarioRequirements
-): "positive" | "negative" | "neutral" {
-  if (m.trait === req.undesired_trait) return "negative"
-  if (m.trait === req.desired_trait) return "positive"
-  return "neutral"
+function optimalScoreLineClass(score: number) {
+  if (score >= 100) return "text-emerald-600 font-semibold"
+  if (score >= 80) return "text-amber-600 font-semibold"
+  return "text-red-600 font-semibold"
 }
 
 function sortedIdsKey(ids: string[]) {
   return [...ids].sort().join("\0")
-}
-
-function ResultInfoCard({
-  icon,
-  label,
-  value,
-}: {
-  icon: ReactNode
-  label: string
-  value: string
-}) {
-  return (
-    <div className="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
-      <div className="flex items-center gap-2 text-teal-600">{icon}</div>
-      <p className="text-xs font-medium uppercase tracking-wide text-gray-500">{label}</p>
-      <p className="text-sm font-semibold leading-snug text-gray-900">{value}</p>
-    </div>
-  )
 }
 
 function SimulatorResult({
@@ -535,6 +697,7 @@ function SimulatorResult({
   scenarioRequirements,
   pool,
   onPlayAgain,
+  scenariosFile,
 }: SimulatorResultProps) {
   const { means } = scoreCombo(result.selectedMicrobes, scenarioRequirements)
   const primaryOptimal = result.optimalCombos[0] ?? []
@@ -574,177 +737,266 @@ function SimulatorResult({
     },
   ]
 
+  const optimalMemberIds = new Set<string>()
+  for (const combo of pool.best_combinations) {
+    if (combo.length !== 3) continue
+    combo.forEach((id) => optimalMemberIds.add(id))
+  }
+
+  const accentHeading =
+    "border-l-4 border-[#4ECDC4] pl-3 text-lg font-bold text-[#1a202c]"
+  const sectionCard = "rounded-xl border border-[#e2e8f0] bg-white p-6 shadow-sm"
+  const statCard =
+    "rounded-xl border border-[#e2e8f0] border-l-4 border-l-[#4ECDC4] bg-white p-5 text-center shadow-sm"
+
   return (
-    <div className="min-h-screen w-full bg-white text-gray-900">
-      <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
-        <header className="mb-10 text-center">
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-            Simulation Complete!
-          </h1>
-          <p className="mt-2 text-lg text-gray-600">Here&apos;s how you performed</p>
-        </header>
-
-        <div className="mb-8 grid gap-4 sm:grid-cols-3">
-          <div className="rounded-xl border border-gray-200 bg-gray-50/80 p-5 text-center shadow-sm">
-            <p className="text-sm font-medium text-gray-500">Your Score</p>
-            <p className={`mt-1 text-3xl font-bold tabular-nums ${resultScoreColorClass(result.playerScore)}`}>
-              {result.playerScore}/100
-            </p>
-          </div>
-          <div className="rounded-xl border border-gray-200 bg-gray-50/80 p-5 text-center shadow-sm">
-            <p className="text-sm font-medium text-gray-500">Max Possible Score</p>
-            <p className="mt-1 text-3xl font-bold tabular-nums text-gray-800">{result.maxScore}/100</p>
-          </div>
-          <div className="rounded-xl border border-gray-200 bg-gray-50/80 p-5 text-center shadow-sm">
-            <p className="text-sm font-medium text-gray-500">Time Spent</p>
-            <p className="mt-1 text-3xl font-bold tabular-nums text-gray-800">
-              {formatMmSs(result.timeSpent)}
-            </p>
-          </div>
-        </div>
-
-        <div className="mb-12 flex flex-wrap justify-center gap-3">
+    <div className="min-h-screen w-full bg-[#f8fffe] text-gray-900">
+      <header
+        className="fixed top-0 right-0 left-0 z-40 flex h-14 shrink-0 items-center justify-between bg-[rgba(20,30,50,0.9)] px-6"
+      >
+        <h1 className="min-w-0 shrink truncate pr-4 text-lg font-bold text-white sm:text-xl">
+          Simulation Complete!
+        </h1>
+        <div className="flex shrink-0 items-center gap-3">
           <button
             type="button"
             onClick={onPlayAgain}
-            className="inline-flex h-11 items-center justify-center rounded-md bg-gray-900 px-8 text-sm font-medium text-white transition-colors hover:bg-gray-800"
+            className="inline-flex h-10 items-center justify-center rounded-lg bg-[#4ECDC4] px-5 text-sm font-semibold text-[#1a202c] transition-opacity hover:opacity-90"
           >
             Play Again
           </button>
           <Link
             href="/"
-            className="inline-flex h-11 items-center justify-center rounded-md border border-gray-300 bg-white px-8 text-sm font-medium text-gray-900 transition-colors hover:bg-gray-50"
+            className="inline-flex h-10 items-center justify-center rounded-lg border-2 border-white bg-transparent px-5 text-sm font-semibold text-white transition-colors hover:bg-white/10"
           >
             Quit
           </Link>
         </div>
+      </header>
 
-        <section className="mb-12">
-          <h2 className="mb-2 text-lg font-semibold text-gray-900">Site information</h2>
-          <p className="mb-4 text-gray-600">
-            <span className="font-medium text-gray-800">{result.scenarioName}</span>
-            <span className="mx-2 text-gray-300">·</span>
-            <span className="text-gray-600">Scenario #{scenarioRequirements.id}</span>
-          </p>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-            <ResultInfoCard
-              icon={<Activity className="h-5 w-5" />}
-              label="Mobility range"
-              value={`${scenarioRequirements.attributes.Mobility.min}–${scenarioRequirements.attributes.Mobility.max}`}
-            />
-            <ResultInfoCard
-              icon={<Zap className="h-5 w-5" />}
-              label="Agility range"
-              value={`${scenarioRequirements.attributes.Agility.min}–${scenarioRequirements.attributes.Agility.max}`}
-            />
-            <ResultInfoCard
-              icon={<Maximize2 className="h-5 w-5" />}
-              label="Size range"
-              value={`${scenarioRequirements.attributes.Size.min}–${scenarioRequirements.attributes.Size.max}`}
-            />
-            <ResultInfoCard
-              icon={<Target className="h-5 w-5" />}
-              label="Desired trait"
-              value={scenarioRequirements.desired_trait}
-            />
-            <ResultInfoCard
-              icon={<XOctagon className="h-5 w-5" />}
-              label="Undesired trait"
-              value={scenarioRequirements.undesired_trait}
-            />
-            <ResultInfoCard
-              icon={<Gauge className="h-5 w-5" />}
-              label="Difficulty"
-              value={scenarioRequirements.difficulty}
-            />
+      <div className="mx-auto max-w-5xl px-4 pb-12 pt-[calc(3.5rem+1rem)] sm:px-6 lg:px-8">
+        <div className="mb-8 grid gap-4 sm:grid-cols-3">
+          <div className={statCard}>
+            <p className="text-sm font-medium text-gray-500">Your Score</p>
+            <p
+              className={`mt-1 text-3xl font-bold tabular-nums ${scoreDisplayColorClass(result.playerScore)}`}
+            >
+              {result.playerScore}/100
+            </p>
           </div>
-        </section>
-
-        <section className="mb-12">
-          <h2 className="mb-4 text-lg font-semibold text-gray-900">Your selection</h2>
-          <div className="mb-6 grid gap-4 sm:grid-cols-3">
-            {result.selectedMicrobes.map((m) => {
-              const c = microbeContribution(m, scenarioRequirements)
-              const tone =
-                c === "positive"
-                  ? "border-emerald-200 bg-emerald-50/60"
-                  : c === "negative"
-                    ? "border-red-200 bg-red-50/60"
-                    : "border-gray-200 bg-gray-50/80"
-              const label =
-                c === "positive"
-                  ? "Positive (desired trait)"
-                  : c === "negative"
-                    ? "Negative (undesired trait)"
-                    : "Neutral"
-              return (
-                <div key={m.id} className={`rounded-xl border p-4 shadow-sm ${tone}`}>
-                  <p className="font-semibold text-gray-900">{m.name}</p>
-                  <p className="mt-2 text-sm text-gray-600 tabular-nums">
-                    Mobility {m.Mobility} · Agility {m.Agility} · Size {m.Size}
-                  </p>
-                  <p className="mt-1 text-sm text-gray-700">Trait: {m.trait}</p>
-                  <p className="mt-2 text-xs font-medium uppercase tracking-wide text-gray-500">{label}</p>
-                </div>
-              )
-            })}
+          <div className={statCard}>
+            <p className="text-sm font-medium text-gray-500">Max Possible Score</p>
+            <p
+              className={`mt-1 text-3xl font-bold tabular-nums ${scoreDisplayColorClass(result.maxScore)}`}
+            >
+              {result.maxScore}/100
+            </p>
           </div>
+          <div className={statCard}>
+            <p className="text-sm font-medium text-gray-500">Time Spent</p>
+            <p className="mt-1 text-3xl font-bold tabular-nums text-gray-800">{formatMmSs(result.timeSpent)}</p>
+          </div>
+        </div>
 
-          <h3 className="mb-3 text-sm font-semibold text-gray-800">Condition checklist</h3>
-          <ul className="space-y-2 rounded-xl border border-gray-200 bg-gray-50/50 p-4">
-            {checklist.map((row) => (
-              <li key={row.label} className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-2">
-                <span className="text-lg" aria-hidden>
-                  {row.pass ? "✅" : "❌"}
+        <p className="mb-8 text-center text-base text-gray-600">
+          You scored {result.playerScore}/100 on {result.scenarioName}. The optimal score was {result.maxScore}/100.
+          {playerFoundOptimal ? " You found the optimal combination! 🎉" : ""}
+        </p>
+
+        <section className={`mb-10 ${sectionCard}`}>
+          <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
+            <div>
+              <h2 className={`mb-4 ${accentHeading}`}>Site &amp; Your Selection</h2>
+              <p className="mb-3 text-sm text-gray-600">
+                <span className="font-medium text-[#1a202c]">{result.scenarioName}</span>
+              </p>
+              <div className="mb-6 flex flex-wrap gap-2">
+                <span className="inline-flex rounded-full border border-[#cceeea] bg-[#eefcfb] px-2.5 py-1 text-xs font-medium text-[#1a202c]">
+                  Mobility{" "}
+                  {scenarioRequirements.attributes.Mobility.min}–
+                  {scenarioRequirements.attributes.Mobility.max}
                 </span>
-                <span className="font-medium text-gray-900">{row.label}</span>
-                {row.detail ? (
-                  <span className="text-sm text-gray-600 sm:ml-auto">{row.detail}</span>
-                ) : null}
-              </li>
-            ))}
-          </ul>
-        </section>
+                <span className="inline-flex rounded-full border border-[#cceeea] bg-[#eefcfb] px-2.5 py-1 text-xs font-medium text-[#1a202c]">
+                  Agility {scenarioRequirements.attributes.Agility.min}–
+                  {scenarioRequirements.attributes.Agility.max}
+                </span>
+                <span className="inline-flex rounded-full border border-[#cceeea] bg-[#eefcfb] px-2.5 py-1 text-xs font-medium text-[#1a202c]">
+                  Size {scenarioRequirements.attributes.Size.min}–{scenarioRequirements.attributes.Size.max}
+                </span>
+                <span className="inline-flex rounded-full border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-800">
+                  Desired: {scenarioRequirements.desired_trait}
+                </span>
+                <span className="inline-flex rounded-full border border-red-300 bg-red-50 px-2.5 py-1 text-xs font-medium text-red-800">
+                  Undesired: {scenarioRequirements.undesired_trait}
+                </span>
+              </div>
 
-        <section className="mb-8">
-          <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900">
-            <Trophy className="h-5 w-5 text-amber-500" />
-            Optimal combination
-          </h2>
-
-          {playerFoundOptimal ? (
-            <p className="mb-4 text-lg font-medium text-emerald-700">🎉 You found the optimal combination!</p>
-          ) : (
-            <p className="mb-4 text-gray-700">The optimal combination was:</p>
-          )}
-
-          {result.optimalCombos.map((combo, idx) => (
-            <div key={idx} className="mb-6 last:mb-0">
-              {result.optimalCombos.length > 1 ? (
-                <p className="mb-2 text-sm text-gray-500">Option {idx + 1}</p>
-              ) : null}
-              <div className="grid gap-3 sm:grid-cols-3">
-                {combo.map((m) => (
-                  <div key={m.id} className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
-                    <p className="font-medium text-gray-900">{m.name}</p>
-                    <p className="mt-1 text-xs text-gray-600 tabular-nums">
-                      M {m.Mobility} · A {m.Agility} · S {m.Size}
-                    </p>
-                    <p className="mt-1 text-xs text-gray-600">{m.trait}</p>
-                  </div>
-                ))}
+              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                {result.selectedMicrobes.map((m) => {
+                  const cat = categorizeMicrobe(m, scenarioRequirements)
+                  const badgeTone =
+                    cat.category === "positive"
+                      ? "bg-emerald-100 text-emerald-800 ring-1 ring-emerald-200"
+                      : cat.category === "negative"
+                        ? "bg-red-100 text-red-800 ring-1 ring-red-200"
+                        : "bg-gray-100 text-gray-700 ring-1 ring-gray-200"
+                  const categoryLabel =
+                    cat.category === "positive"
+                      ? "Positive"
+                      : cat.category === "negative"
+                        ? "Negative"
+                        : "Neutral"
+                  return (
+                    <div
+                      key={m.id}
+                      className="flex min-w-0 flex-1 basis-[calc(33.333%-0.5rem)] flex-col rounded-xl border border-[#e2e8f0] bg-white px-3 py-2 shadow-sm"
+                    >
+                      <p className="truncate font-bold text-[#1a202c]">{m.name}</p>
+                      <div className="mt-1">
+                        <ResultAttributeRow
+                          attributes={microbeAttributePairs(m, scenariosFile.attributes)}
+                          inviableAttributes={cat.inviableAttributes}
+                        />
+                      </div>
+                      <div className="mt-2 flex flex-wrap items-center gap-2">
+                        <TraitBadgeChip trait={m.trait} />
+                        <div className="flex items-center gap-1">
+                          {cat.inviableAttributes.length > 0 ? (
+                            <span
+                              className="cursor-default text-sm"
+                              title="An inviable microbe cannot mathematically contribute to a valid average for one or more attributes, regardless of what other microbes are selected."
+                            >
+                              ⚠️
+                            </span>
+                          ) : null}
+                          <span
+                            className={`inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${badgeTone}`}
+                          >
+                            {categoryLabel}
+                          </span>
+                        </div>
+                      </div>
+                      <p className="mt-2 text-[11px] leading-snug text-gray-500">{cat.reason}</p>
+                    </div>
+                  )
+                })}
               </div>
             </div>
-          ))}
 
-          <p className="mt-4 text-sm text-gray-700">
-            <span className="font-medium">Optimal combo score:</span>{" "}
-            <span className="tabular-nums">{optimalScore}/100</span>
+            <div className="flex flex-col lg:justify-center">
+              <h2 className={`mb-4 ${accentHeading}`}>Condition Checklist</h2>
+              <ul className="space-y-2.5 rounded-xl border border-[#e2e8f0] bg-[#f8fffe] p-4">
+                {checklist.map((row) => (
+                  <li
+                    key={row.label}
+                    className={`flex flex-col gap-0.5 rounded-lg border px-3 py-2 sm:flex-row sm:items-center sm:gap-2 ${row.pass ? "border-[#e2e8f0] border-l-4 border-l-[#4ECDC4] bg-white" : "border-red-200 bg-red-50/50"}`}
+                  >
+                    <span className="text-lg shrink-0" aria-hidden>
+                      {row.pass ? "✅" : "❌"}
+                    </span>
+                    <span
+                      className={`shrink-0 font-medium ${row.pass ? "text-[#0f766e]" : "text-red-900"}`}
+                    >
+                      {row.label}
+                    </span>
+                    {row.detail ? (
+                      <span className={`text-sm sm:ml-auto ${row.pass ? "text-[#115e59]" : "text-red-800/90"}`}>
+                        {row.detail}
+                      </span>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h2 className={`mb-6 ${accentHeading}`}>🏆 Optimal Combination</h2>
+
+          {playerFoundOptimal ? (
+            <p className="mb-4 text-base font-semibold text-emerald-600">🎉 You found the optimal combination!</p>
+          ) : null}
+
+          <div className={`mx-auto ${sectionCard}`}>
+            <div className="mt-6 grid w-full gap-4 [grid-template-columns:repeat(5,1fr)]">
+              {Array.from({ length: GRID_MICROBE_SLOTS }, (_, idx) => {
+                const m = pool.microbes[idx]
+                if (!m) {
+                  return (
+                    <div
+                      key={`result-empty-${idx}`}
+                      className="min-h-[200px] w-full min-w-[160px] rounded-xl bg-gray-50"
+                      aria-hidden
+                    />
+                  )
+                }
+                const MicrobeSvg = microbeComponents[idx] ?? MicrobeBlob1
+                const blobColor = MICROBE_PALETTE[idx % MICROBE_PALETTE.length] ?? "#808080"
+                const isOptimalMicrobe = optimalMemberIds.has(m.id)
+                const isPlayerSelected = result.selectedMicrobes.some((s) => s.id === m.id)
+                const cat = categorizeMicrobe(m, scenarioRequirements)
+                const badgeBase =
+                  "absolute top-[-12px] z-10 whitespace-nowrap rounded px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white shadow"
+                return (
+                  <div
+                    key={m.id}
+                    className={`relative flex min-h-[200px] w-full min-w-[160px] flex-col overflow-visible rounded-xl border-2 bg-white p-2 shadow-md ${
+                      isOptimalMicrobe
+                        ? "border-[#16a34a] bg-[#f0fdf4]"
+                        : isPlayerSelected
+                          ? "border-[#e2e8f0] border-l-[3px] border-l-[#2563eb] opacity-50"
+                          : "border-[#e2e8f0] opacity-50"
+                    }`}
+                  >
+                    {isOptimalMicrobe && isPlayerSelected ? (
+                      <>
+                        <span
+                          className={`${badgeBase} left-1/4 -translate-x-1/2 bg-[#16a34a]`}
+                        >
+                          OPTIMAL
+                        </span>
+                        <span
+                          className={`${badgeBase} left-3/4 -translate-x-1/2 bg-[#2563eb]`}
+                        >
+                          YOUR PICK
+                        </span>
+                      </>
+                    ) : isOptimalMicrobe ? (
+                      <span className={`${badgeBase} left-1/2 -translate-x-1/2 bg-[#16a34a]`}>
+                        OPTIMAL
+                      </span>
+                    ) : isPlayerSelected ? (
+                      <span className={`${badgeBase} left-1/2 -translate-x-1/2 bg-[#2563eb]`}>
+                        YOUR PICK
+                      </span>
+                    ) : null}
+                    <p className="mb-1 line-clamp-2 w-full text-center text-[13px] font-bold text-gray-800">
+                      {m.name}
+                    </p>
+                    <div className="mb-1 flex shrink-0 justify-center [&_svg]:block [&_svg]:h-12 [&_svg]:w-12">
+                      <MicrobeSvg color={blobColor} />
+                    </div>
+                    <div className="mt-auto flex w-full flex-col items-center gap-1.5 pt-1">
+                      <ResultAttributeRow
+                        attributes={microbeAttributePairs(m, scenariosFile.attributes)}
+                        inviableAttributes={cat.inviableAttributes}
+                      />
+                      <OptimalGridTraitBadge trait={m.trait} />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          <p className={`mt-6 text-lg tabular-nums ${optimalScoreLineClass(optimalScore)}`}>
+            Optimal score: {optimalScore}/100
           </p>
         </section>
 
         {result.maxScore < 100 ? (
-          <p className="mx-auto max-w-2xl text-center text-xs text-gray-500">
+          <p className="mx-auto mt-10 max-w-2xl text-center text-xs text-gray-500">
             Note: perfect scores (100) are not always achievable. The max possible score shown reflects the best
             achievable result for this pool.
           </p>
@@ -926,6 +1178,7 @@ export default function SimulatorPage() {
         scenarioRequirements={scenarioRequirements}
         pool={pool}
         onPlayAgain={handlePlayAgain}
+        scenariosFile={scenariosFile}
       />
     )
   }
