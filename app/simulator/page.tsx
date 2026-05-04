@@ -447,12 +447,19 @@ function attributeKeyIcon(attribute: string) {
 }
 
 function Tooltip({ children, text }: { children: ReactNode; text: string }) {
+  const [visible, setVisible] = useState(false)
   return (
-    <span className="group relative inline-flex">
+    <span
+      className="relative inline-flex"
+      onMouseEnter={() => setVisible(true)}
+      onMouseLeave={() => setVisible(false)}
+    >
       {children}
-      <span className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-1 max-w-xs -translate-x-1/2 rounded bg-gray-900 px-2 py-1 text-left text-xs text-white opacity-0 transition-opacity whitespace-normal group-hover:opacity-100">
-        {text}
-      </span>
+      {visible && (
+        <span className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-1 max-w-xs -translate-x-1/2 rounded bg-gray-900 px-2 py-1 text-left text-xs text-white whitespace-normal">
+          {text}
+        </span>
+      )}
     </span>
   )
 }
@@ -659,7 +666,7 @@ function OptimalGridTraitBadge({ trait }: { trait: string }) {
   )
 }
 
-/** Selection slot only — 11px attribute row (grid cards keep MicrobeAttributeRow). */
+/** Selection slot only — attribute row (grid cards keep MicrobeAttributeRow). */
 function SlotAttributeRow({
   Mobility,
   Agility,
@@ -670,10 +677,10 @@ function SlotAttributeRow({
   Size: number
 }) {
   return (
-    <div className="flex w-full flex-col gap-0.5 px-1 text-[11px] leading-none">
+    <div className="flex w-full flex-col gap-1 px-2 text-[12px] leading-none">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1">
-          <svg className="size-[11px] shrink-0 text-gray-500" viewBox="0 0 16 16" fill="currentColor">
+          <svg className="size-[13px] shrink-0 text-gray-500" viewBox="0 0 16 16" fill="currentColor">
             <rect x="1" y="1" width="4" height="4" />
             <rect x="6" y="1" width="4" height="4" />
             <rect x="11" y="1" width="4" height="4" />
@@ -690,7 +697,7 @@ function SlotAttributeRow({
       </div>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1">
-          <svg className="size-[11px] shrink-0 text-yellow-500" viewBox="0 0 16 16" fill="currentColor">
+          <svg className="size-[13px] shrink-0 text-yellow-500" viewBox="0 0 16 16" fill="currentColor">
             <path d="M9 1L4 9h4l-1 6 5-8H8l1-6z" />
           </svg>
           <span className="text-gray-600">Agility</span>
@@ -699,7 +706,7 @@ function SlotAttributeRow({
       </div>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1">
-          <svg className="size-[11px] shrink-0 text-blue-400" viewBox="0 0 16 16" fill="currentColor">
+          <svg className="size-[13px] shrink-0 text-blue-400" viewBox="0 0 16 16" fill="currentColor">
             <path d="M1 15L1 1L15 15H1Z" opacity="0.6" />
             <path d="M1 1L15 15" stroke="currentColor" strokeWidth="1.5" fill="none" />
           </svg>
@@ -716,13 +723,13 @@ function SlotTraitBadge({ trait }: { trait: string }) {
   return (
     <Tooltip text={trait}>
       <span
-        className="inline-flex size-[28px] shrink-0 cursor-default items-center justify-center rounded-full"
+        className="inline-flex size-[32px] shrink-0 cursor-default items-center justify-center rounded-full text-[11px]"
         style={{
           backgroundColor: traitChipBg(trait),
           color: tc,
         }}
       >
-        {traitIcon(trait, "h-3.5 w-3.5")}
+        {traitIcon(trait, "h-[11px] w-[11px]")}
       </span>
     </Tooltip>
   )
@@ -977,9 +984,9 @@ function SimulatorResult({ siteResults, scenariosFile, onPlayAgain }: SimulatorR
                 open={siteIdx === 0}
                 className="group rounded-xl border border-[#e2e8f0] bg-white p-4 shadow-sm open:pb-6 open:[&>summary>svg]:rotate-180"
               >
-                <summary className="flex cursor-pointer list-none items-center justify-between text-lg font-bold text-[#1a202c] [&::-webkit-details-marker]:hidden">
+                <summary className="flex cursor-pointer list-none select-none items-center justify-between text-xl font-bold text-[#1a202c] transition-colors hover:text-[#4ECDC4] [&::-webkit-details-marker]:hidden">
                   <span>Site {siteIdx + 1}</span>
-                  <ChevronDown className="h-5 w-5 shrink-0 text-gray-400 transition-transform duration-200 group-open:rotate-180" />
+                  <ChevronDown className="h-6 w-6 shrink-0 text-gray-600 transition-transform group-open:rotate-180" />
                 </summary>
 
                 <div className="mt-6 space-y-6">
@@ -1039,16 +1046,15 @@ function SimulatorResult({ siteResults, scenariosFile, onPlayAgain }: SimulatorR
                                     className="text-[13px]"
                                   />
                                 </div>
-                                <div className="mt-2 flex flex-wrap items-center gap-2">
+                                <div className="mt-2 flex w-full items-center justify-between">
                                   <TraitBadgeChip trait={m.trait} chipClassName="h-7 w-7" />
-                                  <div className="flex items-center gap-1">
+                                  <div className="flex items-center gap-1.5">
                                     {cat.inviableAttributes.length > 0 ? (
-                                      <span
-                                        className="cursor-default text-sm"
-                                        title="An inviable microbe cannot mathematically contribute to a valid average for one or more attributes, regardless of what other microbes are selected."
-                                      >
-                                        ⚠️
-                                      </span>
+                                      <Tooltip text="An inviable microbe cannot mathematically contribute to a valid average for one or more attributes, regardless of what other microbes are selected.">
+                                        <span className="inline-flex h-[22px] w-[22px] shrink-0 cursor-default items-center justify-center rounded-full bg-amber-100 text-[13px] text-amber-500">
+                                          ⚠
+                                        </span>
+                                      </Tooltip>
                                     ) : null}
                                     <span
                                       className={`inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${badgeTone}`}
@@ -1478,27 +1484,27 @@ export default function SimulatorPage() {
             <span className="h-2 w-2 rounded-full bg-gray-800" />
             <span className="text-sm font-bold text-gray-800">TRAIT</span>
           </div>
-          <div className="space-y-0.5 pl-3 text-sm">
-            <p>
-              <span className="text-gray-700">Desired:</span>{" "}
-              <span
-                className="inline-flex items-center gap-1 font-medium"
+          <div className="space-y-2 pl-3 text-sm">
+            <div>
+              <p className="text-xs font-medium text-gray-600">Desired</p>
+              <p
+                className="flex items-center gap-1 font-medium"
                 style={{ color: traitColor(scenarioRequirements.desired_trait) }}
               >
                 {traitIcon(scenarioRequirements.desired_trait, "h-3 w-3 shrink-0")}
                 {scenarioRequirements.desired_trait}
-              </span>
-            </p>
-            <p>
-              <span className="text-gray-700">Undesired:</span>{" "}
-              <span
-                className="inline-flex items-center gap-1 font-medium"
+              </p>
+            </div>
+            <div>
+              <p className="text-xs font-medium text-gray-600">Undesired</p>
+              <p
+                className="flex items-center gap-1 font-medium"
                 style={{ color: traitColor(scenarioRequirements.undesired_trait) }}
               >
                 {traitIcon(scenarioRequirements.undesired_trait, "h-3 w-3 shrink-0")}
                 {scenarioRequirements.undesired_trait}
-              </span>
-            </p>
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -1528,11 +1534,11 @@ export default function SimulatorPage() {
                 onClick={() => removeMicrobe(sel.id)}
                 className="relative flex h-[220px] w-[160px] shrink-0 cursor-pointer flex-col items-center text-center rounded-xl border-2 border-solid border-blue-400 bg-white shadow-lg"
               >
-                <div className="flex min-h-0 w-full flex-1 flex-col items-center justify-between gap-1 px-2 py-2 text-center [&_svg]:block [&_svg]:h-10 [&_svg]:w-10">
-                  <div className="flex shrink-0 items-center justify-center">
+                <div className="flex min-h-0 w-full flex-1 flex-col items-center justify-between gap-1 px-2 py-2 text-center">
+                  <div className="flex h-16 w-16 shrink-0 items-center justify-center [&>svg]:block [&>svg]:h-full [&>svg]:w-full [&>svg]:max-h-full [&>svg]:max-w-full">
                     <Svg color={col} />
                   </div>
-                  <p className="line-clamp-2 w-full text-center text-[13px] font-bold leading-tight text-gray-800">
+                  <p className="line-clamp-2 w-full text-center text-[14px] font-bold leading-tight text-gray-800">
                     {sel.name}
                   </p>
                   <div className="flex w-full flex-col items-center text-center">
