@@ -1,0 +1,126 @@
+{
+  "traits": ["Biofilm-forming", "Thermophilic", "Metal-tolerant", "Halophobic"],
+  "attributes": ["Mobility", "Agility", "Size"],
+  "scenarios": [
+    {
+      "id": 1,
+      "name": "Coral Reef Delta",
+      "difficulty": "easy",
+      "attributes": {
+        "Mobility": { "min": 2, "max": 6 },
+        "Agility": { "min": 4, "max": 8 },
+        "Size": { "min": 2, "max": 6 }
+      },
+      "desired_trait": "Biofilm-forming",
+      "undesired_trait": "Thermophilic"
+    },
+    {
+      "id": 2,
+      "name": "Arctic Shelf",
+      "difficulty": "easy",
+      "attributes": {
+        "Mobility": { "min": 3, "max": 7 },
+        "Agility": { "min": 3, "max": 7 },
+        "Size": { "min": 5, "max": 9 }
+      },
+      "desired_trait": "Metal-tolerant",
+      "undesired_trait": "Biofilm-forming"
+    },
+    {
+      "id": 3,
+      "name": "Mangrove Estuary",
+      "difficulty": "easy",
+      "attributes": {
+        "Mobility": { "min": 1, "max": 3 },
+        "Agility": { "min": 3, "max": 5 },
+        "Size": { "min": 5, "max": 7 }
+      },
+      "desired_trait": "Halophobic",
+      "undesired_trait": "Thermophilic"
+    },
+    {
+      "id": 4,
+      "name": "Coastal Estuary",
+      "difficulty": "medium",
+      "attributes": {
+        "Mobility": { "min": 2, "max": 4 },
+        "Agility": { "min": 6, "max": 8 },
+        "Size": { "min": 6, "max": 8 }
+      },
+      "desired_trait": "Halophobic",
+      "undesired_trait": "Metal-tolerant"
+    },
+    {
+      "id": 5,
+      "name": "Polar Ice Cap",
+      "difficulty": "medium",
+      "attributes": {
+        "Mobility": { "min": 5, "max": 7 },
+        "Agility": { "min": 2, "max": 4 },
+        "Size": { "min": 7, "max": 9 }
+      },
+      "desired_trait": "Metal-tolerant",
+      "undesired_trait": "Biofilm-forming"
+    },
+    {
+      "id": 6,
+      "name": "Hydrothermal Basin",
+      "difficulty": "medium",
+      "attributes": {
+        "Mobility": { "min": 6, "max": 8 },
+        "Agility": { "min": 5, "max": 7 },
+        "Size": { "min": 2, "max": 4 }
+      },
+      "desired_trait": "Thermophilic",
+      "undesired_trait": "Metal-tolerant"
+    },
+    {
+      "id": 7,
+      "name": "Volcanic Vent",
+      "difficulty": "hard",
+      "attributes": {
+        "Mobility": { "min": 6, "max": 8 },
+        "Agility": { "min": 4, "max": 6 },
+        "Size": { "min": 1, "max": 3 }
+      },
+      "desired_trait": "Thermophilic",
+      "undesired_trait": "Halophobic"
+    },
+    {
+      "id": 8,
+      "name": "Deep Abyssal Plain",
+      "difficulty": "hard",
+      "attributes": {
+        "Mobility": { "min": 4, "max": 6 },
+        "Agility": { "min": 1, "max": 3 },
+        "Size": { "min": 8, "max": 10 }
+      },
+      "desired_trait": "Metal-tolerant",
+      "undesired_trait": "Thermophilic"
+    },
+    {
+      "id": 9,
+      "name": "Tropical Lagoon",
+      "difficulty": "hard",
+      "attributes": {
+        "Mobility": { "min": 7, "max": 9 },
+        "Agility": { "min": 7, "max": 9 },
+        "Size": { "min": 3, "max": 5 }
+      },
+      "desired_trait": "Biofilm-forming",
+      "undesired_trait": "Halophobic"
+    },
+    {
+      "id": 10,
+      "name": "Abyssal Trench",
+      "difficulty": "hard",
+      "attributes": {
+        "Mobility": { "min": 3, "max": 5 },
+        "Agility": { "min": 8, "max": 10 },
+        "Size": { "min": 7, "max": 9 }
+      },
+      "desired_trait": "Biofilm-forming",
+      "undesired_trait": "Halophobic"
+    }
+  ]
+}
