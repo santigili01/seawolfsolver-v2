@@ -637,27 +637,29 @@ export default function ProfilingSimulatorPage() {
             return (
               <div
                 key={name}
-                className={`flex w-full items-center gap-3 rounded-xl border px-3 py-3 transition-colors ${
+                className={`flex w-full items-center justify-between gap-3 rounded-xl border px-3 py-3 transition-colors ${
                   on ? "border-[#4ECDC4] bg-[#4ECDC4]/10" : "border-gray-200 bg-white"
                 }`}
               >
-                <span className={`inline-flex shrink-0 ${on ? "" : "opacity-40"}`}>{attributeRowIcon(name)}</span>
-                <span className={`w-[72px] shrink-0 font-medium ${on ? "text-gray-800" : "text-gray-400"}`}>{name}</span>
-                <RangeTrack
-                  attrName={name}
-                  min={r.min}
-                  max={r.max}
-                  highlight={on}
-                  sliderStart={start}
-                  onSliderChange={handleSliderChange}
-                />
-                <span
-                  className={`w-14 shrink-0 text-center text-[14px] font-semibold tabular-nums ${
-                    on ? "text-gray-700" : "text-gray-400"
-                  }`}
-                >
-                  {start}-{start + 2}
-                </span>
+                <div className="flex min-w-0 flex-1 items-center gap-3">
+                  <span className={`inline-flex shrink-0 ${on ? "" : "opacity-40"}`}>{attributeRowIcon(name)}</span>
+                  <span className={`w-[72px] shrink-0 font-medium ${on ? "text-gray-800" : "text-gray-400"}`}>{name}</span>
+                  <RangeTrack
+                    attrName={name}
+                    min={r.min}
+                    max={r.max}
+                    highlight={on}
+                    sliderStart={start}
+                    onSliderChange={handleSliderChange}
+                  />
+                  <span
+                    className={`w-14 shrink-0 text-center text-sm font-semibold tabular-nums ${
+                      on ? "text-gray-700" : "text-gray-400"
+                    }`}
+                  >
+                    {start}-{start + 2}
+                  </span>
+                </div>
                 <button
                   type="button"
                   onClick={() => toggleItem({ type: "attribute", name })}
