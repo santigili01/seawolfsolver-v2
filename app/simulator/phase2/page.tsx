@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react"
 import Link from "next/link"
 import {
   Settings,
@@ -130,51 +130,91 @@ function traitIcon(trait: string, className = "h-4 w-4") {
 const MicrobeBlob1 = ({ color = "#FF6B6B" }: { color?: string }) => (
   <svg viewBox="0 0 80 80" className="h-16 w-16">
     <ellipse cx="40" cy="40" rx="30" ry="25" fill={color} />
+    <circle cx="30" cy="35" r="4" fill="white" opacity="0.6" />
+    <path d="M15 40 Q5 35 8 25" stroke={color} strokeWidth="3" fill="none" />
+    <path d="M65 40 Q75 35 72 25" stroke={color} strokeWidth="3" fill="none" />
   </svg>
 )
 const MicrobeBlob2 = ({ color = "#4ECDC4" }: { color?: string }) => (
   <svg viewBox="0 0 80 80" className="h-16 w-16">
     <path d="M40 10 Q70 20 65 50 Q60 75 40 70 Q20 75 15 50 Q10 20 40 10" fill={color} />
+    <circle cx="35" cy="30" r="3" fill="white" opacity="0.5" />
+    <path d="M40 70 L40 78" stroke={color} strokeWidth="2" />
+    <path d="M35 68 L32 76" stroke={color} strokeWidth="2" />
+    <path d="M45 68 L48 76" stroke={color} strokeWidth="2" />
   </svg>
 )
 const MicrobeBlob3 = ({ color = "#FFE66D" }: { color?: string }) => (
   <svg viewBox="0 0 80 80" className="h-16 w-16">
     <circle cx="40" cy="40" r="20" fill={color} />
+    <circle cx="25" cy="25" r="8" fill={color} />
+    <circle cx="55" cy="25" r="6" fill={color} />
+    <circle cx="55" cy="55" r="7" fill={color} />
+    <circle cx="25" cy="55" r="5" fill={color} />
   </svg>
 )
 const MicrobeBlob4 = ({ color = "#95E1D3" }: { color?: string }) => (
   <svg viewBox="0 0 80 80" className="h-16 w-16">
     <ellipse cx="40" cy="45" rx="25" ry="20" fill={color} />
+    <path d="M20 30 Q15 15 25 10" stroke={color} strokeWidth="3" fill="none" />
+    <path d="M60 30 Q65 15 55 10" stroke={color} strokeWidth="3" fill="none" />
+    <circle cx="35" cy="40" r="3" fill="white" opacity="0.6" />
   </svg>
 )
 const MicrobeBlob5 = ({ color = "#F38181" }: { color?: string }) => (
   <svg viewBox="0 0 80 80" className="h-16 w-16">
     <path d="M40 15 L55 30 L55 50 L40 65 L25 50 L25 30 Z" fill={color} />
+    <circle cx="40" cy="40" r="8" fill="white" opacity="0.3" />
+    <path d="M40 15 L40 5" stroke={color} strokeWidth="2" />
+    <path d="M55 30 L65 25" stroke={color} strokeWidth="2" />
+    <path d="M25 30 L15 25" stroke={color} strokeWidth="2" />
   </svg>
 )
 const MicrobeBlob6 = ({ color = "#AA96DA" }: { color?: string }) => (
   <svg viewBox="0 0 80 80" className="h-16 w-16">
     <ellipse cx="40" cy="40" rx="28" ry="18" fill={color} />
+    <path d="M12 40 Q5 40 8 50" stroke={color} strokeWidth="3" fill="none" />
+    <path d="M68 40 Q75 40 72 50" stroke={color} strokeWidth="3" fill="none" />
+    <circle cx="30" cy="38" r="4" fill="white" opacity="0.5" />
+    <circle cx="50" cy="38" r="4" fill="white" opacity="0.5" />
   </svg>
 )
 const MicrobeBlob7 = ({ color = "#FCBAD3" }: { color?: string }) => (
   <svg viewBox="0 0 80 80" className="h-16 w-16">
     <circle cx="40" cy="40" r="22" fill={color} />
+    <circle cx="40" cy="40" r="12" fill="white" opacity="0.2" />
+    <path
+      d="M40 18 L40 8 M45 10 L40 8 L35 10"
+      stroke={color}
+      strokeWidth="2"
+      fill="none"
+    />
   </svg>
 )
 const MicrobeBlob8 = ({ color = "#A8D8EA" }: { color?: string }) => (
   <svg viewBox="0 0 80 80" className="h-16 w-16">
     <path d="M25 40 Q25 20 40 20 Q55 20 55 40 Q55 60 40 60 Q25 60 25 40" fill={color} />
+    <ellipse cx="40" cy="40" rx="8" ry="12" fill="white" opacity="0.3" />
+    <circle cx="18" cy="35" r="5" fill={color} />
+    <circle cx="62" cy="35" r="5" fill={color} />
   </svg>
 )
 const MicrobeBlob9 = ({ color = "#C3EDC0" }: { color?: string }) => (
   <svg viewBox="0 0 80 80" className="h-16 w-16">
     <ellipse cx="40" cy="42" rx="22" ry="18" fill={color} />
+    <path d="M30 24 Q28 12 35 8" stroke={color} strokeWidth="3" fill="none" />
+    <path d="M50 24 Q52 12 45 8" stroke={color} strokeWidth="3" fill="none" />
+    <path d="M40 60 L40 72" stroke={color} strokeWidth="3" fill="none" />
   </svg>
 )
 const MicrobeBlob10 = ({ color = "#FFD93D" }: { color?: string }) => (
   <svg viewBox="0 0 80 80" className="h-16 w-16">
     <circle cx="40" cy="40" r="18" fill={color} />
+    <circle cx="22" cy="30" r="6" fill={color} />
+    <circle cx="58" cy="30" r="6" fill={color} />
+    <circle cx="22" cy="50" r="6" fill={color} />
+    <circle cx="58" cy="50" r="6" fill={color} />
+    <circle cx="40" cy="40" r="6" fill="white" opacity="0.4" />
   </svg>
 )
 
@@ -191,26 +231,144 @@ const microbeComponents = [
   MicrobeBlob10,
 ]
 
-function MicrobeAttributeRow({ Mobility, Agility, Size }: { Mobility: number; Agility: number; Size: number }) {
+function Tooltip({ children, text }: { children: ReactNode; text: string }) {
+  const [visible, setVisible] = useState(false)
   return (
-    <div className="flex min-w-0 flex-wrap items-center gap-2 text-[12px] leading-none">
-      <span className="tabular-nums text-gray-700">M {Mobility}</span>
-      <span className="tabular-nums text-gray-700">A {Agility}</span>
-      <span className="tabular-nums text-gray-700">S {Size}</span>
+    <span
+      className="relative inline-flex"
+      onMouseEnter={() => setVisible(true)}
+      onMouseLeave={() => setVisible(false)}
+    >
+      {children}
+      {visible && (
+        <span className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-1 max-w-xs -translate-x-1/2 rounded bg-gray-900 px-2 py-1 text-left text-xs text-white whitespace-normal">
+          {text}
+        </span>
+      )}
+    </span>
+  )
+}
+
+function TraitBadgeChip({
+  trait,
+  chipClassName = "h-6 w-6",
+}: {
+  trait: string
+  chipClassName?: string
+}) {
+  const tc = traitColor(trait)
+  return (
+    <Tooltip text={trait}>
+      <span
+        className={`inline-flex shrink-0 cursor-default items-center justify-center rounded-full ${chipClassName}`}
+        style={{
+          backgroundColor: traitChipBg(trait),
+          color: tc,
+        }}
+      >
+        {traitIcon(trait, "h-3.5 w-3.5")}
+      </span>
+    </Tooltip>
+  )
+}
+
+/** Selection slot only — attribute row (grid cards keep MicrobeAttributeRow). */
+function SlotAttributeRow({
+  Mobility,
+  Agility,
+  Size,
+}: {
+  Mobility: number
+  Agility: number
+  Size: number
+}) {
+  return (
+    <div className="flex w-full flex-col gap-1 px-2 text-[12px] leading-none">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-1">
+          <svg className="size-[13px] shrink-0 text-gray-500" viewBox="0 0 16 16" fill="currentColor">
+            <rect x="1" y="1" width="4" height="4" />
+            <rect x="6" y="1" width="4" height="4" />
+            <rect x="11" y="1" width="4" height="4" />
+            <rect x="1" y="6" width="4" height="4" />
+            <rect x="6" y="6" width="4" height="4" />
+            <rect x="11" y="6" width="4" height="4" />
+            <rect x="1" y="11" width="4" height="4" />
+            <rect x="6" y="11" width="4" height="4" />
+            <rect x="11" y="11" width="4" height="4" />
+          </svg>
+          <span className="text-gray-600">Mobility</span>
+        </div>
+        <span className="font-bold tabular-nums text-gray-800">{Mobility}</span>
+      </div>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-1">
+          <svg className="size-[13px] shrink-0 text-yellow-500" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M9 1L4 9h4l-1 6 5-8H8l1-6z" />
+          </svg>
+          <span className="text-gray-600">Agility</span>
+        </div>
+        <span className="font-bold tabular-nums text-gray-800">{Agility}</span>
+      </div>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-1">
+          <svg className="size-[13px] shrink-0 text-blue-400" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M1 15L1 1L15 15H1Z" opacity="0.6" />
+            <path d="M1 1L15 15" stroke="currentColor" strokeWidth="1.5" fill="none" />
+          </svg>
+          <span className="text-gray-600">Size</span>
+        </div>
+        <span className="font-bold tabular-nums text-gray-800">{Size}</span>
+      </div>
     </div>
   )
 }
 
-function TraitBadgeChip({ trait }: { trait: string }) {
-  const tc = traitColor(trait)
+function MicrobeAttributeRow({
+  Mobility,
+  Agility,
+  Size,
+}: {
+  Mobility: number
+  Agility: number
+  Size: number
+}) {
   return (
-    <span
-      className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full"
-      style={{ backgroundColor: traitChipBg(trait), color: tc }}
-      title={trait}
-    >
-      {traitIcon(trait, "h-3.5 w-3.5")}
-    </span>
+    <div className="flex min-w-0 flex-wrap items-center gap-2 text-[12px] leading-none">
+      <Tooltip text="Mobility">
+        <span className="inline-flex items-center gap-0.5">
+          <svg className="h-3.5 w-3.5 shrink-0 text-gray-500" viewBox="0 0 16 16" fill="currentColor">
+            <rect x="1" y="1" width="4" height="4" />
+            <rect x="6" y="1" width="4" height="4" />
+            <rect x="11" y="1" width="4" height="4" />
+            <rect x="1" y="6" width="4" height="4" />
+            <rect x="6" y="6" width="4" height="4" />
+            <rect x="11" y="6" width="4" height="4" />
+            <rect x="1" y="11" width="4" height="4" />
+            <rect x="6" y="11" width="4" height="4" />
+            <rect x="11" y="11" width="4" height="4" />
+          </svg>
+          <span className="tabular-nums leading-none text-gray-700">{Mobility}</span>
+        </span>
+      </Tooltip>
+      <Tooltip text="Agility">
+        <span className="inline-flex items-center gap-0.5">
+          <svg className="h-3.5 w-3.5 shrink-0 text-yellow-500" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M9 1L4 9h4l-1 6 5-8H8l1-6z" />
+          </svg>
+          <span className="tabular-nums leading-none text-gray-700">{Agility}</span>
+        </span>
+      </Tooltip>
+      <Tooltip text="Size">
+        <span className="inline-flex items-center gap-0.5">
+          <svg className="h-3.5 w-3.5 shrink-0 text-blue-400" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M1 15L1 1L15 15H1Z" opacity="0.6" />
+            <path d="M1 1L15 15" stroke="currentColor" strokeWidth="1.5" fill="none" />
+          </svg>
+          <span className="tabular-nums leading-none text-gray-700">{Size}</span>
+        </span>
+      </Tooltip>
+    </div>
   )
 }
 
@@ -410,12 +568,52 @@ export default function Phase2Page() {
       </div>
 
       <div className="absolute top-20 right-6 z-10 w-56 rounded-lg bg-[#FFF9C4] p-4 shadow-lg">
-        <h3 className="mb-3 text-sm font-bold uppercase text-gray-800">Site Information</h3>
+        <h3 className="mb-3 text-sm font-bold text-gray-800 uppercase">Site 1 Information</h3>
         <p className="mb-3 text-xs font-medium text-gray-700">{scenarioRequirements.name}</p>
-        <div className="space-y-0.5 text-sm text-gray-700">
-          <p>Mobility: {scenarioRequirements.attributes.Mobility.min}-{scenarioRequirements.attributes.Mobility.max}</p>
-          <p>Agility: {scenarioRequirements.attributes.Agility.min}-{scenarioRequirements.attributes.Agility.max}</p>
-          <p>Size: {scenarioRequirements.attributes.Size.min}-{scenarioRequirements.attributes.Size.max}</p>
+        <div className="mb-3">
+          <div className="mb-1 flex items-center gap-1">
+            <span className="h-2 w-2 rounded-full bg-gray-800" />
+            <span className="text-sm font-bold text-gray-800">ATTRIBUTES</span>
+          </div>
+          <div className="space-y-0.5 pl-3 text-sm text-gray-700">
+            <p>
+              Mobility: {scenarioRequirements.attributes.Mobility.min}–{scenarioRequirements.attributes.Mobility.max}
+            </p>
+            <p>
+              Agility: {scenarioRequirements.attributes.Agility.min}–{scenarioRequirements.attributes.Agility.max}
+            </p>
+            <p>
+              Size: {scenarioRequirements.attributes.Size.min}–{scenarioRequirements.attributes.Size.max}
+            </p>
+          </div>
+        </div>
+        <div>
+          <div className="mb-1 flex items-center gap-1">
+            <span className="h-2 w-2 rounded-full bg-gray-800" />
+            <span className="text-sm font-bold text-gray-800">TRAIT</span>
+          </div>
+          <div className="space-y-2 pl-3 text-sm">
+            <div>
+              <p className="text-xs font-medium text-gray-600">Desired</p>
+              <p
+                className="flex items-center gap-1 font-medium"
+                style={{ color: traitColor(scenarioRequirements.desired_trait) }}
+              >
+                {traitIcon(scenarioRequirements.desired_trait, "h-3 w-3 shrink-0")}
+                {scenarioRequirements.desired_trait}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs font-medium text-gray-600">Undesired</p>
+              <p
+                className="flex items-center gap-1 font-medium"
+                style={{ color: traitColor(scenarioRequirements.undesired_trait) }}
+              >
+                {traitIcon(scenarioRequirements.undesired_trait, "h-3 w-3 shrink-0")}
+                {scenarioRequirements.undesired_trait}
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -438,13 +636,20 @@ export default function Phase2Page() {
                     : "border-[#d1d5db]"
                 } ${anotherSelected ? "opacity-60" : "opacity-100"}`}
               >
-                <div className="mb-1 w-full text-center text-sm font-bold text-gray-800 line-clamp-2">{m.name}</div>
+                <div className="mb-1 w-full text-center text-sm font-bold text-gray-800 line-clamp-1">{m.name}</div>
                 <div className="mb-1 flex shrink-0 justify-center">
                   <Svg color={blobColor} />
                 </div>
-                <div className="mt-auto flex w-full items-center justify-between gap-1 px-1">
-                  <MicrobeAttributeRow Mobility={m.Mobility} Agility={m.Agility} Size={m.Size} />
-                  <TraitBadgeChip trait={m.trait} />
+                <div className="mt-auto flex w-full flex-col items-center gap-2 px-1">
+                  <SlotAttributeRow
+                    Mobility={m.Mobility}
+                    Agility={m.Agility}
+                    Size={m.Size}
+                  />
+                  <TraitBadgeChip
+                    trait={m.trait}
+                    chipClassName="h-8 w-8"
+                  />
                 </div>
               </button>
             )
@@ -488,7 +693,11 @@ export default function Phase2Page() {
                   <Svg color={blobColor} />
                 </div>
                 <div className="mt-auto flex w-full items-center justify-between gap-1 px-1">
-                  <MicrobeAttributeRow Mobility={m.Mobility} Agility={m.Agility} Size={m.Size} />
+                  <MicrobeAttributeRow
+                    Mobility={m.Mobility}
+                    Agility={m.Agility}
+                    Size={m.Size}
+                  />
                   <TraitBadgeChip trait={m.trait} />
                 </div>
               </div>
