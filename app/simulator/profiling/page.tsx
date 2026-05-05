@@ -40,7 +40,12 @@ type ScenariosFile = {
   scenarios: ScenarioRequirements[]
 }
 
-type SelectionItem = { type: "attribute" | "trait"; name: string }
+type SelectionItem = {
+  type: "attribute" | "trait"
+  name: string
+  selectedMin?: number
+  selectedMax?: number
+}
 
 const ATTR_NAMES = ["Mobility", "Agility", "Size"] as const
 
@@ -241,31 +246,65 @@ function selectionKey(type: "attribute" | "trait", name: string) {
   return `${type}:${name}`
 }
 
-function RangeTrack({
-  min,
-  max,
-  highlight,
-}: {
+/** Start index of movable 3-value window on 1–10; valid stops 1–8 (covers 8–10 at max). */
+function clampSliderStart(value: number): number {
+  return Math.min(8, Math.max(1, Math.round(value)))
+}
+
+function RangeTrack(props: {
+  attrName: string
   min: number
   max: number
   highlight: boolean
+  sliderStart: number
+  onSliderChange: (name: string, val: number) => void
 }) {
-  const leftPct = (min - 1) * 10
-  const widthPct = (max - min + 1) * 10
+  const { attrName, highlight, sliderStart, onSliderChange } = props
+  const leftPct = ((sliderStart - 1) / 9) * 100
+  const widthPct = (2 / 9) * 100
+
   return (
     <div className="relative flex min-w-[120px] max-w-[220px] flex-1 items-center">
-      <div className="relative h-2.5 w-full rounded-full bg-gray-200">
-        <div
-          className={`absolute top-0 h-full rounded-full transition-colors ${
-            highlight ? "bg-[#4ECDC4]" : "bg-[#4ECDC4]/45"
-          }`}
-          style={{ left: `${leftPct}%`, width: `${widthPct}%` }}
-        />
-      </div>
       <div className="pointer-events-none absolute -top-5 left-0 right-0 flex justify-between text-[9px] font-medium text-gray-400">
         <span>1</span>
         <span>10</span>
       </div>
+      <div className="relative h-2.5 w-full rounded-full bg-gray-200">
+        <div
+          className={`absolute top-0 h-full rounded-full transition-colors ${
+            highlight ? "bg-[#4ECDC4]" : "bg-[#4ECDC4]/20"
+          }`}
+          style={{ left: `${leftPct}%`, width: `${widthPct}%` }}
+        />
+        {highlight ? (
+          <div
+            className="pointer-events-none absolute top-1/2 z-[5] flex -translate-y-1/2 items-center justify-center gap-0.5"
+            style={{
+              left: `${leftPct + widthPct / 2 - 2}%`,
+            }}
+          >
+            <div className="h-2 w-0.5 rounded-full bg-white/80" />
+            <div className="h-2 w-0.5 rounded-full bg-white/80" />
+          </div>
+        ) : null}
+      </div>
+      {highlight ? (
+        <input
+          type="range"
+          min={1}
+          max={8}
+          step={1}
+          value={sliderStart}
+          onChange={(e) => {
+            e.stopPropagation()
+            onSliderChange(attrName, Number(e.target.value))
+          }}
+          onClick={(e) => e.stopPropagation()}
+          onPointerDown={(e) => e.stopPropagation()}
+          aria-label={`${attrName} profile range (length 3)`}
+          className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
+        />
+      ) : null}
     </div>
   )
 }
@@ -302,6 +341,12 @@ export default function ProfilingSimulatorPage() {
   const [timeRemaining, setTimeRemaining] = useState(TIMER_START)
   const [keyExpanded, setKeyExpanded] = useState(false)
 
+  const [sliderPositions, setSliderPositions] = useState<Record<string, number>>({
+    Mobility: 1,
+    Agility: 1,
+    Size: 1,
+  })
+
   const loadData = useCallback(async () => {
     setBootState("loading")
     setFetchError(null)
@@ -335,7 +380,20 @@ export default function ProfilingSimulatorPage() {
     return () => clearInterval(t)
   }, [])
 
+  useEffect(() => {
+    if (!scenario) return
+    setSliderPositions({
+      Mobility: clampSliderStart(scenario.attributes.Mobility.min),
+      Agility: clampSliderStart(scenario.attributes.Agility.min),
+      Size: clampSliderStart(scenario.attributes.Size.min),
+    })
+  }, [scenario])
+
   const progressPercent = (timeRemaining / TIMER_START) * 100
+
+  const handleSliderChange = useCallback((name: string, val: number) => {
+    setSliderPositions((prev) => ({ ...prev, [name]: clampSliderStart(val) }))
+  }, [])
 
   const toggleItem = (item: SelectionItem) => {
     const k = selectionKey(item.type, item.name)
@@ -353,7 +411,7 @@ export default function ProfilingSimulatorPage() {
 
   const submit = () => {
     if (!scenario || selectedKeys.size !== 2) return
-    const items = selectionFromKeys(selectedKeys)
+    const items = selectionFromKeys(selectedKeys, sliderPositions)
     setPlayerSelection(items.slice(0, 2))
     setScenarioName(scenario.name)
     setOptimalSelection(computeOptimalSelection(scenario))
@@ -363,11 +421,19 @@ export default function ProfilingSimulatorPage() {
   const keyTraits = scenariosFile?.traits ?? []
   const traitList = scenariosFile?.traits ?? []
 
-  function selectionFromKeys(keys: Set<string>): SelectionItem[] {
+  function selectionFromKeys(keys: Set<string>, positions: Record<string, number>): SelectionItem[] {
     const out: SelectionItem[] = []
     for (const n of ATTR_NAMES) {
       const kk = selectionKey("attribute", n)
-      if (keys.has(kk)) out.push({ type: "attribute", name: n })
+      if (keys.has(kk)) {
+        const start = clampSliderStart(positions[n] ?? 1)
+        out.push({
+          type: "attribute",
+          name: n,
+          selectedMin: start,
+          selectedMax: start + 2,
+        })
+      }
     }
     for (const t of traitList) {
       const kk = selectionKey("trait", t)
@@ -567,31 +633,40 @@ export default function ProfilingSimulatorPage() {
             const r = req.attributes[name]
             const k = selectionKey("attribute", name)
             const on = selectedKeys.has(k)
+            const start = clampSliderStart(sliderPositions[name] ?? r.min)
             return (
-              <button
+              <div
                 key={name}
-                type="button"
-                onClick={() => toggleItem({ type: "attribute", name })}
-                className={`flex w-full cursor-pointer flex-wrap items-center gap-3 rounded-xl border px-3 py-3 text-left transition-colors sm:flex-nowrap ${
-                  on ? "border-[#4ECDC4] bg-[#4ECDC4]/10" : "border-gray-200 bg-white hover:bg-gray-50"
+                className={`flex w-full items-center gap-3 rounded-xl border px-3 py-3 transition-colors ${
+                  on ? "border-[#4ECDC4] bg-[#4ECDC4]/10" : "border-gray-200 bg-white"
                 }`}
               >
-                <input
-                  type="checkbox"
-                  readOnly
-                  checked={on}
-                  className="h-4 w-4 shrink-0 rounded border-gray-300 text-[#4ECDC4] focus:ring-[#4ECDC4]"
-                  tabIndex={-1}
-                  aria-hidden
+                <span className={`inline-flex shrink-0 ${on ? "" : "opacity-40"}`}>{attributeRowIcon(name)}</span>
+                <span className={`w-[72px] shrink-0 font-medium ${on ? "text-gray-800" : "text-gray-400"}`}>{name}</span>
+                <RangeTrack
+                  attrName={name}
+                  min={r.min}
+                  max={r.max}
+                  highlight={on}
+                  sliderStart={start}
+                  onSliderChange={handleSliderChange}
                 />
-                {attributeRowIcon(name)}
-                <span className="w-[72px] shrink-0 font-medium text-gray-800">{name}</span>
-                <RangeTrack min={r.min} max={r.max} highlight={on} />
-                <span className="w-14 shrink-0 text-right text-sm font-semibold tabular-nums text-gray-700">
-                  {r.min}-{r.max}
+                <span
+                  className={`w-14 shrink-0 text-center text-[14px] font-semibold tabular-nums ${
+                    on ? "text-gray-700" : "text-gray-400"
+                  }`}
+                >
+                  {start}-{start + 2}
                 </span>
-                <ToggleSwitch on={on} />
-              </button>
+                <button
+                  type="button"
+                  onClick={() => toggleItem({ type: "attribute", name })}
+                  className="shrink-0 cursor-pointer appearance-none border-none bg-transparent p-0"
+                  aria-label={`Toggle ${name}`}
+                >
+                  <ToggleSwitch on={on} />
+                </button>
+              </div>
             )
           })}
         </div>
@@ -603,28 +678,25 @@ export default function ProfilingSimulatorPage() {
             const on = selectedKeys.has(k)
             const tc = traitColor(trait)
             return (
-              <button
+              <div
                 key={trait}
-                type="button"
-                onClick={() => toggleItem({ type: "trait", name: trait })}
-                className={`flex w-full cursor-pointer items-center gap-3 rounded-xl border px-3 py-3 text-left transition-colors ${
-                  on ? "border-[#4ECDC4] bg-[#4ECDC4]/10" : "border-gray-200 bg-white hover:bg-gray-50"
+                className={`flex w-full items-center gap-3 rounded-xl border px-3 py-3 transition-colors ${
+                  on ? "border-[#4ECDC4] bg-[#4ECDC4]/10" : "border-gray-200 bg-white"
                 }`}
               >
-                <input
-                  type="checkbox"
-                  readOnly
-                  checked={on}
-                  className="h-4 w-4 shrink-0 rounded border-gray-300 text-[#4ECDC4] focus:ring-[#4ECDC4]"
-                  tabIndex={-1}
-                  aria-hidden
-                />
                 <TraitBadgeChip trait={trait} chipClassName="h-8 w-8" />
                 <span className="min-w-0 flex-1 font-medium break-words" style={{ color: tc }}>
                   {trait}
                 </span>
-                <ToggleSwitch on={on} />
-              </button>
+                <button
+                  type="button"
+                  onClick={() => toggleItem({ type: "trait", name: trait })}
+                  className="shrink-0 cursor-pointer appearance-none border-none bg-transparent p-0"
+                  aria-label={`Toggle ${trait}`}
+                >
+                  <ToggleSwitch on={on} />
+                </button>
+              </div>
             )
           })}
         </div>
