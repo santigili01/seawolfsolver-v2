@@ -56,10 +56,11 @@ type Pool = {
 
 type ScenarioData = {
   [scenarioName: string]: {
-    easy: Pool[]
-    medium: Pool[]
-    hard: Pool[]
-    very_hard: Pool[]
+    easy?: Pool[]
+    medium?: Pool[]
+    hard?: Pool[]
+    very_hard?: Pool[]
+    hadal?: Pool[]
   }
 }
 
@@ -84,7 +85,6 @@ type ScenarioAttributeRanges = {
 type ScenarioRequirements = {
   id: number
   name: string
-  difficulty: string
   attributes: ScenarioAttributeRanges
   desired_trait: string
   undesired_trait: string
@@ -312,7 +312,13 @@ function pickRandomScenarioPool(data: ScenarioData): { scenarioName: string; poo
   const scenarioName = scenarioNames[Math.floor(Math.random() * scenarioNames.length)]!
 
   const bucket = data[scenarioName]!
-  const pools = [...bucket.easy, ...bucket.medium, ...bucket.hard, ...bucket.very_hard]
+  const pools = [
+    ...(bucket.easy ?? []),
+    ...(bucket.medium ?? []),
+    ...(bucket.hard ?? []),
+    ...(bucket.very_hard ?? []),
+    ...(bucket.hadal ?? []),
+  ]
   if (!pools.length) {
     throw new Error(`No pools for scenario «${scenarioName}»`)
   }
