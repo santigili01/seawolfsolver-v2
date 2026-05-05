@@ -82,7 +82,7 @@ def validate_pool(pool_obj, scenario):
     failures = []
     microbes         = pool_obj.get("microbes", [])
     reported_max     = pool_obj.get("max_score")
-    reported_diff    = pool_obj.get("difficulty")
+    reported_diff    = pool_obj.get("difficulty_band", pool_obj.get("difficulty"))
     reported_combos  = pool_obj.get("best_combinations", [])
 
     # ── Check 1: exactly 10 microbes ──────────────────────────────────────────
@@ -194,9 +194,13 @@ def main():
     total_checked = 0
     total_passed  = 0
     all_failures  = []   # list of (pool_id, [failure strings])
+    band_order = ["beginner", "intermediate", "advanced", "expert", "hadal", "(no band)"]
+    global_band_counts = {b: 0 for b in band_order}
+    per_scenario_band_counts = {}
 
     for scenario_name, tiers in pools_data.items():
         print(f"\n=== {scenario_name} ===")
+        per_scenario_band_counts.setdefault(scenario_name, {b: 0 for b in band_order})
 
         if scenario_name not in scenario_by_name:
             print(f"  ERROR: scenario not found in scenarios.json — skipping")
@@ -204,11 +208,16 @@ def main():
 
         scenario = scenario_by_name[scenario_name]
 
-        for tier_name in ("easy", "medium", "hard"):
+        for tier_name in ("easy", "medium", "hard", "hadal"):
             pools = tiers.get(tier_name, [])
             for pool_obj in pools:
                 pool_id = pool_obj.get("pool_id", "<no pool_id>")
                 total_checked += 1
+                band = pool_obj.get("difficulty_band")
+                if band not in global_band_counts:
+                    band = "(no band)"
+                global_band_counts[band] += 1
+                per_scenario_band_counts[scenario_name][band] += 1
 
                 failures = validate_pool(pool_obj, scenario)
 
@@ -244,6 +253,31 @@ def main():
     else:
         print()
         print("  All pools passed validation.")
+
+    print()
+    print("DIFFICULTY DISTRIBUTION")
+    print("─" * width)
+    for band in band_order:
+        count = global_band_counts[band]
+        pct = (count / total_checked * 100) if total_checked else 0.0
+        print(f"  {band:<14} : {count:>3}  ({pct:>4.1f}%)")
+    print("─" * width)
+    print(f"  Total pools    : {total_checked}")
+
+    print()
+    print("PER-SCENARIO DIFFICULTY")
+    for scenario_name in pools_data.keys():
+        counts = per_scenario_band_counts.get(scenario_name, {b: 0 for b in band_order})
+        print(f"  {scenario_name}:")
+        print(
+            "    "
+            f"beginner: {counts['beginner']}  "
+            f"intermediate: {counts['intermediate']}  "
+            f"advanced: {counts['advanced']}  "
+            f"expert: {counts['expert']}  "
+            f"hadal: {counts['hadal']}  "
+            f"(no band): {counts['(no band)']}"
+        )
 
     print("=" * width)
 

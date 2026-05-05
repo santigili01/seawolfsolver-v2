@@ -210,6 +210,26 @@
       },
       "desired_trait": "Biofilm-forming",
       "undesired_trait": "Halophobic"
+    },
+    {
+      "id": 11,
+      "name": "Hadal Abyss",
+      "attributes": {
+        "Mobility": {
+          "min": 2,
+          "max": 4
+        },
+        "Agility": {
+          "min": 7,
+          "max": 9
+        },
+        "Size": {
+          "min": 2,
+          "max": 4
+        }
+      },
+      "desired_trait": "Thermophilic",
+      "undesired_trait": "Halophobic"
     }
   ]
 }
