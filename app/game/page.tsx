@@ -3104,14 +3104,70 @@ function phase2ChoiceLabel(choice: "site1" | "site2" | "return", siteNum: number
   return "Return"
 }
 
-function phase3RoundFallbackFeedback(rr: import("@/lib/game-scoring").RoundResult): string {
-  if (rr.playerPickClassification === "optimal") return "Optimal pick — this microbe gave your pool the best chance of a 100-point treatment."
-  if (rr.playerPickClassification === "negative") return "Negative pick — this microbe actively reduces your pool's maximum score. Look for inviable attributes or undesired traits to spot these."
-  if (rr.optimalId) return "You missed the optimal candidate. Check the green-highlighted card to see what you should have picked and why."
-  if (rr.bestNeutralScore !== null && rr.playerPickNeutralScore !== null && rr.playerPickNeutralScore < rr.bestNeutralScore) {
-    return "You picked a neutral candidate, but a stronger neutral was available. Compare conditions satisfied across all three options."
+function phase3RoundFeedback(
+  rr: import("@/lib/game-scoring").RoundResult,
+  chooseSet: ProspectRoundJson | null | undefined,
+  req: ScenarioRequirements,
+): string {
+  if (!chooseSet) {
+    if (rr.playerPickClassification === "optimal") return "Optimal pick — strongest candidate this round."
+    if (rr.playerPickClassification === "negative") return "Negative pick — this microbe reduces your pool's ceiling."
+    return "Neutral pick."
   }
-  return "Good pick — no optimal candidate was available, and you chose wisely among the neutrals."
+
+  const playerCand = chooseSet.candidates.find((c) => c.microbe.id === rr.playerPickId)
+  const optimalCand = chooseSet.candidates.find((c) => c.classification === "optimal")
+  const attrs = ["Mobility", "Agility", "Size"] as const
+
+  function whyNegative(m: Microbe): string {
+    if (m.trait === req.undesired_trait) return `has the undesired trait (${m.trait})`
+    const inviable = attrs.filter((a) => {
+      const val = m[a]
+      const minSum = val + 1 + 1
+      const maxSum = val + 10 + 10
+      return maxSum < req.attributes[a].min * 3 || minSum > req.attributes[a].max * 3
+    })
+    if (inviable.length > 0) return `is inviable on ${inviable.join(", ")}`
+    return "does not contribute to a valid combination"
+  }
+
+  function attrsInRange(m: Microbe): string[] {
+    return attrs.filter((a) => m[a] >= req.attributes[a].min && m[a] <= req.attributes[a].max)
+  }
+
+  if (rr.playerPickClassification === "optimal") {
+    return `Optimal pick — ${playerCand?.microbe.name ?? "your pick"} was the best candidate (${playerCand?.conditions_satisfied ?? "?"} conditions satisfied).`
+  }
+
+  if (rr.playerPickClassification === "negative" && optimalCand) {
+    const why = playerCand ? whyNegative(playerCand.microbe) : "it is a negative candidate"
+    return `Bad pick — ${playerCand?.microbe.name ?? "your pick"} ${why}. ${optimalCand.microbe.name} was optimal (${optimalCand.conditions_satisfied} conditions satisfied), and missing it hurts your pool's achievable max score.`
+  }
+
+  if (rr.playerPickClassification === "negative" && !optimalCand) {
+    const why = playerCand ? whyNegative(playerCand.microbe) : "it is a negative candidate"
+    return `Bad pick — ${playerCand?.microbe.name ?? "your pick"} ${why}. No optimal was available; any neutral would have been better.`
+  }
+
+  if (rr.optimalId && optimalCand && playerCand) {
+    const playerIn = attrsInRange(playerCand.microbe)
+    const optimalIn = attrsInRange(optimalCand.microbe)
+    const desiredNote = optimalCand.microbe.trait === req.desired_trait ? ` and has the desired trait (${req.desired_trait})` : ""
+    return `Missed optimal — ${optimalCand.microbe.name} covers ${optimalIn.length}/3 attribute ranges${desiredNote}. Your pick (${playerCand.microbe.name}) covers ${playerIn.length}/3, which hurts your pool's achievable max score.`
+  }
+
+  const bestNeutral = chooseSet.candidates
+    .filter((c) => c.classification === "neutral" && c.neutral_score !== null)
+    .sort((a, b) => (b.neutral_score ?? 0) - (a.neutral_score ?? 0))[0]
+
+  if (bestNeutral && playerCand && bestNeutral.microbe.id !== playerCand.microbe.id) {
+    const bestIn = attrsInRange(bestNeutral.microbe)
+    const playerIn = attrsInRange(playerCand.microbe)
+    const desiredNote = bestNeutral.microbe.trait === req.desired_trait ? ` with the desired trait (${req.desired_trait})` : ""
+    return `Weaker neutral — ${bestNeutral.microbe.name} covers ${bestIn.length}/3 attribute ranges${desiredNote}. You picked ${playerCand.microbe.name} (${playerIn.length}/3 in range).`
+  }
+
+  return "Good pick — best available option this round."
 }
 
 function GameResultsFull({
@@ -3241,6 +3297,8 @@ function GameResultsFull({
             const playerFoundOptimal =
               playerKeysSorted === optimalKeysSorted && playerKeysSorted.length > 0 && s.phase4.selectedMicrobes.length === 3
             const initialProspectPool = pool.slice(0, 6)
+            const phase1TraitPick = entry.phase1Picks?.find((p) => p.type === "trait") ?? null
+            const phase1AttributePick = entry.phase1Picks?.find((p) => p.type === "attribute") ?? null
             const badgeBase =
               "absolute top-[-12px] z-10 whitespace-nowrap rounded px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white shadow"
 
@@ -3388,6 +3446,43 @@ function GameResultsFull({
                             {traitIcon(req.undesired_trait, "h-3.5 w-3.5")}
                           </span>
                           <span>{req.undesired_trait}</span>
+                        </span>
+                      </div>
+                    </div>
+                    <div className="mb-4 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700">
+                      <div className="font-semibold text-gray-900">Your picks</div>
+                      <div className="mt-1 flex flex-wrap items-center gap-4">
+                        <span className="flex items-center gap-1.5">
+                          <span>Trait:</span>
+                          {phase1TraitPick ? (
+                            <>
+                              <span
+                                className="inline-flex h-5 w-5 items-center justify-center rounded-full"
+                                style={{ backgroundColor: traitChipBg(phase1TraitPick.name), color: traitColor(phase1TraitPick.name) }}
+                              >
+                                {traitIcon(phase1TraitPick.name, "h-3.5 w-3.5")}
+                              </span>
+                              <span className="font-medium">{phase1TraitPick.name}</span>
+                            </>
+                          ) : (
+                            <span className="text-gray-500">No trait selected</span>
+                          )}
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          <span>Attribute:</span>
+                          {phase1AttributePick ? (
+                            <>
+                              <span className="inline-flex">{attributeRowIcon(phase1AttributePick.name as (typeof ATTR_NAMES)[number])}</span>
+                              <span className="font-medium">
+                                {phase1AttributePick.name}
+                                {typeof phase1AttributePick.selectedMin === "number" && typeof phase1AttributePick.selectedMax === "number"
+                                  ? ` ${phase1AttributePick.selectedMin}–${phase1AttributePick.selectedMax}`
+                                  : ""}
+                              </span>
+                            </>
+                          ) : (
+                            <span className="text-gray-500">No attribute selected</span>
+                          )}
                         </span>
                       </div>
                     </div>
@@ -3618,7 +3713,7 @@ function GameResultsFull({
                               .filter((c) => c.classification === "neutral" && c.neutral_score !== null)
                               .sort((a, b) => (b.neutral_score ?? -Infinity) - (a.neutral_score ?? -Infinity))[0]
                           : null
-                        const aiLine = phase3RoundFallbackFeedback(rr)
+                        const aiLine = phase3RoundFeedback(rr, chooseSet, req)
                         return (
                           <div key={`r-${rr.round}`} className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
                             <div className="mb-2 font-bold text-gray-900">Round {rr.round}</div>
