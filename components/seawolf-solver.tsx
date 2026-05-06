@@ -240,6 +240,14 @@ function SiteConfigCard({
 }
 
 export function SeawolfSolver() {
+  const phaseCard = "rounded-xl border border-gray-200 bg-white/95 p-6 shadow-sm"
+  const sectionCard = "rounded-xl border border-[#e2e8f0] bg-white p-6 shadow-sm"
+  const phaseChip = "mb-4 inline-flex rounded-full bg-[#eefcfb] px-3 py-1 text-sm font-semibold text-[#0f766e] ring-1 ring-[#cceeea]"
+  const accentHeading = "border-l-4 border-[#4ECDC4] pl-3 text-lg font-bold text-[#1a202c]"
+  const neutralButton = "border border-[#cbd5e1] bg-white text-[#1a202c] hover:bg-[#f8fafc]"
+  const primaryButton = "bg-[#4ECDC4] text-[#1a202c] hover:bg-[#3fc0b8]"
+  const dangerButton = "border border-red-300 bg-white text-red-700 hover:bg-red-50"
+
   const [activePhase, setActivePhase] = useState<PhaseKey>("phase4")
   const [attrNames, setAttrNames] = useState<[string, string, string]>(["Attribute 1", "Attribute 2", "Attribute 3"])
   const [traitNames, setTraitNames] = useState<[string, string, string, string]>(["Trait 1", "Trait 2", "Trait 3", "Trait 4"])
@@ -254,22 +262,10 @@ export function SeawolfSolver() {
     undesiredTrait: traitNames[1] ?? traitNames[0] ?? "",
   })
 
-  const [p1Config, setP1Config] = useState<SiteConfig>(emptySiteConfig())
-  const [p2SiteConfig, setP2SiteConfig] = useState<SiteConfig>(emptySiteConfig())
-  const [p3Config, setP3Config] = useState<SiteConfig>(emptySiteConfig())
+  const [siteInfoConfig, setSiteInfoConfig] = useState<SiteConfig>(emptySiteConfig())
 
   useEffect(() => {
-    setP1Config((prev) => ({
-      ...prev,
-      desiredTrait: prev.desiredTrait || traitNames[0] || "",
-      undesiredTrait: prev.undesiredTrait || traitNames[1] || traitNames[0] || "",
-    }))
-    setP2SiteConfig((prev) => ({
-      ...prev,
-      desiredTrait: prev.desiredTrait || traitNames[0] || "",
-      undesiredTrait: prev.undesiredTrait || traitNames[1] || traitNames[0] || "",
-    }))
-    setP3Config((prev) => ({
+    setSiteInfoConfig((prev) => ({
       ...prev,
       desiredTrait: prev.desiredTrait || traitNames[0] || "",
       undesiredTrait: prev.undesiredTrait || traitNames[1] || traitNames[0] || "",
@@ -283,7 +279,7 @@ export function SeawolfSolver() {
   const phase1Extremes = useMemo(() => {
     const scored = [0, 1, 2]
       .map((idx) => {
-        const r = p1Config.attrRanges[idx]
+        const r = siteInfoConfig.attrRanges[idx]
         if (typeof r.min !== "number" || typeof r.max !== "number") return null
         return { idx, score: Math.abs((r.min + r.max) / 2 - 5.5) }
       })
@@ -291,7 +287,7 @@ export function SeawolfSolver() {
     if (!scored.length) return []
     const best = Math.max(...scored.map((x) => x.score))
     return scored.filter((x) => x.score === best).map((x) => x.idx)
-  }, [p1Config])
+  }, [siteInfoConfig])
 
   // Phase 2
   const [p2RevealType, setP2RevealType] = useState<"trait" | "attribute">("trait")
@@ -318,8 +314,8 @@ export function SeawolfSolver() {
   }, [traitNames, p2Current.trait, p2RevealTrait])
 
   const p2SetupComplete =
-    !!p2SiteConfig.desiredTrait &&
-    !!p2SiteConfig.undesiredTrait &&
+    !!siteInfoConfig.desiredTrait &&
+    !!siteInfoConfig.undesiredTrait &&
     (p2RevealType === "trait" || (typeof p2RevealMin === "number" && typeof p2RevealMax === "number"))
 
   const evaluateP2 = (m: SolverMicrobe): { result: Phase2Result["result"]; reason: string } => {
@@ -328,7 +324,7 @@ export function SeawolfSolver() {
         ? m.trait === p2RevealTrait
         : isInRange(getMicrobeAttr(m, p2RevealAttrIdx), Number(p2RevealMin), Number(p2RevealMax))
 
-    if (satisfiesSite2 && m.trait !== p2SiteConfig.undesiredTrait) {
+    if (satisfiesSite2 && m.trait !== siteInfoConfig.undesiredTrait) {
       return {
         result: "NEXT SITE",
         reason:
@@ -339,22 +335,22 @@ export function SeawolfSolver() {
     }
 
     const completeRangeIdx = [0, 1, 2].filter((idx) => {
-      const r = p2SiteConfig.attrRanges[idx]
+      const r = siteInfoConfig.attrRanges[idx]
       return typeof r.min === "number" && typeof r.max === "number"
     })
     const inRangeCount = completeRangeIdx.filter((idx) => {
-      const r = p2SiteConfig.attrRanges[idx]
+      const r = siteInfoConfig.attrRanges[idx]
       return isInRange(getMicrobeAttr(m, idx), Number(r.min), Number(r.max))
     }).length
     const inviable = completeRangeIdx.some((idx) => {
-      const r = p2SiteConfig.attrRanges[idx]
+      const r = siteInfoConfig.attrRanges[idx]
       return isInviableOnAttribute(getMicrobeAttr(m, idx), Number(r.min), Number(r.max))
     })
     const skipRangeChecks = completeRangeIdx.length === 0
 
     if (
       !satisfiesSite2 &&
-      m.trait !== p2SiteConfig.undesiredTrait &&
+      m.trait !== siteInfoConfig.undesiredTrait &&
       (skipRangeChecks || inRangeCount > 0) &&
       (skipRangeChecks || !inviable)
     ) {
@@ -408,7 +404,7 @@ export function SeawolfSolver() {
     if (roundIdx !== p3UnlockedRound) return
 
     const completeRangeIdx = [0, 1, 2].filter((idx) => {
-      const r = p3Config.attrRanges[idx]
+      const r = siteInfoConfig.attrRanges[idx]
       return typeof r.min === "number" && typeof r.max === "number"
     })
 
@@ -419,11 +415,11 @@ export function SeawolfSolver() {
       const values = [mobility, agility, size]
 
       const inviable = completeRangeIdx.some((idx) =>
-        isInviableOnAttribute(values[idx], Number(p3Config.attrRanges[idx].min), Number(p3Config.attrRanges[idx].max))
+        isInviableOnAttribute(values[idx], Number(siteInfoConfig.attrRanges[idx].min), Number(siteInfoConfig.attrRanges[idx].max))
       )
 
       const attrsInRange = completeRangeIdx.filter((idx) =>
-        isInRange(values[idx], Number(p3Config.attrRanges[idx].min), Number(p3Config.attrRanges[idx].max))
+        isInRange(values[idx], Number(siteInfoConfig.attrRanges[idx].min), Number(siteInfoConfig.attrRanges[idx].max))
       ).length
 
       const desiredPresent = cand.desired
@@ -478,6 +474,17 @@ export function SeawolfSolver() {
     undesirable: Array(PHASE4_MICROBE_COUNT).fill(false),
   })
 
+  useEffect(() => {
+    const [r1, r2, r3] = siteInfoConfig.attrRanges
+    setTargetRanges({
+      mobility: { min: r1.min, max: r1.max },
+      agility: { min: r2.min, max: r2.max },
+      size: { min: r3.min, max: r3.max },
+    })
+    setP4DesiredTrait(siteInfoConfig.desiredTrait)
+    setP4UndesiredTrait(siteInfoConfig.undesiredTrait)
+  }, [siteInfoConfig])
+
   const handleRangeChange = (attribute: keyof TargetRanges, field: "min" | "max", value: string) => {
     const numValue = parseNumericInput(value)
     setTargetRanges((prev) => ({
@@ -486,6 +493,11 @@ export function SeawolfSolver() {
         ...prev[attribute],
         [field]: numValue,
       },
+    }))
+    const idx = attribute === "mobility" ? 0 : attribute === "agility" ? 1 : 2
+    setSiteInfoConfig((prev) => ({
+      ...prev,
+      attrRanges: prev.attrRanges.map((r, i) => (i === idx ? { ...r, [field]: numValue } : r)) as SiteConfig["attrRanges"],
     }))
   }
 
@@ -543,6 +555,16 @@ export function SeawolfSolver() {
     })
     setP4DesiredTrait("")
     setP4UndesiredTrait("")
+    setSiteInfoConfig((prev) => ({
+      ...prev,
+      attrRanges: [
+        { min: "", max: "" },
+        { min: "", max: "" },
+        { min: "", max: "" },
+      ],
+      desiredTrait: "",
+      undesiredTrait: "",
+    }))
     setMicrobeData({
       mobility: Array(PHASE4_MICROBE_COUNT).fill(""),
       agility: Array(PHASE4_MICROBE_COUNT).fill(""),
@@ -588,13 +610,23 @@ export function SeawolfSolver() {
     const desiredIdx = randomInt(0, Math.max(0, traitNames.length - 1))
     let undesiredIdx = randomInt(0, Math.max(0, traitNames.length - 1))
     if (traitNames.length > 1 && undesiredIdx === desiredIdx) undesiredIdx = (desiredIdx + 1) % traitNames.length
-    setTargetRanges({
+    const nextRanges = {
       mobility: randomRange(),
       agility: randomRange(),
       size: randomRange(),
-    })
+    }
+    setTargetRanges(nextRanges)
     setP4DesiredTrait(traitNames[desiredIdx] ?? "")
     setP4UndesiredTrait(traitNames[undesiredIdx] ?? "")
+    setSiteInfoConfig({
+      attrRanges: [
+        { min: nextRanges.mobility.min, max: nextRanges.mobility.max },
+        { min: nextRanges.agility.min, max: nextRanges.agility.max },
+        { min: nextRanges.size.min, max: nextRanges.size.max },
+      ],
+      desiredTrait: traitNames[desiredIdx] ?? "",
+      undesiredTrait: traitNames[undesiredIdx] ?? "",
+    })
   }
 
   useEffect(() => {
@@ -714,7 +746,7 @@ export function SeawolfSolver() {
   )
 
   const phaseItems: { key: PhaseKey; label: string; subtitle?: string }[] = [
-    { key: "config", label: "Config" },
+    { key: "config", label: "Site Information" },
     { key: "phase1", label: "Phase 1 - Profiling" },
     { key: "phase2", label: "Phase 2 - Categorization" },
     { key: "phase3", label: "Phase 3 - Prospect Pool" },
@@ -723,7 +755,7 @@ export function SeawolfSolver() {
 
   return (
     <div className="flex flex-row gap-4">
-      <aside className="w-[180px] shrink-0 rounded-xl border border-gray-200 bg-white p-3 shadow-sm">
+      <aside className="w-[190px] shrink-0 rounded-xl border border-[#e2e8f0] bg-white p-3 shadow-sm">
         <div className="space-y-1.5">
           {phaseItems.map((item) => {
             const active = activePhase === item.key
@@ -733,8 +765,10 @@ export function SeawolfSolver() {
                 type="button"
                 onClick={() => setActivePhase(item.key)}
                 className={cn(
-                  "w-full rounded-lg px-3 py-2 text-left transition-colors",
-                  active ? "bg-[#4ECDC4] text-white" : "bg-transparent text-gray-600 hover:text-[#0f766e]"
+                  "w-full rounded-lg border px-3 py-2 text-left transition-colors",
+                  active
+                    ? "border-[#4ECDC4] bg-[#4ECDC4] text-white shadow-sm"
+                    : "border-transparent bg-transparent text-gray-600 hover:border-[#cceeea] hover:bg-[#eefcfb] hover:text-[#0f766e]"
                 )}
               >
                 <div className={cn("font-semibold", item.key === "phase4" ? "text-[15px]" : "text-sm")}>{item.label}</div>
@@ -749,8 +783,9 @@ export function SeawolfSolver() {
 
       <div className="flex-1">
         {activePhase === "config" ? (
-          <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-bold text-[#1a202c]">Config</h2>
+          <section className={phaseCard}>
+            <div className={phaseChip}>Site Information</div>
+            <h2 className={accentHeading}>Global Naming</h2>
             <div className="mt-4">
               <div className="text-sm font-semibold text-gray-700">Attribute Names</div>
               <div className="mt-2 grid gap-2 md:grid-cols-3">
@@ -790,41 +825,51 @@ export function SeawolfSolver() {
             <p className="mt-4 text-xs text-gray-500">
               These names are used across all phases. Leave blank to use defaults.
             </p>
+            <div className="mt-5">
+              <SiteConfigCard
+                config={siteInfoConfig}
+                onChange={setSiteInfoConfig}
+                attrNames={attrNames}
+                traitNames={traitNames}
+                title="Site Characteristics"
+              />
+            </div>
           </section>
         ) : null}
 
         {activePhase === "phase1" ? (
           <section className="space-y-4">
             <SiteConfigCard
-              config={p1Config}
-              onChange={setP1Config}
+              config={siteInfoConfig}
+              onChange={setSiteInfoConfig}
               attrNames={attrNames}
               traitNames={traitNames}
               title="Site Characteristics"
             />
-            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-              <h2 className="text-lg font-bold text-[#1a202c]">Phase 1 Solver</h2>
-              {p1Config.desiredTrait || phase1Extremes.length ? (
+            <div className={phaseCard}>
+              <div className={phaseChip}>Phase 1 · Profiling</div>
+              <h2 className={accentHeading}>Phase 1 Solver</h2>
+              {siteInfoConfig.desiredTrait || phase1Extremes.length ? (
                 <div className="mt-5 space-y-3 text-sm">
-                  <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                  <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 shadow-sm">
                     <div className="font-semibold">Pick this trait:</div>
                     <div
                       className="mt-1 inline-flex items-center gap-2 font-semibold"
                       style={{
                         color: traitColor(
-                          p1Config.desiredTrait,
-                          Math.max(0, traitNames.indexOf(p1Config.desiredTrait as (typeof traitNames)[number]))
+                          siteInfoConfig.desiredTrait,
+                          Math.max(0, traitNames.indexOf(siteInfoConfig.desiredTrait as (typeof traitNames)[number]))
                         ),
                       }}
                     >
                       {traitIcon(
-                        p1Config.desiredTrait,
-                        Math.max(0, traitNames.indexOf(p1Config.desiredTrait as (typeof traitNames)[number]))
+                        siteInfoConfig.desiredTrait,
+                        Math.max(0, traitNames.indexOf(siteInfoConfig.desiredTrait as (typeof traitNames)[number]))
                       )}
-                      <span>{p1Config.desiredTrait || "-"}</span>
+                      <span>{siteInfoConfig.desiredTrait || "-"}</span>
                     </div>
                   </div>
-                  <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                  <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 shadow-sm">
                     <div className="font-semibold">Pick this attribute:</div>
                     <div className="mt-1 flex flex-wrap gap-2">
                       {phase1Extremes.length ? (
@@ -841,19 +886,16 @@ export function SeawolfSolver() {
                       )}
                     </div>
                   </div>
-                  <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                  <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 shadow-sm">
                     <div className="font-semibold">Set the slider to:</div>
                     {phase1Extremes.map((idx) => {
-                      const r = p1Config.attrRanges[idx]
+                      const r = siteInfoConfig.attrRanges[idx]
                       return (
                         <div key={`p1-range-${idx}`} className="mt-1 text-gray-700">
                           {attrNames[idx] || `Attribute ${idx + 1}`}: {r.min} - {r.max}
                         </div>
                       )
                     })}
-                    <div className="mt-2 text-xs text-gray-500">
-                      The slider default is 4. Only move it if your chosen attribute requires it.
-                    </div>
                   </div>
                 </div>
               ) : (
@@ -866,14 +908,15 @@ export function SeawolfSolver() {
         {activePhase === "phase2" ? (
           <section className="space-y-4">
             <SiteConfigCard
-              config={p2SiteConfig}
-              onChange={setP2SiteConfig}
+              config={siteInfoConfig}
+              onChange={setSiteInfoConfig}
               attrNames={attrNames}
               traitNames={traitNames}
               title="Site 1 Characteristics"
             />
-            <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-              <h2 className="text-lg font-bold text-[#1a202c]">Revealed characteristic about Site 2</h2>
+            <div className={phaseCard}>
+              <div className={phaseChip}>Phase 2 · Categorization</div>
+              <h2 className={accentHeading}>Revealed Characteristic About Site 2</h2>
               <div className="mt-2 flex items-center gap-4 text-sm">
                 <label>
                   <input
@@ -940,7 +983,7 @@ export function SeawolfSolver() {
                 </div>
               )}
             </div>
-            <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+            <div className={phaseCard}>
               <h3 className="text-lg font-bold text-[#1a202c]">
                 Microbe {Math.min(p2Index + 1, 10)} of 10
               </h3>
@@ -1003,12 +1046,12 @@ export function SeawolfSolver() {
                     <div className="mt-3">
                       <span
                         className={cn(
-                          "inline-flex rounded-full px-3 py-1 text-xs font-bold",
+                          "inline-flex rounded-full border px-3 py-1 text-xs font-bold uppercase tracking-wide",
                           p2Preview.result === "CURRENT SITE"
-                            ? "bg-emerald-100 text-emerald-800"
+                            ? "border-emerald-300 bg-emerald-50 text-emerald-800"
                             : p2Preview.result === "NEXT SITE"
-                              ? "bg-blue-100 text-blue-800"
-                              : "bg-red-100 text-red-700"
+                              ? "border-blue-300 bg-blue-50 text-blue-800"
+                              : "border-red-300 bg-red-50 text-red-700"
                         )}
                       >
                         {p2Preview.result}
@@ -1016,7 +1059,7 @@ export function SeawolfSolver() {
                       <p className="mt-1 text-sm text-gray-700">{p2Preview.reason}</p>
                     </div>
                   ) : null}
-                  <Button className="mt-3" onClick={pushP2Microbe}>
+                  <Button className={cn("mt-3", primaryButton)} onClick={pushP2Microbe}>
                     Next microbe
                   </Button>
                 </>
@@ -1026,7 +1069,7 @@ export function SeawolfSolver() {
                   <div className="mb-2 text-sm font-semibold text-gray-800">Summary</div>
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs">
-                      <thead className="text-gray-600">
+                      <thead className="bg-[#f8fffe] text-gray-600">
                         <tr>
                           <th>#</th>
                           <th>{attrNames[0] || "A1"}</th>
@@ -1039,7 +1082,7 @@ export function SeawolfSolver() {
                       </thead>
                       <tbody>
                         {p2Results.map((r, i) => (
-                          <tr key={`p2-r-${i}`} className="border-t">
+                          <tr key={`p2-r-${i}`} className="border-t border-gray-200 bg-white">
                             <td>{i + 1}</td>
                             <td>{r.mobility}</td>
                             <td>{r.agility}</td>
@@ -1054,7 +1097,7 @@ export function SeawolfSolver() {
                   </div>
                   <Button
                     variant="outline"
-                    className="mt-3"
+                    className={cn("mt-3", neutralButton)}
                     onClick={() => {
                       setP2Index(0)
                       setP2Results([])
@@ -1072,17 +1115,18 @@ export function SeawolfSolver() {
         {activePhase === "phase3" ? (
           <section className="space-y-4">
             <SiteConfigCard
-              config={p3Config}
-              onChange={setP3Config}
+              config={siteInfoConfig}
+              onChange={setSiteInfoConfig}
               attrNames={attrNames}
               traitNames={traitNames}
               title="Site Characteristics"
             />
-            <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+            <div className={phaseCard}>
+              <div className={phaseChip}>Phase 3 · Prospect Pool</div>
               <h3 className="text-base font-bold text-[#1a202c]">Preloaded Pool (P1-P6)</h3>
               <div className="mt-3 grid gap-2 md:grid-cols-3">
                 {p3Preloaded.map((m, idx) => (
-                  <div key={`p3-pre-${idx}`} className="rounded-lg border border-gray-200 p-3">
+                  <div key={`p3-pre-${idx}`} className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
                     <div className="mb-2 text-xs font-bold text-gray-700">P{idx + 1}</div>
                     <div className="grid grid-cols-3 gap-1">
                       <Input
@@ -1138,7 +1182,7 @@ export function SeawolfSolver() {
               const unlocked = roundIdx <= p3UnlockedRound
               const solved = p3Solved[roundIdx]
               return (
-                <div key={`p3-round-${roundIdx}`} className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+                <div key={`p3-round-${roundIdx}`} className={phaseCard}>
                   <h3 className="text-base font-bold text-[#1a202c]">Round {roundIdx + 1}</h3>
                   {!unlocked ? (
                     <p className="mt-2 text-sm text-gray-500">Complete previous round to unlock.</p>
@@ -1154,8 +1198,8 @@ export function SeawolfSolver() {
                               className={cn(
                                 "rounded-lg border p-3",
                                 solved && solved.recommendedIndex === candIdx
-                                  ? "border-emerald-500 bg-emerald-50"
-                                  : "border-gray-200"
+                                  ? "border-emerald-500 bg-emerald-50 shadow-sm"
+                                  : "border-gray-200 bg-white"
                               )}
                             >
                               <div className="mb-2 text-xs font-bold text-gray-700">Candidate {candIdx + 1}</div>
@@ -1229,10 +1273,10 @@ export function SeawolfSolver() {
                                     className={cn(
                                       "inline-flex rounded-full px-2 py-0.5 font-bold",
                                       solvedCard.classification === "OPTIMAL"
-                                        ? "bg-emerald-100 text-emerald-700"
+                                        ? "border border-emerald-300 bg-emerald-50 text-emerald-800"
                                         : solvedCard.classification === "NEUTRAL"
-                                          ? "bg-amber-100 text-amber-700"
-                                          : "bg-red-100 text-red-700"
+                                          ? "border border-amber-300 bg-amber-50 text-amber-800"
+                                          : "border border-red-300 bg-red-50 text-red-700"
                                     )}
                                   >
                                     {solvedCard.classification}
@@ -1245,7 +1289,7 @@ export function SeawolfSolver() {
                         })}
                       </div>
                       {roundIdx === p3UnlockedRound && !solved ? (
-                        <Button className="mt-3" onClick={() => solveRound(roundIdx)}>
+                        <Button className={cn("mt-3", primaryButton)} onClick={() => solveRound(roundIdx)}>
                           Solve round
                         </Button>
                       ) : null}
@@ -1255,7 +1299,7 @@ export function SeawolfSolver() {
               )
             })}
             {p3Solved.length === PHASE3_ROUNDS ? (
-              <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+              <div className={phaseCard}>
                 <h3 className="text-base font-bold text-[#1a202c]">Final Recommended Pool (10)</h3>
                 <div className="mt-2 text-sm text-gray-700">
                   Preloaded: 6 microbes + Picks from rounds:{" "}
@@ -1267,12 +1311,13 @@ export function SeawolfSolver() {
         ) : null}
 
         {activePhase === "phase4" ? (
-          <section className="space-y-3">
-            <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-[1fr_1.25fr_2.75fr]">
-              <div className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm">
+          <section className="space-y-2">
+            <div className={phaseChip}>Phase 4 · Treatment</div>
+            <div className="grid grid-cols-1 gap-2 lg:grid-cols-[1fr_1.15fr_2.35fr]">
+              <div className="rounded-xl border border-[#e2e8f0] bg-white p-4 shadow-sm">
                 <div className="mb-2 flex items-center justify-between">
-                  <h3 className="text-[1.05rem] font-semibold">Target Ranges</h3>
-                  <Button variant="outline" size="sm" onClick={randomFillP4Config}>
+                  <h3 className={accentHeading}>Target Ranges</h3>
+                  <Button variant="outline" size="sm" className={neutralButton} onClick={randomFillP4Config}>
                     Random fill
                   </Button>
                 </div>
@@ -1309,7 +1354,10 @@ export function SeawolfSolver() {
                     <select
                       className="mt-1 w-full rounded-md border-2 border-[#94a3b8] bg-white px-3 py-2 text-sm"
                       value={p4DesiredTrait}
-                      onChange={(e) => setP4DesiredTrait(e.target.value)}
+                      onChange={(e) => {
+                        setP4DesiredTrait(e.target.value)
+                        setSiteInfoConfig((prev) => ({ ...prev, desiredTrait: e.target.value }))
+                      }}
                     >
                       <option value="">(Optional)</option>
                       {traitNames.map((t) => (
@@ -1324,7 +1372,10 @@ export function SeawolfSolver() {
                     <select
                       className="mt-1 w-full rounded-md border-2 border-[#94a3b8] bg-white px-3 py-2 text-sm"
                       value={p4UndesiredTrait}
-                      onChange={(e) => setP4UndesiredTrait(e.target.value)}
+                      onChange={(e) => {
+                        setP4UndesiredTrait(e.target.value)
+                        setSiteInfoConfig((prev) => ({ ...prev, undesiredTrait: e.target.value }))
+                      }}
                     >
                       <option value="">(Optional)</option>
                       {traitNames.map((t) => (
@@ -1337,13 +1388,13 @@ export function SeawolfSolver() {
                 </div>
               </div>
 
-              <div className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm">
-                <h3 className="mb-2 text-[1.05rem] font-semibold">Results</h3>
+              <div className="rounded-xl border border-[#e2e8f0] bg-white p-4 shadow-sm">
+                <h3 className={accentHeading}>Results</h3>
                 {areAllInputsComplete && primaryWinningCombo ? (
                   <div className="space-y-2">
                     <p
                       className={cn(
-                        "text-5xl font-bold leading-none",
+                        "text-6xl font-extrabold leading-none",
                         maxScore === 100 ? "text-[#16a34a]" : maxScore === 80 ? "text-[#d97706]" : "text-[#dc2626]"
                       )}
                     >
@@ -1353,7 +1404,7 @@ export function SeawolfSolver() {
                       {primaryWinningCombo.microbes.map((idx) => (
                         <span
                           key={idx}
-                          className="rounded-md bg-[#2563eb] px-2 py-0.5 text-xs font-semibold text-white"
+                          className="rounded-md bg-[#2563eb] px-2 py-0.5 text-xs font-semibold text-white shadow-sm"
                         >
                           M{idx + 1}
                         </span>
@@ -1383,8 +1434,8 @@ export function SeawolfSolver() {
                 )}
               </div>
 
-              <div className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm">
-                <h3 className="mb-2 text-[1.05rem] font-semibold">Conditions</h3>
+              <div className="rounded-xl border border-[#e2e8f0] bg-white p-4 shadow-sm">
+                <h3 className={accentHeading}>Conditions</h3>
                 {areAllInputsComplete && primaryWinningCombo ? (
                   <ul className="space-y-1.5">
                     {[
@@ -1435,7 +1486,7 @@ export function SeawolfSolver() {
                         </div>
                         <span
                           className={cn(
-                            "rounded px-1.5 py-0.5 text-[10px] font-semibold text-white",
+                            "rounded px-1.5 py-0.5 text-[10px] font-semibold text-white shadow-sm",
                             check.pass ? "bg-[#16a34a]" : "bg-[#dc2626]"
                           )}
                         >
@@ -1450,9 +1501,9 @@ export function SeawolfSolver() {
               </div>
             </div>
 
-            <div className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm">
+            <div className="rounded-xl border border-[#e2e8f0] bg-white p-4 shadow-sm">
               <div className="mb-2 flex items-center justify-between">
-                <h3 className="text-[1.05rem] font-semibold">Microbe Data</h3>
+                <h3 className={accentHeading}>Microbe Data</h3>
                 <div className="flex gap-2">
                   <div className="text-right">
                     <Button
@@ -1469,7 +1520,7 @@ export function SeawolfSolver() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="h-10 border-[#dc2626] text-[#dc2626] hover:bg-[#dc2626] hover:text-white"
+                      className={cn("h-10", dangerButton)}
                       onClick={clearAllInputs}
                     >
                       Clear All
@@ -1478,7 +1529,7 @@ export function SeawolfSolver() {
                   </div>
                 </div>
               </div>
-              <div className="space-y-2.5">
+              <div className="grid gap-2 md:grid-cols-2">
                 {PHASE4_TABLES.map((table) => {
                   const indices = Array.from(
                     { length: table.end - table.start + 1 },
@@ -1488,28 +1539,28 @@ export function SeawolfSolver() {
                     <div
                       key={table.start}
                       className={cn(
-                        "overflow-x-auto rounded-md border border-[#cbd5e1] border-l-2 p-2 shadow-inner",
+                        "overflow-x-auto rounded-md border border-[#cbd5e1] border-l-2 p-1.5 shadow-inner",
                         table.bgClass,
                         table.borderClass
                       )}
                     >
-                      <table className="w-full table-fixed border-separate border-spacing-x-2 border-spacing-y-1">
+                      <table className="w-full table-fixed border-separate border-spacing-x-1.5 border-spacing-y-0.5">
                         <thead>
                           <tr>
-                            <th className="w-22 rounded-md bg-[#f1f5f9] px-1.5 py-1 text-left text-xs font-bold">
+                            <th className="w-20 rounded-md bg-[#f1f5f9] px-1 py-0.5 text-left text-[11px] font-bold">
                               Microbe
                             </th>
                             {indices.map((idx) => (
                               <th
                                 key={idx}
                                 className={cn(
-                                  "rounded-t-md border border-[#cbd5e1] border-b-0 bg-[#e2e8f0] px-4 py-1 text-center text-xs font-bold",
+                                  "rounded-t-md border border-[#cbd5e1] border-b-0 bg-[#e2e8f0] px-3 py-0.5 text-center text-[11px] font-bold",
                                   highlightedColumns.has(idx) && "border-[#16a34a] bg-[#dcfce7]"
                                 )}
                               >
                                 <span
                                   className={cn(
-                                    "inline-flex min-w-8 justify-center rounded px-1.5 py-0.5 text-[10px] font-semibold text-white",
+                                    "inline-flex min-w-7 justify-center rounded px-1 py-0.5 text-[10px] font-semibold text-white",
                                     table.start === 0 ? "bg-[#2563eb]" : "bg-[#6366f1]",
                                     highlightedColumns.has(idx) && "bg-[#16a34a]"
                                   )}
@@ -1525,14 +1576,14 @@ export function SeawolfSolver() {
                             const key = PHASE4_ATTRIBUTE_KEYS[attrIndex]
                             return (
                               <tr key={`p4-row-${attrIndex}`}>
-                                <td className="whitespace-nowrap px-1.5 py-0.5 text-[11px] font-semibold text-[#374151]">
+                                <td className="whitespace-nowrap px-1 py-0.5 text-[10px] font-semibold text-[#374151]">
                                   {attrNames[attrIndex] || `Attribute ${attrIndex + 1}`}
                                 </td>
                                 {indices.map((idx) => (
                                   <td
                                     key={`p4-${attrIndex}-${idx}`}
                                     className={cn(
-                                      "border-x border-[#cbd5e1] px-4 py-0.5",
+                                      "border-x border-[#cbd5e1] px-3 py-0.5",
                                       attrIndex % 2 === 0 ? "bg-white" : "bg-[#f1f5f9]",
                                       highlightedColumns.has(idx) && "border-[#16a34a] bg-[#dcfce7]"
                                     )}
@@ -1546,7 +1597,7 @@ export function SeawolfSolver() {
                                       onKeyDown={(e) => handleMicrobeInputKeyDown(e, idx, attrIndex)}
                                       data-microbe-index={idx}
                                       data-attribute-index={attrIndex}
-                                      className="h-7 border-2 border-[#94a3b8] px-1 text-center text-[11px] font-medium"
+                                      className="h-6 border-2 border-[#94a3b8] px-1 text-center text-[10px] font-medium"
                                     />
                                   </td>
                                 ))}
@@ -1554,18 +1605,18 @@ export function SeawolfSolver() {
                             )
                           })}
                           <tr>
-                            <td className="bg-[#f1f5f9] px-1.5 py-0.5 text-[10px] font-semibold">
+                            <td className="bg-[#f1f5f9] px-1 py-0.5 text-[10px] font-semibold">
                               Desired Trait
                             </td>
                             {indices.map((idx) => (
                               <td
                                 key={`des-${idx}`}
                                 className={cn(
-                                  "border-x border-[#cbd5e1] bg-[#f1f5f9] px-4 py-0.5",
+                                  "border-x border-[#cbd5e1] bg-[#f1f5f9] px-3 py-0.5",
                                   highlightedColumns.has(idx) && "border-[#16a34a] bg-[#dcfce7]"
                                 )}
                               >
-                                <div className="flex h-7 items-center justify-center rounded-md border bg-white">
+                                <div className="flex h-6 items-center justify-center rounded-md border bg-white">
                                   <Checkbox
                                     checked={microbeData.desirable[idx]}
                                     onCheckedChange={(v) => handleCheckboxChange("desirable", idx, v === true)}
@@ -1575,18 +1626,18 @@ export function SeawolfSolver() {
                             ))}
                           </tr>
                           <tr>
-                            <td className="bg-white px-1.5 py-0.5 text-[10px] font-semibold">
+                            <td className="bg-white px-1 py-0.5 text-[10px] font-semibold">
                               Undesired Trait
                             </td>
                             {indices.map((idx) => (
                               <td
                                 key={`undes-${idx}`}
                                 className={cn(
-                                  "rounded-b-md border-x border-b border-[#cbd5e1] bg-white px-4 py-0.5",
+                                  "rounded-b-md border-x border-b border-[#cbd5e1] bg-white px-3 py-0.5",
                                   highlightedColumns.has(idx) && "border-[#16a34a] bg-[#dcfce7]"
                                 )}
                               >
-                                <div className="flex h-7 items-center justify-center rounded-md border bg-white">
+                                <div className="flex h-6 items-center justify-center rounded-md border bg-white">
                                   <Checkbox
                                     checked={microbeData.undesirable[idx]}
                                     onCheckedChange={(v) => handleCheckboxChange("undesirable", idx, v === true)}

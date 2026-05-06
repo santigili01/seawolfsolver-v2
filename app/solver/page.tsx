@@ -13,7 +13,7 @@ export default function SolverPage() {
         </div>
       </header>
       <main className="h-[calc(100vh-68px)] overflow-y-auto p-4 md:p-6">
-        <div className="mx-auto w-full max-w-5xl">
+        <div className="mx-auto w-full max-w-[1500px]">
           <SeawolfSolver />
         </div>
       </main>
