@@ -995,7 +995,7 @@ function GamePhase1ProfilingPanel({
   const keyTraits = scenariosFileTraits.length ? scenariosFileTraits : traitList
 
   return (
-    <div className="relative min-h-[calc(100vh-8rem)] w-full pb-[22rem]">
+    <div className="relative min-h-[calc(100vh-8rem)] w-full overflow-y-auto pb-10">
       <div className="pointer-events-none absolute inset-0 z-[1] opacity-20">
         <div className="absolute top-20 left-20 h-48 w-32 rounded-lg bg-orange-500/30" />
         <div className="absolute top-32 left-60 h-32 w-20 rounded-lg bg-blue-400/30" />
@@ -1068,11 +1068,11 @@ function GamePhase1ProfilingPanel({
         </div>
       </div>
 
-      <div className="relative z-[5] mx-auto mt-[4.5rem] mb-4 w-[min(900px,calc(100%-18rem))] rounded-2xl border border-white/30 bg-white/95 p-5 shadow-xl backdrop-blur-sm">
-        <h2 className="mb-6 text-2xl font-bold text-gray-900">Characteristics</h2>
+      <div className="relative z-[5] mx-auto mt-3 mb-3 w-[min(900px,calc(100%-18rem))] rounded-2xl border border-white/30 bg-white/95 p-4 shadow-xl backdrop-blur-sm">
+        <h2 className="mb-4 text-2xl font-bold text-gray-900">Characteristics</h2>
 
         <p className="mb-2 text-sm font-bold uppercase tracking-wide text-gray-600">Attributes</p>
-        <div className="mb-8 space-y-3">
+        <div className="mb-5 space-y-2">
           {ATTR_NAMES.map((name) => {
             const r = req.attributes[name]
             const k = selectionKey("attribute", name)
@@ -1081,7 +1081,7 @@ function GamePhase1ProfilingPanel({
             return (
               <div
                 key={name}
-                className={`flex w-full items-center justify-between gap-3 rounded-xl border px-3 py-3 transition-colors ${
+                className={`flex w-full items-center justify-between gap-3 rounded-xl border px-3 py-2 transition-colors ${
                   on ? "border-[#4ECDC4] bg-[#4ECDC4]/10" : "border-gray-200 bg-white"
                 }`}
               >
@@ -1118,7 +1118,7 @@ function GamePhase1ProfilingPanel({
         </div>
 
         <p className="mb-2 text-sm font-bold uppercase tracking-wide text-gray-600">Traits</p>
-        <div className="mb-8 space-y-3">
+        <div className="mb-5 space-y-2">
           {traitList.map((trait) => {
             const k = selectionKey("trait", trait)
             const on = selectedKeys.has(k)
@@ -1126,7 +1126,7 @@ function GamePhase1ProfilingPanel({
             return (
               <div
                 key={trait}
-                className={`flex w-full items-center gap-3 rounded-xl border px-3 py-3 transition-colors ${
+                className={`flex w-full items-center gap-3 rounded-xl border px-3 py-2 transition-colors ${
                   on ? "border-[#4ECDC4] bg-[#4ECDC4]/10" : "border-gray-200 bg-white"
                 }`}
               >
@@ -1147,12 +1147,12 @@ function GamePhase1ProfilingPanel({
           })}
         </div>
 
-        <div className="flex justify-center border-t border-gray-200 pt-5">
+        <div className="flex justify-center border-t border-gray-200 pt-4">
           <button
             type="button"
             disabled={!canSubmit}
             onClick={submit}
-            className={`min-w-[200px] rounded-lg px-10 py-3 text-sm font-semibold transition-colors ${
+            className={`min-w-[200px] rounded-lg px-10 py-2.5 text-sm font-semibold transition-colors ${
               canSubmit
                 ? "cursor-pointer bg-[rgba(20,30,50,0.9)] text-white hover:bg-[rgba(30,40,60,0.95)]"
                 : "cursor-not-allowed bg-gray-300 text-gray-500"
@@ -3121,20 +3121,77 @@ function GameResultsFull({
                     <div className="mb-4 inline-flex rounded-full bg-[#eefcfb] px-3 py-1 text-sm font-semibold text-[#0f766e] ring-1 ring-[#cceeea]">
                       Phase 2 · {s.phase2.raw}/10 ({Math.round(s.phase2.percentage)}%)
                     </div>
-                    <div className="mb-4 flex flex-wrap gap-3 text-xs">
-                      <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
-                        <span className="font-semibold text-gray-700">Site info: </span>
-                        {req.name} · Mobility {req.attributes.Mobility.min}–{req.attributes.Mobility.max} · Agility {req.attributes.Agility.min}–
-                        {req.attributes.Agility.max} · Size {req.attributes.Size.min}–{req.attributes.Size.max} · Desired: {req.desired_trait}
+                    <div className={`mb-4 grid gap-2 ${siteIdx < 2 ? "md:grid-cols-[1.6fr_1fr]" : "md:grid-cols-1"}`}>
+                      <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs">
+                        <div className="mb-1 font-semibold text-gray-800">Site {siteIdx + 1} info</div>
+                        <div className="flex items-center gap-4 overflow-x-auto whitespace-nowrap text-gray-700">
+                          <span className="font-medium text-gray-800">{req.name}</span>
+                          <span className="flex items-center gap-1.5">
+                            <span className="inline-flex">{attributeRowIcon("Mobility")}</span>
+                            <span>Mobility: {req.attributes.Mobility.min}–{req.attributes.Mobility.max}</span>
+                          </span>
+                          <span className="flex items-center gap-1.5">
+                            <span className="inline-flex">{attributeRowIcon("Agility")}</span>
+                            <span>Agility: {req.attributes.Agility.min}–{req.attributes.Agility.max}</span>
+                          </span>
+                          <span className="flex items-center gap-1.5">
+                            <span className="inline-flex">{attributeRowIcon("Size")}</span>
+                            <span>Size: {req.attributes.Size.min}–{req.attributes.Size.max}</span>
+                          </span>
+                          <span className="flex items-center gap-1.5">
+                            <span>Desired:</span>
+                            <span
+                              className="inline-flex h-5 w-5 items-center justify-center rounded-full"
+                              style={{ backgroundColor: traitChipBg(req.desired_trait), color: traitColor(req.desired_trait) }}
+                            >
+                              {traitIcon(req.desired_trait, "h-3.5 w-3.5")}
+                            </span>
+                            <span>{req.desired_trait}</span>
+                          </span>
+                          <span className="flex items-center gap-1.5">
+                            <span>Undesired:</span>
+                            <span
+                              className="inline-flex h-5 w-5 items-center justify-center rounded-full"
+                              style={{ backgroundColor: traitChipBg(req.undesired_trait), color: traitColor(req.undesired_trait) }}
+                            >
+                              {traitIcon(req.undesired_trait, "h-3.5 w-3.5")}
+                            </span>
+                            <span>{req.undesired_trait}</span>
+                          </span>
+                        </div>
                       </div>
-                      {entry.revealedChar ? (
-                        <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
-                          <span className="font-semibold text-amber-800">Site 2 insight revealed: </span>
-                          {entry.revealedChar.type === "trait"
-                            ? `Desired trait: ${entry.revealedChar.value}`
-                            : `${entry.revealedChar.name}: ${(entry.revealedChar.value as { min: number; max: number }).min}–${
-                                (entry.revealedChar.value as { min: number; max: number }).max
-                              }`}
+                      {siteIdx < 2 ? (
+                        <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs">
+                          <div className="font-semibold text-amber-800">Site {siteIdx + 2} insight</div>
+                          <div className="mt-1 flex flex-wrap items-center gap-1.5 text-amber-900">
+                            {entry.revealedChar ? (
+                              entry.revealedChar.type === "trait" ? (
+                                <>
+                                  <span>Desired:</span>
+                                  <span
+                                    className="inline-flex h-5 w-5 items-center justify-center rounded-full"
+                                    style={{
+                                      backgroundColor: traitChipBg(String(entry.revealedChar.value)),
+                                      color: traitColor(String(entry.revealedChar.value)),
+                                    }}
+                                  >
+                                    {traitIcon(String(entry.revealedChar.value), "h-3.5 w-3.5")}
+                                  </span>
+                                  <span>{String(entry.revealedChar.value)}</span>
+                                </>
+                              ) : (
+                                <>
+                                  <span className="inline-flex">{attributeRowIcon(entry.revealedChar.name as (typeof ATTR_NAMES)[number])}</span>
+                                  <span>
+                                    {entry.revealedChar.name}: {(entry.revealedChar.value as { min: number; max: number }).min}–
+                                    {(entry.revealedChar.value as { min: number; max: number }).max}
+                                  </span>
+                                </>
+                              )
+                            ) : (
+                              <span>No additional insight shown for this site.</span>
+                            )}
+                          </div>
                         </div>
                       ) : null}
                     </div>
