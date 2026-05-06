@@ -2847,8 +2847,43 @@ function gameResultsBreakdownBorderClass(player: number, max: number) {
   return "border-l-red-500"
 }
 
+function phase2ChoiceLabel(choice: "site1" | "site2" | "return", siteNum: number) {
+  if (choice === "site1") return `Site ${siteNum}`
+  if (choice === "site2") return `Site ${siteNum + 1}`
+  return "Return"
+}
+
+function phase3RoundFallbackFeedback(rr: import("@/lib/game-scoring").RoundResult): string {
+  if (rr.playerPickClassification === "optimal") return "Great pick. You chose the strongest candidate available."
+  if (rr.playerPickClassification === "negative") return "This pick hurt pool quality. Try to avoid negative candidates."
+  if (rr.optimalId) return "A better optimal candidate was available this round."
+  if (rr.bestNeutralScore !== null && rr.playerPickNeutralScore !== null && rr.playerPickNeutralScore < rr.bestNeutralScore) {
+    return "You picked a weaker neutral option than the best available."
+  }
+  return "Solid pick for this round."
+}
+
+function parseJsonStringArray(raw: string): string[] | null {
+  const trimmed = raw.trim()
+  try {
+    const parsed = JSON.parse(trimmed)
+    if (Array.isArray(parsed) && parsed.every((x) => typeof x === "string")) return parsed
+  } catch {
+    /* ignore */
+  }
+  const fenceMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```/i)
+  if (!fenceMatch?.[1]) return null
+  try {
+    const parsed = JSON.parse(fenceMatch[1].trim())
+    if (Array.isArray(parsed) && parsed.every((x) => typeof x === "string")) return parsed
+  } catch {
+    /* ignore */
+  }
+  return null
+}
+
 function GameResultsFull({
-  gameScore: _gameScore,
+  gameScore,
   totalSeconds,
   siteDetail,
 }: {
@@ -2859,11 +2894,13 @@ function GameResultsFull({
     phase1Picks?: GSelectionItem[]
     scenarios: ScenarioRequirements
     treatmentPool: Microbe[]
+    catPoolMicrobes: Microbe[]
+    prospectChooseSets: ProspectRoundJson[]
+    revealedChar: RevealedCharacteristic | null
   }[]
 }) {
-  void _gameScore
-  const totalPlayer = siteDetail.reduce((acc, e) => acc + e.site.phase4.score, 0)
-  const totalMax = siteDetail.reduce((acc, e) => acc + e.site.phase4.optimalScore, 0)
+  const [friendlyPhase2Reasons, setFriendlyPhase2Reasons] = useState<Record<number, string[]>>({})
+  const [friendlyPhase3RoundLines, setFriendlyPhase3RoundLines] = useState<Record<number, string[]>>({})
 
   const accentHeading =
     "border-l-4 border-[#4ECDC4] pl-3 text-lg font-bold text-[#1a202c]"
@@ -2884,6 +2921,57 @@ function GameResultsFull({
         <path d="M5 5l6 6M11 5l-6 6" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" />
       </svg>
     )
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      for (let siteIdx = 0; siteIdx < siteDetail.length; siteIdx++) {
+        const entry = siteDetail[siteIdx]!
+        const phase2Reasons = entry.site.phase2.explanation.incorrect.map((x) => x.reason)
+        const phase3Lines = entry.site.phase3.roundResults.map((rr) => phase3RoundFallbackFeedback(rr))
+        const batched = [...phase2Reasons, ...phase3Lines]
+        if (!batched.length) continue
+        try {
+          const apiKey =
+            (typeof window !== "undefined" ? window.localStorage.getItem("ANTHROPIC_API_KEY") : null) ??
+            (process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY ?? "")
+          if (!apiKey) continue
+          const response = await fetch("https://api.anthropic.com/v1/messages", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-api-key": apiKey,
+              "anthropic-version": "2023-06-01",
+            },
+            body: JSON.stringify({
+              model: "claude-sonnet-4-20250514",
+              max_tokens: 1000,
+              messages: [
+                {
+                  role: "user",
+                  content: `Rewrite these microbe categorization feedback messages to be concise, friendly, and informative. Keep each under 15 words. Return ONLY a JSON array of strings in the same order: ${JSON.stringify(
+                    batched,
+                  )}`,
+                },
+              ],
+            }),
+          })
+          if (!response.ok) continue
+          const payload = (await response.json()) as { content?: { type: string; text?: string }[] }
+          const text = payload.content?.find((c) => c.type === "text")?.text ?? ""
+          const rewritten = parseJsonStringArray(text)
+          if (!rewritten || rewritten.length !== batched.length || cancelled) continue
+          setFriendlyPhase2Reasons((prev) => ({ ...prev, [siteIdx]: rewritten.slice(0, phase2Reasons.length) }))
+          setFriendlyPhase3RoundLines((prev) => ({ ...prev, [siteIdx]: rewritten.slice(phase2Reasons.length) }))
+        } catch {
+          /* keep originals */
+        }
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [siteDetail])
 
   return (
     <div className="min-h-screen w-full bg-[#f8fffe] text-gray-900">
@@ -2909,18 +2997,24 @@ function GameResultsFull({
       <div className="mx-auto max-w-7xl px-4 pb-12 pt-[calc(3.5rem+1rem)] sm:px-6 lg:px-8">
         <div className="mb-8 grid gap-4 sm:grid-cols-3">
           <div className={statCard}>
-            <p className="text-sm font-medium text-gray-500">Total Score</p>
-            <p className={`mt-1 text-3xl font-bold tabular-nums ${gameResultsScoreDisplayColorClass(totalPlayer / 3)}`}>
-              {totalPlayer}/300
+            <p className="text-sm font-medium text-gray-500">Overall Score</p>
+            <p className={`mt-1 text-3xl font-bold tabular-nums ${gameResultsScoreDisplayColorClass(gameScore.globalAverage)}`}>
+              {Math.round(gameScore.globalAverage)}%
             </p>
           </div>
           <div className={statCard}>
-            <p className="text-sm font-medium text-gray-500">Max Possible Score</p>
-            <p className={`mt-1 text-3xl font-bold tabular-nums ${gameResultsScoreDisplayColorClass(totalMax / 3)}`}>{totalMax}/300</p>
+            <p className="text-sm font-medium text-gray-500">Total Time</p>
+            <p className="mt-1 text-3xl font-bold tabular-nums text-gray-800">{formatMmSs(totalSeconds)}</p>
           </div>
           <div className={statCard}>
-            <p className="text-sm font-medium text-gray-500">Time Spent</p>
-            <p className="mt-1 text-3xl font-bold tabular-nums text-gray-800">{formatMmSs(totalSeconds)}</p>
+            <p className="text-sm font-medium text-gray-500">Phase Averages</p>
+            <div className="mt-2 flex flex-wrap items-center justify-center gap-1.5">
+              <span className="rounded-full bg-teal-100 px-2 py-1 text-xs font-semibold text-teal-800">P1: {Math.round(gameScore.perPhaseAverages.phase1)}%</span>
+              <span className="rounded-full bg-teal-100 px-2 py-1 text-xs font-semibold text-teal-800">P2: {Math.round(gameScore.perPhaseAverages.phase2)}%</span>
+              <span className="rounded-full bg-teal-100 px-2 py-1 text-xs font-semibold text-teal-800">P0: {Math.round(gameScore.perPhaseAverages.phase0)}%</span>
+              <span className="rounded-full bg-teal-100 px-2 py-1 text-xs font-semibold text-teal-800">P3: {Math.round(gameScore.perPhaseAverages.phase3)}%</span>
+              <span className="rounded-full bg-teal-100 px-2 py-1 text-xs font-semibold text-teal-800">P4: {Math.round(gameScore.perPhaseAverages.phase4)}%</span>
+            </div>
           </div>
         </div>
 
@@ -2930,7 +3024,7 @@ function GameResultsFull({
             return (
               <div
                 key={`breakdown-${s.siteNumber}-${i}`}
-                className={`rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm border-l-4 ${gameResultsBreakdownBorderClass(s.phase4.score, s.phase4.optimalScore)}`}
+                className={`rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm border-l-4 ${gameResultsBreakdownBorderClass(s.siteAverage, 100)}`}
               >
                 <div className="grid items-center gap-2" style={{ gridTemplateColumns: "1fr auto auto" }}>
                   <div className="min-w-0">
@@ -2938,8 +3032,8 @@ function GameResultsFull({
                     <div className="text-sm text-gray-500">{s.scenarioName}</div>
                   </div>
                   <span className="text-sm tabular-nums text-gray-400">{formatMmSs(s.timeSpent)}</span>
-                  <span className={`text-sm font-semibold tabular-nums ${gameResultsScoreDisplayColorClass(s.phase4.score)}`}>
-                    {s.phase4.score}/{s.phase4.optimalScore}
+                  <span className={`text-sm font-semibold tabular-nums ${gameResultsScoreDisplayColorClass(s.siteAverage)}`}>
+                    {Math.round(s.siteAverage)}%
                   </span>
                 </div>
               </div>
@@ -2962,7 +3056,8 @@ function GameResultsFull({
             const badgeBase =
               "absolute top-[-12px] z-10 whitespace-nowrap rounded px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white shadow"
 
-            const resolveName = (id: string) => pool.find((m) => m.id === id)?.name ?? id
+            const resolveName = (id: string) =>
+              entry.catPoolMicrobes.find((x) => x.id === id)?.name ?? pool.find((m) => m.id === id)?.name ?? id
 
             const phase0ClassificationBadge = (c: string) => {
               if (c === "good") return "bg-emerald-100 text-emerald-800 ring-1 ring-emerald-200"
@@ -2987,6 +3082,12 @@ function GameResultsFull({
                     <div className="mb-4 inline-flex rounded-full bg-[#eefcfb] px-3 py-1 text-sm font-semibold text-[#0f766e] ring-1 ring-[#cceeea]">
                       Phase 1 · {s.phase1.raw}/2 ({Math.round(s.phase1.percentage)}%)
                     </div>
+                    <p className="mb-4 text-sm leading-relaxed text-gray-600">
+                      In Phase 1 you earn 1 point for selecting the site's desired trait, and 1 point for selecting the most strategically
+                      important attribute — the one whose range is furthest from the middle of the 1–10 scale (e.g. 1–3 or 8–10 are more
+                      extreme than 4–6). You also need to position the slider at the correct range. The optimal strategy is always: desired
+                      trait + most extreme attribute.
+                    </p>
                     <div className="flex flex-col gap-3">
                       <div
                         className={`flex gap-3 rounded-lg border px-3 py-2 ${s.phase1.traitCorrect ? "border-gray-200 bg-white" : "border-red-200 bg-red-50/40"}`}
@@ -3020,11 +3121,32 @@ function GameResultsFull({
                     <div className="mb-4 inline-flex rounded-full bg-[#eefcfb] px-3 py-1 text-sm font-semibold text-[#0f766e] ring-1 ring-[#cceeea]">
                       Phase 2 · {s.phase2.raw}/10 ({Math.round(s.phase2.percentage)}%)
                     </div>
+                    <div className="mb-4 flex flex-wrap gap-3 text-xs">
+                      <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
+                        <span className="font-semibold text-gray-700">Site info: </span>
+                        {req.name} · Mobility {req.attributes.Mobility.min}–{req.attributes.Mobility.max} · Agility {req.attributes.Agility.min}–
+                        {req.attributes.Agility.max} · Size {req.attributes.Size.min}–{req.attributes.Size.max} · Desired: {req.desired_trait}
+                      </div>
+                      {entry.revealedChar ? (
+                        <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
+                          <span className="font-semibold text-amber-800">Site 2 insight revealed: </span>
+                          {entry.revealedChar.type === "trait"
+                            ? `Desired trait: ${entry.revealedChar.value}`
+                            : `${entry.revealedChar.name}: ${(entry.revealedChar.value as { min: number; max: number }).min}–${
+                                (entry.revealedChar.value as { min: number; max: number }).max
+                              }`}
+                        </div>
+                      ) : null}
+                    </div>
                     <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-5">
                       {s.phase2.decisions.map((d) => {
                         const wrong = d.playerChoice !== d.correctChoice
                         const ex = s.phase2.explanation.incorrect.find((i) => i.id === d.microbeId)
-                        const pm = pool.find((x) => x.id === d.microbeId) ?? null
+                        const pm = entry.catPoolMicrobes.find((x) => x.id === d.microbeId) ?? pool.find((x) => x.id === d.microbeId) ?? null
+                        const rewrittenReason =
+                          ex && friendlyPhase2Reasons[siteIdx]
+                            ? friendlyPhase2Reasons[siteIdx]![s.phase2.explanation.incorrect.findIndex((x) => x.id === ex.id)] ?? ex.reason
+                            : ex?.reason ?? null
                         return (
                           <div
                             key={d.microbeId}
@@ -3039,12 +3161,12 @@ function GameResultsFull({
                             </div>
                             <div className="font-semibold leading-tight text-gray-900 line-clamp-2">{resolveName(d.microbeId)}</div>
                             <div className="mt-1 text-gray-600">
-                              You: <span className="font-medium">{d.playerChoice}</span>
+                              You: <span className="font-medium">{phase2ChoiceLabel(d.playerChoice, siteIdx + 1)}</span>
                             </div>
                             <div className="text-gray-600">
-                              Correct: <span className="font-medium">{d.correctChoice}</span>
+                              Correct: <span className="font-medium">{phase2ChoiceLabel(d.correctChoice, siteIdx + 1)}</span>
                             </div>
-                            {wrong && ex ? <div className="mt-1 text-red-600">{ex.reason}</div> : null}
+                            {wrong && rewrittenReason ? <div className="mt-1 text-red-600">{rewrittenReason}</div> : null}
                           </div>
                         )
                       })}
@@ -3093,21 +3215,74 @@ function GameResultsFull({
                     <div className="mb-4 inline-flex rounded-full bg-[#eefcfb] px-3 py-1 text-sm font-semibold text-[#0f766e] ring-1 ring-[#cceeea]">
                       Phase 3 ({Math.round(s.phase3.percentage)}%)
                     </div>
+                    <p className="mb-4 text-sm text-gray-600">
+                      Phase 3 scores how well you built your prospect pool. Each round you lose points for picking a worse option when a
+                      better one was available: −2 for picking neutral over optimal, −3 for picking negative. Without an optimal pick, −1 for
+                      a worse neutral, −2 for negative. A further penalty applies if your pool can't reach the original maximum treatment
+                      score.
+                    </p>
                     <div className="mb-4 grid gap-3 sm:grid-cols-2">
-                      {s.phase3.roundResults.map((rr) => (
-                        <div key={`r-${rr.round}`} className="rounded-lg border border-gray-200 bg-white p-4 text-sm shadow-sm">
-                          <div className="font-bold text-gray-900">Round {rr.round}</div>
-                          <div className="mt-2 text-gray-700">
-                            Picked: <span className="font-medium">{rr.playerPickId ? resolveName(rr.playerPickId) : "—"}</span>
+                      {s.phase3.roundResults.map((rr, rrIdx) => {
+                        const chooseSet = entry.prospectChooseSets[rrIdx]
+                        const bestNeutral = chooseSet
+                          ? chooseSet.candidates
+                              .filter((c) => c.classification === "neutral" && c.neutral_score !== null)
+                              .sort((a, b) => (b.neutral_score ?? -Infinity) - (a.neutral_score ?? -Infinity))[0]
+                          : null
+                        const aiLine =
+                          friendlyPhase3RoundLines[siteIdx]?.[rrIdx] ??
+                          phase3RoundFallbackFeedback(rr)
+                        return (
+                          <div key={`r-${rr.round}`} className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
+                            <div className="mb-2 font-bold text-gray-900">Round {rr.round}</div>
+                            <div className="grid gap-2">
+                              {(chooseSet?.candidates ?? []).map((cand) => {
+                                const picked = rr.playerPickId === cand.microbe.id
+                                const isOptimal = cand.classification === "optimal"
+                                const isBestNeutral = !rr.optimalId && bestNeutral?.microbe.id === cand.microbe.id
+                                const cardClass = isOptimal
+                                  ? "border-emerald-500 bg-emerald-50"
+                                  : isBestNeutral
+                                    ? "border-amber-400 bg-amber-50"
+                                    : "border-gray-200 bg-white"
+                                return (
+                                  <div key={`${rr.round}-${cand.microbe.id}`} className={`rounded-md border px-2 py-2 ${cardClass} ${picked ? "border-blue-400 ring-1 ring-blue-300" : ""}`}>
+                                    <div className="flex items-center justify-between gap-2">
+                                      <p className="truncate text-xs font-bold text-gray-900">{cand.microbe.name}</p>
+                                      <div className="flex items-center gap-1">
+                                        {picked ? <span className="rounded bg-blue-600 px-1.5 py-0.5 text-[9px] font-bold text-white">YOUR PICK</span> : null}
+                                        <span
+                                          className={`rounded px-1.5 py-0.5 text-[9px] font-bold uppercase ${
+                                            cand.classification === "optimal"
+                                              ? "bg-emerald-200 text-emerald-800"
+                                              : cand.classification === "neutral"
+                                                ? "bg-amber-200 text-amber-800"
+                                                : "bg-red-200 text-red-800"
+                                          }`}
+                                        >
+                                          {cand.classification}
+                                        </span>
+                                      </div>
+                                    </div>
+                                    <p className="mt-1 text-[11px] text-gray-600">
+                                      M: {cand.microbe.Mobility} A: {cand.microbe.Agility} S: {cand.microbe.Size}
+                                    </p>
+                                    <div className="mt-1">
+                                      <TraitBadgeChip trait={cand.microbe.trait} chipClassName="h-5 w-5" />
+                                    </div>
+                                  </div>
+                                )
+                              })}
+                            </div>
+                            <div className="mt-2 flex items-center justify-between gap-2">
+                              <p className="text-xs text-gray-700">Round {rr.round}: {aiLine}</p>
+                              {rr.deduction > 0 ? (
+                                <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-700">-{rr.deduction}</span>
+                              ) : null}
+                            </div>
                           </div>
-                          <div className="text-gray-700">
-                            Deduction: <span className="font-medium">{rr.deduction}</span>
-                          </div>
-                          <div className={rr.optimalId && rr.optimalId !== rr.playerPickId ? "mt-1 text-amber-700" : "mt-1 text-gray-600"}>
-                            Optimal: {rr.optimalId ? resolveName(rr.optimalId) : "none"}
-                          </div>
-                        </div>
-                      ))}
+                        )
+                      })}
                     </div>
                     <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700 shadow-sm">
                       <span className="font-semibold text-gray-900">Pool quality: </span>
@@ -3574,6 +3749,9 @@ export default function FullGamePage() {
           phase1Picks: p1SelectionsBySite[ix],
           scenarios: cfg.scenarios[siteRow.siteNumber - 1]!,
           treatmentPool: treatmentPoolsBySite[ix] ?? [],
+          catPoolMicrobes: ix === 0 ? cfg.catPool12.microbes : ix === 1 ? cfg.catPool23.microbes : [],
+          prospectChooseSets: ix === 0 ? cfg.prospectA.choose_sets : ix === 1 ? cfg.prospectB.choose_sets : cfg.prospectC.choose_sets,
+          revealedChar: ix === 0 ? cfg.catPool12.revealed_characteristic : ix === 1 ? cfg.catPool23.revealed_characteristic : null,
         }))}
       />
     )
