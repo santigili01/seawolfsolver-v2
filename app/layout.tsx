@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
+import { ClerkProvider, Show, SignInButton, SignUpButton, UserButton } from '@clerk/nextjs'
 import './globals.css'
 
 const _geist = Geist({ subsets: ["latin"] });
@@ -24,8 +25,19 @@ export default function RootLayout({
   return (
     <html lang="en" className="bg-background">
       <body className="font-sans antialiased bg-background">
-        {children}
-        {process.env.NODE_ENV === 'production' && <Analytics />}
+        <ClerkProvider>
+          <header className="flex items-center justify-end gap-3 border-b border-border px-4 py-3">
+            <Show when="signed-out">
+              <SignInButton />
+              <SignUpButton />
+            </Show>
+            <Show when="signed-in">
+              <UserButton />
+            </Show>
+          </header>
+          {children}
+          {process.env.NODE_ENV === 'production' && <Analytics />}
+        </ClerkProvider>
       </body>
     </html>
   )

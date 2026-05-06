@@ -1,16 +1,38 @@
-import Link from "next/link";
-import { Check, Monitor, FileSpreadsheet, Play } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { LayoutGrid, Search, Calculator, Lightbulb, RefreshCw, Infinity } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 const features = [
-  "Web solver — instant results in your browser",
-  "Excel solver — full formula engine, no macros",
-  "Free simulator — practice with real scenarios",
-  "Evaluates all 120 microbe combinations",
-  "Full score breakdown per condition",
-  "Works for every Seawolf scenario",
-  "One-time payment, lifetime access + updates",
-];
+  {
+    icon: LayoutGrid,
+    title: "Full 4-Phase Simulator",
+    description: "Practice all 4 phases of the real Sea Wolf assessment: Profiling, Categorization, Prospect Pool, and Treatment. 300+ unique scenarios.",
+  },
+  {
+    icon: Search,
+    title: "Phase 3 Prospect Pool Solver",
+    description: "The hardest phase. The solver shows you the optimal candidate pick in every round — the move that maximises your final pool score.",
+  },
+  {
+    icon: Calculator,
+    title: "Phase 4 Treatment Solver",
+    description: "Input your 10 microbes. Get the optimal trio with full scoring breakdown across all 5 conditions.",
+  },
+  {
+    icon: Lightbulb,
+    title: "Deepest Insights on the Market",
+    description: "Every run ends with a full decision-level breakdown. Know exactly which choice cost you points and what the optimal move was.",
+  },
+  {
+    icon: RefreshCw,
+    title: "Built for 2026",
+    description: "Covers the current McKinsey Solve format. Updated as the assessment changes. Check the changelog for the latest.",
+  },
+  {
+    icon: Infinity,
+    title: "Lifetime Access",
+    description: "Pay once. Practice as many times as you need. No subscription, no expiry. Future phases (Redrock, SFL) included free when released.",
+  },
+]
 
 export function Features() {
   return (
@@ -18,101 +40,29 @@ export function Features() {
       id="features"
       className="scroll-mt-20 bg-card px-4 py-16 sm:px-6 sm:py-24 lg:px-8"
     >
-      <div className="mx-auto max-w-7xl">
-        <div className="grid items-center gap-12 lg:grid-cols-2">
-          {/* Left column - Features list */}
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-              Everything You Need to Score 100
-            </h2>
-            <p className="mt-4 text-lg text-muted-foreground">
-              A complete toolkit designed to help you ace the McKinsey Solve
-              assessment
-            </p>
-
-            <ul className="mt-8 space-y-4">
-              {features.map((feature, index) => (
-                <li key={index} className="flex items-start gap-3">
-                  <div className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-primary">
-                    <Check className="size-3 text-primary-foreground" />
-                  </div>
-                  <span className="text-foreground">{feature}</span>
-                </li>
-              ))}
-            </ul>
-
-            <Button className="mt-8" size="lg" asChild>
-              <Link href="#pricing">Get Instant Access</Link>
-            </Button>
-          </div>
-
-          {/* Right column - Product mockup */}
-          <div className="relative">
-            <div className="overflow-hidden rounded-xl border border-border bg-secondary/30 p-6 shadow-2xl shadow-primary/10">
-              {/* Header bar */}
-              <div className="mb-4 flex items-center gap-2">
-                <div className="size-3 rounded-full bg-destructive/60" />
-                <div className="size-3 rounded-full bg-yellow-500/60" />
-                <div className="size-3 rounded-full bg-green-500/60" />
-                <span className="ml-2 text-xs text-muted-foreground">
-                  Sea Wolf Solver
-                </span>
-              </div>
-
-              {/* Mock solver UI */}
-              <div className="space-y-4">
-                {/* Input section */}
-                <div className="rounded-lg bg-background/50 p-4">
-                  <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-                    <Monitor className="size-4 text-primary" />
-                    Microbe Input
-                  </div>
-                  <div className="mt-3 grid grid-cols-5 gap-2">
-                    {[...Array(10)].map((_, i) => (
-                      <div
-                        key={i}
-                        className="flex h-8 items-center justify-center rounded bg-secondary text-xs text-muted-foreground"
-                      >
-                        M{i + 1}
-                      </div>
-                    ))}
-                  </div>
+      <div className="mx-auto max-w-6xl">
+        <div className="text-center">
+          <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+            Everything you need to walk in prepared
+          </h2>
+          <p className="mt-4 text-lg text-muted-foreground">Simulator and solver. Both cover all 4 phases.</p>
+        </div>
+        <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {features.map((feature) => (
+            <Card key={feature.title} className="border-border bg-card shadow-sm">
+              <CardHeader className="pb-3">
+                <div className="mb-2 inline-flex w-fit rounded-md bg-primary/10 p-2 text-primary">
+                  <feature.icon className="size-4" />
                 </div>
-
-                {/* Results section */}
-                <div className="rounded-lg bg-primary/10 p-4">
-                  <div className="flex items-center gap-2 text-sm font-medium text-primary">
-                    <Play className="size-4" />
-                    Optimal Selection
-                  </div>
-                  <div className="mt-3 flex gap-2">
-                    {["M2", "M5", "M8"].map((m) => (
-                      <div
-                        key={m}
-                        className="flex h-10 flex-1 items-center justify-center rounded bg-primary text-sm font-semibold text-primary-foreground"
-                      >
-                        {m}
-                      </div>
-                    ))}
-                  </div>
-                  <p className="mt-3 text-center text-xs text-primary">
-                    Score: 100 / 100
-                  </p>
-                </div>
-
-                {/* Excel indicator */}
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <FileSpreadsheet className="size-4" />
-                  Also available as Excel download
-                </div>
-              </div>
-            </div>
-
-            {/* Decorative glow */}
-            <div className="pointer-events-none absolute -inset-4 -z-10 rounded-2xl bg-primary/5 blur-xl" />
-          </div>
+                <CardTitle className="text-lg">{feature.title}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">{feature.description}</p>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
     </section>
-  );
+  )
 }
