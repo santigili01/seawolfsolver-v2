@@ -155,6 +155,7 @@ type PartialSiteAccumulator = {
   phase3Result: import("@/lib/game-scoring").Phase3Score | null
   phase4Result: Phase4Score | null
   phase3Pool: Microbe[]
+  phase3SvgMap: Map<string, number> | null
 }
 
 const TIMER_START = 30 * 60
@@ -724,13 +725,31 @@ const microbeComponents = [
   MicrobeBlob30,
 ]
 
-function blobIdx(pool: Microbe[], id: string) {
-  const i = pool.findIndex((m) => m.id === id)
-  return Math.max(0, i)
+function microbeIdToSvgIndex(id: string): number {
+  let hash = 0
+  for (let i = 0; i < id.length; i++) {
+    hash = (hash * 31 + id.charCodeAt(i)) & 0x7fffffff
+  }
+  return hash % microbeComponents.length
+}
+
+function assignUniqueSvgIndices(microbes: { id: string }[]): Map<string, number> {
+  const used = new Set<number>()
+  const result = new Map<string, number>()
+  for (const m of microbes) {
+    let idx = microbeIdToSvgIndex(m.id)
+    while (used.has(idx)) {
+      idx = (idx + 1) % microbeComponents.length
+    }
+    used.add(idx)
+    result.set(m.id, idx)
+  }
+  return result
 }
 
 function MicrobeSvgFor(m: Microbe, pool: Microbe[]) {
-  const idx = blobIdx(pool, m.id)
+  const svgMap = assignUniqueSvgIndices(pool)
+  const idx = svgMap.get(m.id) ?? microbeIdToSvgIndex(m.id)
   const Svg = microbeComponents[idx % microbeComponents.length]!
   const c = MICROBE_PALETTE[idx % MICROBE_PALETTE.length] ?? "#888"
   return <Svg color={c} />
@@ -1440,7 +1459,8 @@ function insightRevealTypeUpper(r: RevealedCharacteristic): string {
 }
 
 function collapsedBlobCard(m: Microbe, poolMs: Microbe[]) {
-  const bi = blobIdx(poolMs, m.id)
+  const svgMap = assignUniqueSvgIndices(poolMs)
+  const bi = svgMap.get(m.id) ?? microbeIdToSvgIndex(m.id)
   const SvgC = microbeComponents[bi % microbeComponents.length] ?? MicrobeBlob1
   const c = MICROBE_PALETTE[bi % MICROBE_PALETTE.length] ?? "#808080"
   return <SvgC color={c} />
@@ -1475,7 +1495,8 @@ function GamePhase2Panel({
   const [keyExpanded, setKeyExpanded] = useState(false)
 
   const displayedMicrobe = pool.microbes[idx] ?? null
-  const ix = displayedMicrobe ? blobIdx(pool.microbes, displayedMicrobe.id) : 0
+  const p2SvgMap = useMemo(() => assignUniqueSvgIndices(pool.microbes), [pool.microbes])
+  const ix = displayedMicrobe ? (p2SvgMap.get(displayedMicrobe.id) ?? 0) : 0
   const Svg = microbeComponents[ix % microbeComponents.length] ?? MicrobeBlob1
   const col = MICROBE_PALETTE[ix % MICROBE_PALETTE.length] ?? "#808080"
 
@@ -1866,6 +1887,7 @@ function GamePhase0Panel({
   const m = taggedMicrobes[i]
   const req = scenarioToSiteReq(scenario)
   const siteStickyReq = scenario
+  const p0SvgMap = useMemo(() => assignUniqueSvgIndices(blobPalettePool), [blobPalettePool])
 
   const site1Label = `Site ${displaySiteNum}`
   type ColumnMicrobe = { m: Microbe; poolMs: Microbe[] }
@@ -1914,7 +1936,7 @@ function GamePhase0Panel({
   if (taggedMicrobes.length === 0) return null
 
   const displayedMicrobe = m
-  const ix = displayedMicrobe ? blobIdx(blobPalettePool, displayedMicrobe.id) : 0
+  const ix = displayedMicrobe ? (p0SvgMap.get(displayedMicrobe.id) ?? 0) : 0
   const Svg = microbeComponents[ix % microbeComponents.length] ?? MicrobeBlob1
   const col = MICROBE_PALETTE[ix % MICROBE_PALETTE.length] ?? "#808080"
   const remainingCount = Math.max(0, taggedMicrobes.length - i)
@@ -2356,7 +2378,7 @@ function GamePhase3PoolPanel({
   displaySiteNum: number
   attributesListForKey: string[]
   scenariosFileTraits: string[]
-  onComplete: (score: import("@/lib/game-scoring").Phase3Score, pool: Microbe[]) => void
+  onComplete: (score: import("@/lib/game-scoring").Phase3Score, pool: Microbe[], svgMap: Map<string, number>) => void
 }) {
   const [pool, setPool] = useState<Microbe[]>(() => [...prospect.preloaded_microbes])
   const [roundIdx, setRoundIdx] = useState(0)
@@ -2364,6 +2386,15 @@ function GamePhase3PoolPanel({
   const [picks, setPicks] = useState<string[]>([])
   const [keyExpanded, setKeyExpanded] = useState(false)
   const set = prospect.choose_sets[roundIdx]
+  const allP3Microbes = useMemo(() => {
+    const seen = new Map<string, Microbe>()
+    for (const m of prospect.preloaded_microbes) seen.set(m.id, m)
+    for (const cs of prospect.choose_sets) {
+      for (const c of cs.candidates) seen.set(c.microbe.id, c.microbe)
+    }
+    return [...seen.values()]
+  }, [prospect])
+  const p3SvgMap = useMemo(() => assignUniqueSvgIndices(allP3Microbes), [allP3Microbes])
 
   const keyTraits = useMemo(() => {
     const inPool = new Set(pool.map((m) => m.trait))
@@ -2408,7 +2439,7 @@ function GamePhase3PoolPanel({
         originalMaxScore: prospect.original_max_score,
         playerPoolMaxScore,
       })
-      onComplete(finalScore, builtOrdered)
+      onComplete(finalScore, builtOrdered, p3SvgMap)
       return
     }
     setRoundIdx((r) => r + 1)
@@ -2502,8 +2533,9 @@ function GamePhase3PoolPanel({
               const m = candidate.microbe
               const isSelected = pickId === m.id
               const anotherSelected = pickId !== null && !isSelected
-              const blobColor = MICROBE_PALETTE[idx % MICROBE_PALETTE.length] ?? "#808080"
-              const Svg = microbeComponents[idx % microbeComponents.length] ?? MicrobeBlob1
+              const svgIdx = p3SvgMap.get(m.id) ?? 0
+              const blobColor = MICROBE_PALETTE[svgIdx % MICROBE_PALETTE.length] ?? "#808080"
+              const Svg = microbeComponents[svgIdx % microbeComponents.length] ?? MicrobeBlob1
               return (
                 <button
                   key={m.id}
@@ -2549,8 +2581,9 @@ function GamePhase3PoolPanel({
                   />
                 )
               }
-              const blobColor = MICROBE_PALETTE[idx % MICROBE_PALETTE.length] ?? "#808080"
-              const Svg = microbeComponents[idx] ?? MicrobeBlob1
+              const svgIdx = p3SvgMap.get(m.id) ?? 0
+              const blobColor = MICROBE_PALETTE[svgIdx % MICROBE_PALETTE.length] ?? "#808080"
+              const Svg = microbeComponents[svgIdx % microbeComponents.length] ?? MicrobeBlob1
               return (
                 <div
                   key={m.id}
@@ -2618,7 +2651,7 @@ function GamePhase3PoolPanel({
           className={DEV_SKIP_BTN_CLASS}
           onClick={() => {
             const { score, pool: p } = devPhase3AutoPool(prospect, scenario)
-            onComplete(score, p)
+            onComplete(score, p, p3SvgMap)
           }}
         >
           Skip →
@@ -2630,6 +2663,7 @@ function GamePhase3PoolPanel({
 
 function GamePhase4TreatmentPanel({
   builtPool,
+  svgMap,
   scenario,
   displaySiteNum,
   attributesListForKey,
@@ -2637,6 +2671,7 @@ function GamePhase4TreatmentPanel({
   onComplete,
 }: {
   builtPool: Microbe[]
+  svgMap: Map<string, number>
   scenario: ScenarioRequirements
   displaySiteNum: number
   attributesListForKey: string[]
@@ -2771,9 +2806,9 @@ function GamePhase4TreatmentPanel({
                 </div>
               )
             }
-            const bi = Math.max(0, microbes.findIndex((m) => m.id === sel.id))
-            const col = MICROBE_PALETTE[bi % MICROBE_PALETTE.length] ?? "#808080"
-            const Svg = microbeComponents[bi] ?? MicrobeBlob1
+            const svgIdx = svgMap.get(sel.id) ?? 0
+            const col = MICROBE_PALETTE[svgIdx % MICROBE_PALETTE.length] ?? "#808080"
+            const Svg = microbeComponents[svgIdx % microbeComponents.length] ?? MicrobeBlob1
             const inv = getInviableAttributes(sel, scenario)
             return (
               <div
@@ -2833,8 +2868,9 @@ function GamePhase4TreatmentPanel({
             if (!microbe) {
               return <div key={`cell-${idx}`} className={trayReserveClass} aria-hidden />
             }
-            const MicrobeSvg = microbeComponents[idx] ?? MicrobeBlob1
-            const blobColor = MICROBE_PALETTE[idx % MICROBE_PALETTE.length] ?? "#808080"
+            const svgIdx = svgMap.get(microbe.id) ?? 0
+            const MicrobeSvg = microbeComponents[svgIdx % microbeComponents.length] ?? MicrobeBlob1
+            const blobColor = MICROBE_PALETTE[svgIdx % MICROBE_PALETTE.length] ?? "#808080"
             const isSel = selectedIds.has(microbe.id)
             const invAttrs = getInviableAttributes(microbe, scenario)
             if (isSel) {
@@ -3063,32 +3099,13 @@ function phase2ChoiceLabel(choice: "site1" | "site2" | "return", siteNum: number
 }
 
 function phase3RoundFallbackFeedback(rr: import("@/lib/game-scoring").RoundResult): string {
-  if (rr.playerPickClassification === "optimal") return "Great pick. You chose the strongest candidate available."
-  if (rr.playerPickClassification === "negative") return "This pick hurt pool quality. Try to avoid negative candidates."
-  if (rr.optimalId) return "A better optimal candidate was available this round."
+  if (rr.playerPickClassification === "optimal") return "Optimal pick — this microbe gave your pool the best chance of a 100-point treatment."
+  if (rr.playerPickClassification === "negative") return "Negative pick — this microbe actively reduces your pool's maximum score. Look for inviable attributes or undesired traits to spot these."
+  if (rr.optimalId) return "You missed the optimal candidate. Check the green-highlighted card to see what you should have picked and why."
   if (rr.bestNeutralScore !== null && rr.playerPickNeutralScore !== null && rr.playerPickNeutralScore < rr.bestNeutralScore) {
-    return "You picked a weaker neutral option than the best available."
+    return "You picked a neutral candidate, but a stronger neutral was available. Compare conditions satisfied across all three options."
   }
-  return "Solid pick for this round."
-}
-
-function parseJsonStringArray(raw: string): string[] | null {
-  const trimmed = raw.trim()
-  try {
-    const parsed = JSON.parse(trimmed)
-    if (Array.isArray(parsed) && parsed.every((x) => typeof x === "string")) return parsed
-  } catch {
-    /* ignore */
-  }
-  const fenceMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```/i)
-  if (!fenceMatch?.[1]) return null
-  try {
-    const parsed = JSON.parse(fenceMatch[1].trim())
-    if (Array.isArray(parsed) && parsed.every((x) => typeof x === "string")) return parsed
-  } catch {
-    /* ignore */
-  }
-  return null
+  return "Good pick — no optimal candidate was available, and you chose wisely among the neutrals."
 }
 
 function GameResultsFull({
@@ -3108,9 +3125,6 @@ function GameResultsFull({
     revealedChar: RevealedCharacteristic | null
   }[]
 }) {
-  const [friendlyPhase2Reasons, setFriendlyPhase2Reasons] = useState<Record<number, string[]>>({})
-  const [friendlyPhase3RoundLines, setFriendlyPhase3RoundLines] = useState<Record<number, string[]>>({})
-
   const accentHeading =
     "border-l-4 border-[#4ECDC4] pl-3 text-lg font-bold text-[#1a202c]"
   const sectionCard = "rounded-xl border border-[#e2e8f0] bg-white p-6 shadow-sm"
@@ -3130,57 +3144,6 @@ function GameResultsFull({
         <path d="M5 5l6 6M11 5l-6 6" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" />
       </svg>
     )
-
-  useEffect(() => {
-    let cancelled = false
-    ;(async () => {
-      for (let siteIdx = 0; siteIdx < siteDetail.length; siteIdx++) {
-        const entry = siteDetail[siteIdx]!
-        const phase2Reasons = entry.site.phase2.explanation.incorrect.map((x) => x.reason)
-        const phase3Lines = entry.site.phase3.roundResults.map((rr) => phase3RoundFallbackFeedback(rr))
-        const batched = [...phase2Reasons, ...phase3Lines]
-        if (!batched.length) continue
-        try {
-          const apiKey =
-            (typeof window !== "undefined" ? window.localStorage.getItem("ANTHROPIC_API_KEY") : null) ??
-            (process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY ?? "")
-          if (!apiKey) continue
-          const response = await fetch("https://api.anthropic.com/v1/messages", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "x-api-key": apiKey,
-              "anthropic-version": "2023-06-01",
-            },
-            body: JSON.stringify({
-              model: "claude-sonnet-4-20250514",
-              max_tokens: 1000,
-              messages: [
-                {
-                  role: "user",
-                  content: `Rewrite these microbe categorization feedback messages to be concise, friendly, and informative. Keep each under 15 words. Return ONLY a JSON array of strings in the same order: ${JSON.stringify(
-                    batched,
-                  )}`,
-                },
-              ],
-            }),
-          })
-          if (!response.ok) continue
-          const payload = (await response.json()) as { content?: { type: string; text?: string }[] }
-          const text = payload.content?.find((c) => c.type === "text")?.text ?? ""
-          const rewritten = parseJsonStringArray(text)
-          if (!rewritten || rewritten.length !== batched.length || cancelled) continue
-          setFriendlyPhase2Reasons((prev) => ({ ...prev, [siteIdx]: rewritten.slice(0, phase2Reasons.length) }))
-          setFriendlyPhase3RoundLines((prev) => ({ ...prev, [siteIdx]: rewritten.slice(phase2Reasons.length) }))
-        } catch {
-          /* keep originals */
-        }
-      }
-    })()
-    return () => {
-      cancelled = true
-    }
-  }, [siteDetail])
 
   return (
     <div className="min-h-screen w-full bg-[#f8fffe] text-gray-900">
@@ -3409,23 +3372,26 @@ function GameResultsFull({
                         const wrong = d.playerChoice !== d.correctChoice
                         const ex = s.phase2.explanation.incorrect.find((i) => i.id === d.microbeId)
                         const pm = entry.catPoolMicrobes.find((x) => x.id === d.microbeId) ?? pool.find((x) => x.id === d.microbeId) ?? null
-                        const rewrittenReason =
-                          ex && friendlyPhase2Reasons[siteIdx]
-                            ? friendlyPhase2Reasons[siteIdx]![s.phase2.explanation.incorrect.findIndex((x) => x.id === ex.id)] ?? ex.reason
-                            : ex?.reason ?? null
+                        const rewrittenReason = ex?.reason ?? null
                         return (
                           <div
                             key={d.microbeId}
                             className={`rounded-lg border p-2 text-[11px] shadow-sm ${wrong ? "border-red-300 bg-red-50" : "border-gray-200 bg-white"}`}
                           >
-                            <div className="mb-2 flex h-16 items-center justify-center">
-                              {pm ? (
-                                MicrobeSvgFor(pm, pool)
-                              ) : (
-                                <span className="rounded-full bg-gray-200 px-2 py-1 text-[9px] font-medium text-gray-600">{d.microbeId}</span>
-                              )}
-                            </div>
                             <div className="font-semibold leading-tight text-gray-900 line-clamp-2">{resolveName(d.microbeId)}</div>
+                            {pm ? (
+                              <div className="mt-1 space-y-0.5 text-[10px] text-gray-700">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="inline-flex">{attributeKeyIcon("Mobility")}</span>
+                                  <span>{pm.Mobility}</span>
+                                  <span className="inline-flex">{attributeKeyIcon("Agility")}</span>
+                                  <span>{pm.Agility}</span>
+                                  <span className="inline-flex">{attributeKeyIcon("Size")}</span>
+                                  <span>{pm.Size}</span>
+                                  <TraitBadgeChip trait={pm.trait} />
+                                </div>
+                              </div>
+                            ) : null}
                             <div className="mt-1 text-gray-600">
                               You: <span className="font-medium">{phase2ChoiceLabel(d.playerChoice, siteIdx + 1)}</span>
                             </div>
@@ -3495,9 +3461,7 @@ function GameResultsFull({
                               .filter((c) => c.classification === "neutral" && c.neutral_score !== null)
                               .sort((a, b) => (b.neutral_score ?? -Infinity) - (a.neutral_score ?? -Infinity))[0]
                           : null
-                        const aiLine =
-                          friendlyPhase3RoundLines[siteIdx]?.[rrIdx] ??
-                          phase3RoundFallbackFeedback(rr)
+                        const aiLine = phase3RoundFallbackFeedback(rr)
                         return (
                           <div key={`r-${rr.round}`} className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
                             <div className="mb-2 font-bold text-gray-900">Round {rr.round}</div>
@@ -3530,10 +3494,10 @@ function GameResultsFull({
                                         </span>
                                       </div>
                                     </div>
-                                    <p className="mt-1 text-[11px] text-gray-600">
-                                      M: {cand.microbe.Mobility} A: {cand.microbe.Agility} S: {cand.microbe.Size}
-                                    </p>
-                                    <div className="mt-1">
+                                    <div className="mt-1 flex items-center gap-1.5 text-[11px] text-gray-600">
+                                      <span>M: {cand.microbe.Mobility}</span>
+                                      <span>A: {cand.microbe.Agility}</span>
+                                      <span>S: {cand.microbe.Size}</span>
                                       <TraitBadgeChip trait={cand.microbe.trait} chipClassName="h-5 w-5" />
                                     </div>
                                   </div>
@@ -3797,6 +3761,7 @@ function newSiteWip(siteNumber: 1 | 2 | 3, cfg: GameConfig): PartialSiteAccumula
     phase3Result: null,
     phase4Result: null,
     phase3Pool: [],
+    phase3SvgMap: null,
   }
 }
 
@@ -4111,17 +4076,20 @@ export default function FullGamePage() {
               displaySiteNum={w.siteNumber}
               attributesListForKey={attrListForKey}
               scenariosFileTraits={traitsList}
-              onComplete={(score, pool) => {
-                setWip((cur) => (cur ? { ...cur, phase3Result: score, phase3Pool: pool } : cur))
+              onComplete={(score, pool, svgMap) => {
+                setWip((cur) =>
+                  cur ? { ...cur, phase3Result: score, phase3Pool: pool, phase3SvgMap: svgMap } : cur,
+                )
                 setStep("s1_phase4")
               }}
             />
           ) : null}
 
-          {step === "s1_phase4" && w.phase3Pool.length ? (
+          {step === "s1_phase4" && w.phase3Pool.length && w.phase3SvgMap ? (
             <GamePhase4TreatmentPanel
               key="s1-p4"
               builtPool={w.phase3Pool}
+              svgMap={w.phase3SvgMap}
               scenario={cfg.scenarios[0]!}
               displaySiteNum={w.siteNumber}
               attributesListForKey={attrListForKey}
@@ -4187,17 +4155,20 @@ export default function FullGamePage() {
               displaySiteNum={w.siteNumber}
               attributesListForKey={attrListForKey}
               scenariosFileTraits={traitsList}
-              onComplete={(score, pool) => {
-                setWip((cur) => (cur ? { ...cur, phase3Result: score, phase3Pool: pool } : cur))
+              onComplete={(score, pool, svgMap) => {
+                setWip((cur) =>
+                  cur ? { ...cur, phase3Result: score, phase3Pool: pool, phase3SvgMap: svgMap } : cur,
+                )
                 setStep("s2_phase4")
               }}
             />
           ) : null}
 
-          {step === "s2_phase4" && w.phase3Pool.length ? (
+          {step === "s2_phase4" && w.phase3Pool.length && w.phase3SvgMap ? (
             <GamePhase4TreatmentPanel
               key="s2-p4"
               builtPool={w.phase3Pool}
+              svgMap={w.phase3SvgMap}
               scenario={cfg.scenarios[1]!}
               displaySiteNum={w.siteNumber}
               attributesListForKey={attrListForKey}
@@ -4263,17 +4234,20 @@ export default function FullGamePage() {
               displaySiteNum={w.siteNumber}
               attributesListForKey={attrListForKey}
               scenariosFileTraits={traitsList}
-              onComplete={(score, pool) => {
-                setWip((cur) => (cur ? { ...cur, phase3Result: score, phase3Pool: pool } : cur))
+              onComplete={(score, pool, svgMap) => {
+                setWip((cur) =>
+                  cur ? { ...cur, phase3Result: score, phase3Pool: pool, phase3SvgMap: svgMap } : cur,
+                )
                 setStep("s3_phase4")
               }}
             />
           ) : null}
 
-          {step === "s3_phase4" && w.phase3Pool.length ? (
+          {step === "s3_phase4" && w.phase3Pool.length && w.phase3SvgMap ? (
             <GamePhase4TreatmentPanel
               key="s3-p4"
               builtPool={w.phase3Pool}
+              svgMap={w.phase3SvgMap}
               scenario={cfg.scenarios[2]!}
               displaySiteNum={w.siteNumber}
               attributesListForKey={attrListForKey}
