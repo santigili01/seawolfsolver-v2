@@ -1,20 +1,20 @@
-import { Globe, Shuffle, Infinity } from "lucide-react"
+import { Monitor, LayoutGrid, Lightbulb } from "lucide-react"
 
 const badges = [
   {
-    icon: Globe,
+    icon: Monitor,
     title: "Browser-Native",
     description: "No Excel. No macros. No malware risk. Open a tab and practice.",
   },
   {
-    icon: Shuffle,
-    title: "Phases 3 & 4 Solved",
-    description: "Most tools only solve Treatment. We optimize your Prospect Pool too.",
+    icon: LayoutGrid,
+    title: "All 4 Phases. Simulator + Solver.",
+    description: "Practice all 4 phases and get the optimal solution for each. Most tools only cover the final phase.",
   },
   {
-    icon: Infinity,
-    title: "300+ Scenarios",
-    description: "Virtually unlimited practice. One-time payment, practice forever.",
+    icon: Lightbulb,
+    title: "Deepest Insights on the Market",
+    description: "Full per-phase score breakdown with specific feedback on every decision. Know exactly what to fix.",
   },
 ]
 

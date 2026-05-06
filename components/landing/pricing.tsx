@@ -16,7 +16,7 @@ export function Pricing() {
             Simple pricing. No subscriptions.
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            Pay once. Practice forever. Prices will increase as we grow — lock in launch pricing now.
+            Launch pricing — available for a limited time.
           </p>
         </div>
 
@@ -33,9 +33,10 @@ export function Pricing() {
             <CardContent className="space-y-3 text-sm">
               <ul className="space-y-2">
                 {[
-                  "300+ unique scenarios",
                   "All 4 phases simulated",
-                  "Full per-phase scoring & insights",
+                  "300+ unique scenarios",
+                  "Full per-phase scoring",
+                  "Deepest insights on the market",
                   "Lifetime access & updates",
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-2 text-foreground">
@@ -59,7 +60,9 @@ export function Pricing() {
               <Badge className="w-fit bg-primary text-primary-foreground">
                 Most popular · Best value
               </Badge>
-              <p className="text-xs font-medium text-muted-foreground">SolvePrep charges $50 for solver alone.</p>
+              <p className="text-xs font-medium text-muted-foreground">
+                Leading prep tools charge $50+ for solver alone — without the simulator.
+              </p>
               <CardTitle className="text-xl">Simulator + Solver</CardTitle>
               <div className="text-4xl font-bold text-foreground">$25</div>
               <p className="text-sm text-muted-foreground">One-time · Lifetime access</p>
@@ -70,7 +73,7 @@ export function Pricing() {
                   "Everything in Simulator",
                   "Phase 3 Prospect Pool solver",
                   "Phase 4 Treatment solver",
-                  "Optimal pick explanations",
+                  "Optimal solution with full explanation",
                   "Lifetime access & updates",
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-2 text-foreground">

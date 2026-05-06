@@ -20,7 +20,7 @@ export function Hero() {
         </h1>
 
         <p className="mx-auto mt-6 max-w-2xl text-pretty text-lg text-muted-foreground">
-          The only simulator that covers all 4 phases — including Phase 3 Prospect Pool. 300+ scenarios. Browser-native, no Excel, no downloads. From $15.
+          The only prep tool covering all 4 phases of Sea Wolf — simulator and solver included. Built for the 2026 McKinsey Solve format.
         </p>
 
         <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -34,7 +34,7 @@ export function Hero() {
 
         <div className="mt-6 flex flex-wrap items-center justify-center gap-2.5">
           <Badge variant="secondary" className="rounded-full bg-card px-3 py-1 text-xs font-medium text-foreground ring-1 ring-border">
-            ✓ No signup required
+            ✓ All 4 phases covered
           </Badge>
           <Badge variant="secondary" className="rounded-full bg-card px-3 py-1 text-xs font-medium text-foreground ring-1 ring-border">
             ✓ One-time payment

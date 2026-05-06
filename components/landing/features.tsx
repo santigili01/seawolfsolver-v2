@@ -1,36 +1,36 @@
-import { Brain, Search, Calculator, BarChart2, RefreshCw, Infinity } from "lucide-react"
+import { LayoutGrid, Search, Calculator, Lightbulb, RefreshCw, Infinity } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 const features = [
   {
-    icon: Brain,
+    icon: LayoutGrid,
     title: "Full 4-Phase Simulator",
-    description: "Practice the complete Sea Wolf game, not just the final phase. 300+ unique scenario combinations.",
+    description: "Practice all 4 phases of the real Sea Wolf assessment: Profiling, Categorization, Prospect Pool, and Treatment. 300+ unique scenarios.",
   },
   {
     icon: Search,
-    title: "Phase 3 Solver",
-    description: "The Prospect Pool is the hardest phase. Our solver shows you the optimal pick in every round.",
+    title: "Phase 3 Prospect Pool Solver",
+    description: "The hardest phase. The solver shows you the optimal candidate pick in every round — the move that maximises your final pool score.",
   },
   {
     icon: Calculator,
-    title: "Phase 4 Solver",
-    description: "Input your 10 microbes, get the optimal Treatment trio with full scoring breakdown.",
+    title: "Phase 4 Treatment Solver",
+    description: "Input your 10 microbes. Get the optimal trio with full scoring breakdown across all 5 conditions.",
   },
   {
-    icon: BarChart2,
-    title: "Per-Phase Scoring",
-    description: "See exactly where you lost points after every run. Phase-by-phase breakdown with specific feedback.",
+    icon: Lightbulb,
+    title: "Deepest Insights on the Market",
+    description: "Every run ends with a full decision-level breakdown. Know exactly which choice cost you points and what the optimal move was.",
   },
   {
     icon: RefreshCw,
-    title: "2026 Format",
-    description: "Built for the current McKinsey Solve format. Updated as McKinsey changes the game.",
+    title: "Built for 2026",
+    description: "Covers the current McKinsey Solve format. Updated as the assessment changes. Check the changelog for the latest.",
   },
   {
     icon: Infinity,
     title: "Lifetime Access",
-    description: "Pay once. Practice as many times as you need. No subscription, no expiry, no re-purchasing.",
+    description: "Pay once. Practice as many times as you need. No subscription, no expiry. Future phases (Redrock, SFL) included free when released.",
   },
 ]
 
@@ -45,6 +45,7 @@ export function Features() {
           <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
             Everything you need to walk in prepared
           </h2>
+          <p className="mt-4 text-lg text-muted-foreground">Simulator and solver. Both cover all 4 phases.</p>
         </div>
         <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {features.map((feature) => (

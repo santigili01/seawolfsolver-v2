@@ -12,9 +12,9 @@ const faqs = [
       "Excel solvers only handle the Treatment phase (Phase 4) and require macro-enabled files — which many corporate laptops block and security tools flag. SeaWolfPrep is fully browser-based, covers all 4 phases including the Prospect Pool, and includes a full simulator. No downloads.",
   },
   {
-    question: "How is this different from Prepmatter or PSG Cracked?",
+    question: "How does this compare to other prep tools?",
     answer:
-      "Same realistic gameplay, 5–10× cheaper, and you keep access forever. Prepmatter charges $239 for 6 months. PSG Cracked charges ~$165. We charge $25, one-time, lifetime.",
+      "Leading prep tools charge $150–240 for 6-month access windows. SeaWolfPrep charges $25 one-time, lifetime access. Same realistic gameplay — built on the same game mechanics — at a fraction of the price.",
   },
   {
     question: "Is SeaWolfPrep affiliated with McKinsey?",
