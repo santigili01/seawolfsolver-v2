@@ -23,10 +23,17 @@ import {
   type Phase4MicrobeInput,
   type Phase4Score,
   type Phase1Score,
+  type Phase3Score,
   type GameScore,
   type Phase3Candidate,
   type SiteScore,
 } from "@/lib/game-scoring"
+
+/** Dev-only: skip buttons & fast-forward to results. Set `false` for production builds. */
+const DEV_MODE = true
+
+const DEV_SKIP_BTN_CLASS =
+  "fixed bottom-20 left-4 z-50 rounded-lg bg-orange-500 px-3 py-2 text-xs font-bold text-white shadow-lg hover:bg-orange-600"
 
 // ─── shared types ─────────────────────────────────────────────────────────────
 
@@ -258,6 +265,29 @@ function correctP2Reason(pool: CategorizationPool, id: string): string {
     ...pool.correct_categorization.return.map((x) => ({ ...x, c: "return" as const })),
   ]
   return all.find((x) => x.id === id)?.reason ?? ""
+}
+
+function devPhase2PerfectComplete(pool: CategorizationPool): {
+  score: ReturnType<typeof scorePhase2>
+  tagged: Microbe[]
+  rows: Phase2DecisionRow[]
+} {
+  const rows: Phase2DecisionRow[] = pool.microbes.map((m) => {
+    const c = correctP2Choice(pool, m.id)
+    return { microbeId: m.id, playerChoice: c, correctChoice: c, reason: correctP2Reason(pool, m.id) }
+  })
+  const tagged = pool.microbes.filter((m) => correctP2Choice(pool, m.id) === "site2")
+  return { score: scorePhase2(rows), tagged, rows }
+}
+
+function devPhase0AllKeep(taggedMicrobes: Microbe[], scenario: ScenarioRequirements): ReturnType<typeof scorePhase0> {
+  const req = scenarioToSiteReq(scenario)
+  const inputs: Phase0DecisionInput[] = taggedMicrobes.map((m) => ({
+    microbe: { ...m },
+    playerChoice: "keep",
+    siteRequirements: req,
+  }))
+  return scorePhase0(inputs)
 }
 
 function formatCountdown(seconds: number) {
@@ -902,18 +932,18 @@ function GamePhase1ProfilingPanel({
 }) {
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(() => new Set())
   const [sliderPositions, setSliderPositions] = useState<Record<string, number>>({
-    Mobility: 1,
-    Agility: 1,
-    Size: 1,
+    Mobility: 4,
+    Agility: 4,
+    Size: 4,
   })
 
   const [keyExpanded, setKeyExpanded] = useState(false)
 
   useEffect(() => {
     setSliderPositions({
-      Mobility: clampSliderStart(scenario.attributes.Mobility.min),
-      Agility: clampSliderStart(scenario.attributes.Agility.min),
-      Size: clampSliderStart(scenario.attributes.Size.min),
+      Mobility: 4,
+      Agility: 4,
+      Size: 4,
     })
   }, [scenario])
 
@@ -1175,6 +1205,19 @@ function GamePhase1ProfilingPanel({
           ) : null}
         </div>
       </div>
+
+      {DEV_MODE ? (
+        <button
+          type="button"
+          className={DEV_SKIP_BTN_CLASS}
+          onClick={() => {
+            const { score, picks } = devPhase1SkipScoreAndPicks(scenario)
+            onComplete(score, picks)
+          }}
+        >
+          Skip →
+        </button>
+      ) : null}
     </div>
   )
 }
@@ -1575,6 +1618,19 @@ function GamePhase2Panel({
           ) : null}
         </div>
       </div>
+
+      {DEV_MODE ? (
+        <button
+          type="button"
+          className={DEV_SKIP_BTN_CLASS}
+          onClick={() => {
+            const { score, tagged, rows } = devPhase2PerfectComplete(pool)
+            onComplete(score, tagged, rows)
+          }}
+        >
+          Skip →
+        </button>
+      ) : null}
     </div>
   )
 }
@@ -1889,6 +1945,12 @@ function GamePhase0Panel({
           ) : null}
         </div>
       </div>
+
+      {DEV_MODE ? (
+        <button type="button" className={DEV_SKIP_BTN_CLASS} onClick={() => onComplete(devPhase0AllKeep(taggedMicrobes, scenario))}>
+          Skip →
+        </button>
+      ) : null}
     </div>
   )
 }
@@ -1912,6 +1974,168 @@ function prospectToPhase3Input(
       }),
     ),
   }))
+}
+
+function devPhase1PerfectPicks(scenario: ScenarioRequirements): GSelectionItem[] {
+  let bestExt = -1
+  const bests: (typeof ATTR_NAMES)[number][] = []
+  for (const attr of ATTR_NAMES) {
+    const { min, max } = scenario.attributes[attr]
+    const e = Math.abs((min + max) / 2 - 5.5)
+    if (e > bestExt) {
+      bestExt = e
+      bests.length = 0
+      bests.push(attr)
+    } else if (e === bestExt) {
+      bests.push(attr)
+    }
+  }
+  const a = bests[0]!
+  const r = scenario.attributes[a]
+  return [
+    { type: "trait", name: scenario.desired_trait },
+    { type: "attribute", name: a, selectedMin: r.min, selectedMax: r.min + 2 },
+  ]
+}
+
+/** Dev skip: desired trait + first ordered attribute at scenario min; if not a perfect Phase 1, falls back to `devPhase1PerfectPicks`. */
+function devPhase1SkipScoreAndPicks(scenario: ScenarioRequirements): { score: Phase1Score; picks: GSelectionItem[] } {
+  const firstAttr = ATTR_NAMES[0]!
+  let picks: GSelectionItem[] = [
+    { type: "trait", name: scenario.desired_trait },
+    {
+      type: "attribute",
+      name: firstAttr,
+      selectedMin: scenario.attributes[firstAttr].min,
+      selectedMax: scenario.attributes[firstAttr].min + 2,
+    },
+  ]
+  let score = scorePhase1({
+    playerSelection: picks,
+    scenario: { ...scenarioToSiteReq(scenario), name: scenario.name },
+  })
+  if (score.raw !== 2) {
+    picks = devPhase1PerfectPicks(scenario)
+    score = scorePhase1({
+      playerSelection: picks,
+      scenario: { ...scenarioToSiteReq(scenario), name: scenario.name },
+    })
+  }
+  return { score, picks }
+}
+
+function devPhase3AutoPool(prospect: ProspectScenarioJson, scenario: ScenarioRequirements): { score: Phase3Score; pool: Microbe[] } {
+  const pickIds = prospect.choose_sets.map((cs) => cs.candidates[0]!.microbe.id)
+  const builtOrdered = [...prospect.preloaded_microbes]
+  const reqPick = scenarioToSiteReq(scenario)
+  for (let rIdx = 0; rIdx < pickIds.length; rIdx++) {
+    const pid = pickIds[rIdx]
+    const fromRound = prospect.choose_sets[rIdx]?.candidates.find((c) => c.microbe.id === pid)?.microbe
+    if (fromRound) builtOrdered.push(fromRound)
+  }
+  const combos = combinations3([...builtOrdered] as Phase4MicrobeInput[])
+  const playerPoolMaxScore =
+    combos.length === 0
+      ? prospect.optimal_max_score
+      : Math.max(
+          ...combos.map((trio) =>
+            scorePhase4({
+              selectedMicrobes: trio,
+              allMicrobes: builtOrdered as Phase4MicrobeInput[],
+              req: reqPick,
+            }).score,
+          ),
+        )
+  const score = scorePhase3({
+    chooseSets: prospectToPhase3Input(prospect, pickIds),
+    playerPickIds: pickIds,
+    originalMaxScore: prospect.original_max_score,
+    playerPoolMaxScore,
+  })
+  return { score, pool: builtOrdered }
+}
+
+function devScoreAtPct75<T extends { percentage: number }>(s: T): T {
+  return { ...s, percentage: 75 }
+}
+
+function buildDevFinishedThreeSites(cfg: GameConfig): {
+  finished: SiteScore[]
+  pools: Microbe[][]
+  p1Picks: GSelectionItem[][]
+} {
+  const sites: SiteScore[] = []
+  const pools: Microbe[][] = []
+  const p1Picks: GSelectionItem[][] = []
+
+  const pack = (
+    siteNumber: 1 | 2 | 3,
+    scenario: ScenarioRequirements,
+    catPool: CategorizationPool,
+    prospect: ProspectScenarioJson,
+    phase0Input: Phase0DecisionInput[] | null,
+  ) => {
+    const p1Sel = devPhase1PerfectPicks(scenario)
+    const p1 = devScoreAtPct75(
+      scorePhase1({
+        playerSelection: p1Sel,
+        scenario: { ...scenarioToSiteReq(scenario), name: scenario.name },
+      }),
+    )
+    const p2rows: Phase2DecisionRow[] = catPool.microbes.map((m) => {
+      const c = correctP2Choice(catPool, m.id)
+      return { microbeId: m.id, playerChoice: c, correctChoice: c, reason: correctP2Reason(catPool, m.id) }
+    })
+    const p2 = devScoreAtPct75(scorePhase2(p2rows))
+    const p0 = phase0Input ? devScoreAtPct75(scorePhase0(phase0Input)) : null
+    const { score: p3, pool: p3pool } = devPhase3AutoPool(prospect, scenario)
+    const p3s = devScoreAtPct75(p3)
+    const trio = p3pool.slice(0, 3) as Microbe[]
+    const p4raw = scorePhase4({
+      selectedMicrobes: trio as Phase4MicrobeInput[],
+      allMicrobes: p3pool.slice(0, GRID_SLOTS) as Phase4MicrobeInput[],
+      req: scenarioToSiteReq(scenario),
+    })
+    const p4 = devScoreAtPct75(p4raw)
+    const partial: Omit<SiteScore, "siteAverage"> = {
+      siteNumber,
+      scenarioName: scenario.name,
+      timeSpent: 60,
+      phase1: p1,
+      phase2: p2,
+      phase0: p0,
+      phase3: p3s,
+      phase4: p4,
+    }
+    sites.push({ ...partial, siteAverage: computeSiteAverage(partial) })
+    pools.push(p3pool)
+    p1Picks.push(p1Sel)
+  }
+
+  const tagged2 = cfg.catPool12.microbes.filter((m) => correctP2Choice(cfg.catPool12, m.id) === "site2")
+  const p0s2: Phase0DecisionInput[] | null =
+    tagged2.length === 0
+      ? null
+      : tagged2.map((m) => ({
+          microbe: { ...m },
+          playerChoice: "keep",
+          siteRequirements: scenarioToSiteReq(cfg.scenarios[1]!),
+        }))
+  const tagged3 = cfg.catPool23.microbes.filter((m) => correctP2Choice(cfg.catPool23, m.id) === "site2")
+  const p0s3: Phase0DecisionInput[] | null =
+    tagged3.length === 0
+      ? null
+      : tagged3.map((m) => ({
+          microbe: { ...m },
+          playerChoice: "keep",
+          siteRequirements: scenarioToSiteReq(cfg.scenarios[2]!),
+        }))
+
+  pack(1, cfg.scenarios[0]!, cfg.catPool12, cfg.prospectA, null)
+  pack(2, cfg.scenarios[1]!, cfg.catPool23, cfg.prospectB, p0s2)
+  pack(3, cfg.scenarios[2]!, cfg.catPoolSite3, cfg.prospectC, p0s3)
+
+  return { finished: sites, pools, p1Picks: p1Picks }
 }
 
 function GamePhase3PoolPanel({
@@ -1991,7 +2215,7 @@ function GamePhase3PoolPanel({
   const req = scenario
 
   return (
-    <div className="relative min-h-[calc(100vh-6rem)] w-full overflow-hidden pb-44">
+    <div className="relative min-h-[calc(100vh-6rem)] w-full overflow-y-auto pb-10">
       <div className="pointer-events-none absolute inset-0 z-[1] opacity-20">
         <div className="absolute top-20 left-20 h-48 w-32 rounded-lg bg-orange-500/30" />
         <div className="absolute top-32 left-60 h-32 w-20 rounded-lg bg-blue-400/30" />
@@ -2066,7 +2290,7 @@ function GamePhase3PoolPanel({
         </div>
       </div>
 
-      <div className="absolute top-[14%] left-1/2 z-10 flex -translate-x-1/2 flex-col items-center">
+      <div className="relative z-10 mt-6 flex flex-col items-center">
         <div className="flex gap-4">
           {candidates.map((candidate, idx) => {
             const m = candidate.microbe
@@ -2107,7 +2331,7 @@ function GamePhase3PoolPanel({
         </button>
       </div>
 
-      <div className="absolute bottom-10 left-1/2 z-10 -translate-x-1/2">
+      <div className="relative z-10 mt-8 flex justify-center">
         <div className="grid w-[864px] gap-4 [grid-template-columns:repeat(5,160px)]">
           {Array.from({ length: GRID_SLOTS }, (_, idx) => {
             const m = pool[idx]
@@ -2180,6 +2404,19 @@ function GamePhase3PoolPanel({
           <option key={t}>{t}</option>
         ))}
       </select>
+
+      {DEV_MODE ? (
+        <button
+          type="button"
+          className={DEV_SKIP_BTN_CLASS}
+          onClick={() => {
+            const { score, pool: p } = devPhase3AutoPool(prospect, scenario)
+            onComplete(score, p)
+          }}
+        >
+          Skip →
+        </button>
+      ) : null}
     </div>
   )
 }
@@ -2239,7 +2476,7 @@ function GamePhase4TreatmentPanel({
   const req = scenario
 
   return (
-    <div className="relative min-h-[calc(100vh-6rem)] w-full overflow-hidden pb-44">
+    <div className="relative min-h-[calc(100vh-6rem)] w-full overflow-y-auto pb-10">
       <div className="pointer-events-none absolute inset-0 z-[1] opacity-20">
         <div className="absolute top-20 left-20 h-48 w-32 rounded-lg bg-orange-500/30" />
         <div className="absolute top-32 left-60 h-32 w-20 rounded-lg bg-blue-400/30" />
@@ -2312,67 +2549,67 @@ function GamePhase4TreatmentPanel({
         </div>
       </div>
 
-      <div className="absolute top-[14%] left-1/2 z-10 flex -translate-x-1/2 flex-col items-center">
-        <div className="flex gap-4">
-          {[0, 1, 2].map((slotIndex) => {
-            const sel = selected[slotIndex]
-            if (!sel) {
-              return (
-                <div
-                  key={`slot-empty-${slotIndex}`}
-                  className="flex h-[220px] w-[160px] items-center justify-center rounded-xl border-2 border-dashed border-white/50 bg-white/30 transition-all hover:bg-white/40"
-                  aria-label={`Selection slot empty ${slotIndex + 1}`}
-                >
-                  <span className="h-8 w-8 shrink-0 rounded border-2 border-dashed border-white/40" aria-hidden />
-                </div>
-              )
-            }
-            const bi = Math.max(0, microbes.findIndex((m) => m.id === sel.id))
-            const col = MICROBE_PALETTE[bi % MICROBE_PALETTE.length] ?? "#808080"
-            const Svg = microbeComponents[bi] ?? MicrobeBlob1
-            const inv = getInviableAttributes(sel, scenario)
+      <div className="relative z-10 mt-6 flex justify-center gap-3">
+        {[0, 1, 2].map((slotIndex) => {
+          const sel = selected[slotIndex]
+          if (!sel) {
             return (
               <div
-                key={`${sel.id}-slot-${slotIndex}`}
-                role="button"
-                tabIndex={0}
-                onClick={() => removeMicrobeId(sel.id)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault()
-                    removeMicrobeId(sel.id)
-                  }
-                }}
-                className="relative flex h-[220px] w-[160px] shrink-0 cursor-pointer flex-col items-center text-center rounded-xl border-2 border-solid border-blue-400 bg-white shadow-lg"
+                key={`slot-empty-${slotIndex}`}
+                className="flex h-[220px] w-[160px] items-center justify-center rounded-xl border-2 border-dashed border-white/50 bg-white/30 transition-all hover:bg-white/40"
+                aria-label={`Selection slot empty ${slotIndex + 1}`}
               >
-                {inv.length > 0 ? (
-                  <div className="absolute top-1 right-1 z-[2]">
-                    <Tooltip text="An inviable microbe cannot mathematically contribute to a valid average for one or more attributes, regardless of what other microbes are selected.">
-                      <span className="inline-flex text-amber-600">
-                        <HelpCircle className="h-4 w-4" />
-                      </span>
-                    </Tooltip>
-                  </div>
-                ) : null}
-                <div className="flex min-h-0 w-full flex-1 flex-col items-center justify-between gap-1 px-2 py-2 text-center">
-                  <div className="flex h-16 w-16 shrink-0 items-center justify-center [&>svg]:block [&>svg]:h-full [&>svg]:w-full [&>svg]:max-h-full [&>svg]:max-w-full">
-                    <Svg color={col} />
-                  </div>
-                  <p className="line-clamp-2 w-full text-center text-[14px] font-bold leading-tight text-gray-800">{sel.name}</p>
-                  <div className="flex w-full flex-col items-center text-center">
-                    <SlotAttributeRow Mobility={sel.Mobility} Agility={sel.Agility} Size={sel.Size} inviableAttributes={inv} />
-                  </div>
-                  <SlotTraitBadge trait={sel.trait} />
-                </div>
+                <span className="h-8 w-8 shrink-0 rounded border-2 border-dashed border-white/40" aria-hidden />
               </div>
             )
-          })}
-        </div>
+          }
+          const bi = Math.max(0, microbes.findIndex((m) => m.id === sel.id))
+          const col = MICROBE_PALETTE[bi % MICROBE_PALETTE.length] ?? "#808080"
+          const Svg = microbeComponents[bi] ?? MicrobeBlob1
+          const inv = getInviableAttributes(sel, scenario)
+          return (
+            <div
+              key={`${sel.id}-slot-${slotIndex}`}
+              role="button"
+              tabIndex={0}
+              onClick={() => removeMicrobeId(sel.id)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault()
+                  removeMicrobeId(sel.id)
+                }
+              }}
+              className="relative flex h-[220px] w-[160px] shrink-0 cursor-pointer flex-col items-center text-center rounded-xl border-2 border-solid border-blue-400 bg-white shadow-lg"
+            >
+              {inv.length > 0 ? (
+                <div className="absolute top-1 right-1 z-[2]">
+                  <Tooltip text="An inviable microbe cannot mathematically contribute to a valid average for one or more attributes, regardless of what other microbes are selected.">
+                    <span className="inline-flex text-amber-600">
+                      <HelpCircle className="h-4 w-4" />
+                    </span>
+                  </Tooltip>
+                </div>
+              ) : null}
+              <div className="flex min-h-0 w-full flex-1 flex-col items-center justify-between gap-1 px-2 py-2 text-center">
+                <div className="flex h-16 w-16 shrink-0 items-center justify-center [&>svg]:block [&>svg]:h-full [&>svg]:w-full [&>svg]:max-h-full [&>svg]:max-w-full">
+                  <Svg color={col} />
+                </div>
+                <p className="line-clamp-2 w-full text-center text-[14px] font-bold leading-tight text-gray-800">{sel.name}</p>
+                <div className="flex w-full flex-col items-center text-center">
+                  <SlotAttributeRow Mobility={sel.Mobility} Agility={sel.Agility} Size={sel.Size} inviableAttributes={inv} />
+                </div>
+                <SlotTraitBadge trait={sel.trait} />
+              </div>
+            </div>
+          )
+        })}
+      </div>
+      <div className="relative z-10 mt-4 flex justify-center">
         <button
           type="button"
           disabled={selected.length !== 3}
           onClick={submit}
-          className={`mt-5 rounded-lg px-6 py-2 font-medium transition-all ${
+          className={`rounded-lg px-6 py-2 font-medium transition-all ${
             selected.length === 3
               ? "cursor-pointer bg-[rgba(20,30,50,0.9)] text-white hover:bg-[rgba(30,40,60,0.95)]"
               : "cursor-not-allowed bg-gray-500/50 text-gray-300"
@@ -2382,48 +2619,46 @@ function GamePhase4TreatmentPanel({
         </button>
       </div>
 
-      <div className="absolute bottom-10 left-1/2 z-10 -translate-x-1/2">
-        <div className="grid w-[864px] gap-4 [grid-template-columns:repeat(5,160px)]">
-          {Array.from({ length: GRID_SLOTS }, (_, idx) => {
-            const microbe = microbes[idx]
-            if (!microbe) {
-              return <div key={`cell-${idx}`} className={trayReserveClass} aria-hidden />
-            }
-            const MicrobeSvg = microbeComponents[idx] ?? MicrobeBlob1
-            const blobColor = MICROBE_PALETTE[idx % MICROBE_PALETTE.length] ?? "#808080"
-            const isSel = selectedIds.has(microbe.id)
-            const invAttrs = getInviableAttributes(microbe, scenario)
-            if (isSel) {
-              return (
-                <div key={microbe.id} className="h-[160px] w-[160px] rounded-xl border-2 border-dashed border-white/30 bg-white/20" />
-              )
-            }
+      <div className="relative z-10 mx-auto mt-6 grid max-w-[900px] grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-3 px-4">
+        {Array.from({ length: GRID_SLOTS }, (_, idx) => {
+          const microbe = microbes[idx]
+          if (!microbe) {
+            return <div key={`cell-${idx}`} className={trayReserveClass} aria-hidden />
+          }
+          const MicrobeSvg = microbeComponents[idx] ?? MicrobeBlob1
+          const blobColor = MICROBE_PALETTE[idx % MICROBE_PALETTE.length] ?? "#808080"
+          const isSel = selectedIds.has(microbe.id)
+          const invAttrs = getInviableAttributes(microbe, scenario)
+          if (isSel) {
             return (
-              <button
-                key={microbe.id}
-                type="button"
-                disabled={selected.length >= 3}
-                className="flex h-[160px] w-[160px] cursor-pointer flex-col rounded-xl border-2 border-transparent bg-white p-2 text-left shadow-lg transition-all hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60"
-                onClick={() => togglePick(microbe)}
-              >
-                <div className="mb-1 w-full text-center text-sm font-bold text-gray-800 line-clamp-1">{microbe.name}</div>
-                <div className="mb-1 flex shrink-0 justify-center">
-                  <MicrobeSvg color={blobColor} />
-                </div>
-                <div className="mt-auto flex w-full items-center justify-between gap-1 px-1">
-                  <MicrobeAttributeRow
-                    Mobility={microbe.Mobility}
-                    Agility={microbe.Agility}
-                    Size={microbe.Size}
-                    inviableAttributes={invAttrs}
-                    highlightInviable
-                  />
-                  <TraitBadgeChip trait={microbe.trait} />
-                </div>
-              </button>
+              <div key={microbe.id} className="min-h-[140px] rounded-xl border-2 border-dashed border-white/30 bg-white/20" />
             )
-          })}
-        </div>
+          }
+          return (
+            <button
+              key={microbe.id}
+              type="button"
+              disabled={selected.length >= 3}
+              className="flex min-h-[140px] cursor-pointer flex-col rounded-xl border-2 border-transparent bg-white p-2 text-left shadow-lg transition-all hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60"
+              onClick={() => togglePick(microbe)}
+            >
+              <div className="mb-1 w-full text-center text-sm font-bold text-gray-800 line-clamp-1">{microbe.name}</div>
+              <div className="mb-1 flex shrink-0 justify-center">
+                <MicrobeSvg color={blobColor} />
+              </div>
+              <div className="mt-auto flex w-full items-center justify-between gap-1 px-1">
+                <MicrobeAttributeRow
+                  Mobility={microbe.Mobility}
+                  Agility={microbe.Agility}
+                  Size={microbe.Size}
+                  inviableAttributes={invAttrs}
+                  highlightInviable
+                />
+                <TraitBadgeChip trait={microbe.trait} />
+              </div>
+            </button>
+          )
+        })}
       </div>
 
       <div className="absolute right-6 bottom-8 z-20">
@@ -2466,6 +2701,24 @@ function GamePhase4TreatmentPanel({
           <option key={x}>{x}</option>
         ))}
       </select>
+
+      {DEV_MODE && microbes.length >= 3 ? (
+        <button
+          type="button"
+          className={DEV_SKIP_BTN_CLASS}
+          onClick={() =>
+            onComplete(
+              scorePhase4({
+                selectedMicrobes: microbes.slice(0, 3) as Phase4MicrobeInput[],
+                allMicrobes: microbes as Phase4MicrobeInput[],
+                req: scenarioToSiteReq(scenario),
+              }),
+            )
+          }
+        >
+          Skip →
+        </button>
+      ) : null}
     </div>
   )
 }
@@ -3217,6 +3470,49 @@ export default function FullGamePage() {
     }
   }, [scenariosMeta])
 
+  const handleSkipToResults = useCallback(async () => {
+    if (pickingChains) return
+    setPickingChains(true)
+    try {
+      const scRes =
+        scenariosMeta ??
+        (((await fetch("/scenarios.json").then((r) => r.json())) as ScenariosFile) ?? null)
+      if (!scRes?.scenarios?.length) {
+        window.alert("Could not load scenarios.")
+        setPickingChains(false)
+        return
+      }
+      if (!scenariosMeta) setScenariosMeta(scRes)
+
+      const [cats, prospects] = await Promise.all([
+        fetch("/categorization_pools.json").then((r) => r.json()) as Promise<CatPoolsFile>,
+        fetch("/phase2_pools.json").then((r) => r.json()) as Promise<ProspectPoolsFile>,
+      ])
+
+      const chain = pickScenarioChain(scRes.scenarios, cats, prospects)
+      if (!chain) {
+        window.alert("Could not build a scenario chain — try again.")
+        setPickingChains(false)
+        return
+      }
+
+      const { finished, pools, p1Picks } = buildDevFinishedThreeSites(chain)
+      setTaggedForSite2([])
+      setTaggedForSite3([])
+      setGameCfg(chain)
+      setFinishedSites(finished)
+      setTreatmentPoolsBySite(pools)
+      setP1SelectionsBySite(p1Picks)
+      setWip(null)
+      setStep("results")
+    } catch (e) {
+      console.error(e)
+      window.alert("Failed to load game data.")
+    } finally {
+      setPickingChains(false)
+    }
+  }, [pickingChains, scenariosMeta])
+
   const cfg = gameCfg
   const w = wip
   const gameCfgRef = useRef<GameConfig | null>(null)
@@ -3315,6 +3611,16 @@ export default function FullGamePage() {
           >
             {pickingChains ? "Loading…" : "Start Game"}
           </button>
+          {DEV_MODE ? (
+            <button
+              type="button"
+              disabled={pickingChains}
+              onClick={() => void handleSkipToResults()}
+              className="mt-6 rounded-xl bg-orange-500 px-6 py-3 text-sm font-bold text-white shadow-lg transition hover:bg-orange-600 disabled:cursor-wait disabled:opacity-70"
+            >
+              → Skip to Results
+            </button>
+          ) : null}
         </div>
       ) : null}
 
