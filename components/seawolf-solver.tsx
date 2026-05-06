@@ -81,10 +81,6 @@ const PHASE3_PRELOAD_COUNT = 6
 const PHASE3_ROUNDS = 4
 const PHASE3_CANDIDATES = 3
 const PHASE4_ATTRIBUTE_KEYS = ["mobility", "agility", "size"] as const
-const PHASE4_TABLES = [
-  { start: 0, end: 4, bgClass: "bg-[#f0f4ff]", borderClass: "border-l-[#2563eb]/50" },
-  { start: 5, end: 9, bgClass: "bg-[#f0f4ff]", borderClass: "border-l-[#2563eb]/50" },
-] as const
 
 const FALLBACK_TRAIT_COLORS = ["#10b981", "#f59e0b", "#6366f1", "#06b6d4"] as const
 
@@ -464,8 +460,6 @@ export function SeawolfSolver() {
     agility: { min: "", max: "" },
     size: { min: "", max: "" },
   })
-  const [p4DesiredTrait, setP4DesiredTrait] = useState("")
-  const [p4UndesiredTrait, setP4UndesiredTrait] = useState("")
   const [microbeData, setMicrobeData] = useState<Phase4MicrobeData>({
     mobility: Array(PHASE4_MICROBE_COUNT).fill(""),
     agility: Array(PHASE4_MICROBE_COUNT).fill(""),
@@ -481,8 +475,6 @@ export function SeawolfSolver() {
       agility: { min: r2.min, max: r2.max },
       size: { min: r3.min, max: r3.max },
     })
-    setP4DesiredTrait(siteInfoConfig.desiredTrait)
-    setP4UndesiredTrait(siteInfoConfig.undesiredTrait)
   }, [siteInfoConfig])
 
   const handleRangeChange = (attribute: keyof TargetRanges, field: "min" | "max", value: string) => {
@@ -553,8 +545,6 @@ export function SeawolfSolver() {
       agility: { min: "", max: "" },
       size: { min: "", max: "" },
     })
-    setP4DesiredTrait("")
-    setP4UndesiredTrait("")
     setSiteInfoConfig((prev) => ({
       ...prev,
       attrRanges: [
@@ -562,8 +552,6 @@ export function SeawolfSolver() {
         { min: "", max: "" },
         { min: "", max: "" },
       ],
-      desiredTrait: "",
-      undesiredTrait: "",
     }))
     setMicrobeData({
       mobility: Array(PHASE4_MICROBE_COUNT).fill(""),
@@ -607,26 +595,20 @@ export function SeawolfSolver() {
       const delta = randomInt(2, maxDelta)
       return { min, max: min + delta }
     }
-    const desiredIdx = randomInt(0, Math.max(0, traitNames.length - 1))
-    let undesiredIdx = randomInt(0, Math.max(0, traitNames.length - 1))
-    if (traitNames.length > 1 && undesiredIdx === desiredIdx) undesiredIdx = (desiredIdx + 1) % traitNames.length
     const nextRanges = {
       mobility: randomRange(),
       agility: randomRange(),
       size: randomRange(),
     }
     setTargetRanges(nextRanges)
-    setP4DesiredTrait(traitNames[desiredIdx] ?? "")
-    setP4UndesiredTrait(traitNames[undesiredIdx] ?? "")
-    setSiteInfoConfig({
+    setSiteInfoConfig((prev) => ({
+      ...prev,
       attrRanges: [
         { min: nextRanges.mobility.min, max: nextRanges.mobility.max },
         { min: nextRanges.agility.min, max: nextRanges.agility.max },
         { min: nextRanges.size.min, max: nextRanges.size.max },
       ],
-      desiredTrait: traitNames[desiredIdx] ?? "",
-      undesiredTrait: traitNames[undesiredIdx] ?? "",
-    })
+    }))
   }
 
   useEffect(() => {
@@ -706,8 +688,8 @@ export function SeawolfSolver() {
               means.agility <= numericTargetRanges.agility.max,
             sizeInRange:
               means.size >= numericTargetRanges.size.min && means.size <= numericTargetRanges.size.max,
-            desiredPresent: p4DesiredTrait ? microbes.some((idx) => microbeData.desirable[idx]) : true,
-            undesiredAbsent: p4UndesiredTrait ? microbes.every((idx) => !microbeData.undesirable[idx]) : true,
+            desiredPresent: microbes.some((idx) => microbeData.desirable[idx]),
+            undesiredAbsent: microbes.every((idx) => !microbeData.undesirable[idx]),
           }
 
           let score = 100
@@ -728,7 +710,7 @@ export function SeawolfSolver() {
     }
 
     return combos
-  }, [areAllInputsComplete, microbeData, numericTargetRanges, p4DesiredTrait, p4UndesiredTrait])
+  }, [areAllInputsComplete, microbeData, numericTargetRanges])
 
   const maxScore = useMemo(
     () => evaluations.reduce((best, combo) => Math.max(best, combo.score), 0),
@@ -1313,8 +1295,8 @@ export function SeawolfSolver() {
         {activePhase === "phase4" ? (
           <section className="space-y-2">
             <div className={phaseChip}>Phase 4 · Treatment</div>
-            <div className="grid grid-cols-1 gap-2 lg:grid-cols-[1fr_1.15fr_2.35fr]">
-              <div className="rounded-xl border border-[#e2e8f0] bg-white p-4 shadow-sm">
+            <div className="grid grid-cols-1 gap-2 lg:grid-cols-[1.25fr_0.55fr_0.95fr]">
+              <div className="rounded-xl border border-[#e2e8f0] bg-white p-3 shadow-sm">
                 <div className="mb-2 flex items-center justify-between">
                   <h3 className={accentHeading}>Target Ranges</h3>
                   <Button variant="outline" size="sm" className={neutralButton} onClick={randomFillP4Config}>
@@ -1333,7 +1315,7 @@ export function SeawolfSolver() {
                           max={10}
                           value={targetRanges[key].min}
                           onChange={(e) => handleRangeChange(key, "min", e.target.value)}
-                          className="h-9 w-14 border-2 border-[#94a3b8] text-center"
+                          className="h-8 w-14 border-2 border-[#94a3b8] text-center"
                         />
                         <span>-</span>
                         <Input
@@ -1342,54 +1324,16 @@ export function SeawolfSolver() {
                           max={10}
                           value={targetRanges[key].max}
                           onChange={(e) => handleRangeChange(key, "max", e.target.value)}
-                          className="h-9 w-14 border-2 border-[#94a3b8] text-center"
+                          className="h-8 w-14 border-2 border-[#94a3b8] text-center"
                         />
                       </div>
                     )
                   })}
                 </div>
-                <div className="mt-3 space-y-2">
-                  <div>
-                    <label className="text-sm font-semibold text-gray-700">Desired trait</label>
-                    <select
-                      className="mt-1 w-full rounded-md border-2 border-[#94a3b8] bg-white px-3 py-2 text-sm"
-                      value={p4DesiredTrait}
-                      onChange={(e) => {
-                        setP4DesiredTrait(e.target.value)
-                        setSiteInfoConfig((prev) => ({ ...prev, desiredTrait: e.target.value }))
-                      }}
-                    >
-                      <option value="">(Optional)</option>
-                      {traitNames.map((t) => (
-                        <option key={`p4-des-${t}`} value={t}>
-                          {t}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-sm font-semibold text-gray-700">Undesired trait</label>
-                    <select
-                      className="mt-1 w-full rounded-md border-2 border-[#94a3b8] bg-white px-3 py-2 text-sm"
-                      value={p4UndesiredTrait}
-                      onChange={(e) => {
-                        setP4UndesiredTrait(e.target.value)
-                        setSiteInfoConfig((prev) => ({ ...prev, undesiredTrait: e.target.value }))
-                      }}
-                    >
-                      <option value="">(Optional)</option>
-                      {traitNames.map((t) => (
-                        <option key={`p4-undes-${t}`} value={t}>
-                          {t}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
               </div>
 
-              <div className="rounded-xl border border-[#e2e8f0] bg-white p-4 shadow-sm">
-                <h3 className={accentHeading}>Results</h3>
+              <div className="rounded-xl border border-[#e2e8f0] bg-white p-3 shadow-sm">
+                <h3 className={accentHeading}>Max Score</h3>
                 {areAllInputsComplete && primaryWinningCombo ? (
                   <div className="space-y-2">
                     <p
@@ -1426,6 +1370,7 @@ export function SeawolfSolver() {
                         ))}
                       </div>
                     ) : null}
+                    <p className="text-[10px] text-gray-500">A score of 100 is not always possible. However, we recommend double-checking your inputs.</p>
                   </div>
                 ) : (
                   <p className="text-sm text-gray-500">
@@ -1434,7 +1379,7 @@ export function SeawolfSolver() {
                 )}
               </div>
 
-              <div className="rounded-xl border border-[#e2e8f0] bg-white p-4 shadow-sm">
+              <div className="rounded-xl border border-[#e2e8f0] bg-white p-3 shadow-sm">
                 <h3 className={accentHeading}>Conditions</h3>
                 {areAllInputsComplete && primaryWinningCombo ? (
                   <ul className="space-y-1.5">
@@ -1460,8 +1405,8 @@ export function SeawolfSolver() {
                       {
                         label: "Desired trait present",
                         icon: traitIcon(
-                          p4DesiredTrait || traitNames[0] || "",
-                          Math.max(0, traitNames.indexOf((p4DesiredTrait || traitNames[0]) as (typeof traitNames)[number])),
+                          traitNames[0] || "",
+                          Math.max(0, traitNames.indexOf((traitNames[0] || "") as (typeof traitNames)[number])),
                           "h-3.5 w-3.5"
                         ),
                         mean: null,
@@ -1470,8 +1415,8 @@ export function SeawolfSolver() {
                       {
                         label: "Undesired trait absent",
                         icon: traitIcon(
-                          p4UndesiredTrait || traitNames[1] || "",
-                          Math.max(0, traitNames.indexOf((p4UndesiredTrait || traitNames[1]) as (typeof traitNames)[number])),
+                          traitNames[1] || "",
+                          Math.max(0, traitNames.indexOf((traitNames[1] || "") as (typeof traitNames)[number])),
                           "h-3.5 w-3.5"
                         ),
                         mean: null,
@@ -1529,128 +1474,69 @@ export function SeawolfSolver() {
                   </div>
                 </div>
               </div>
-              <div className="grid gap-2 md:grid-cols-2">
-                {PHASE4_TABLES.map((table) => {
-                  const indices = Array.from(
-                    { length: table.end - table.start + 1 },
-                    (_, idx) => table.start + idx
-                  )
-                  return (
-                    <div
-                      key={table.start}
-                      className={cn(
-                        "overflow-x-auto rounded-md border border-[#cbd5e1] border-l-2 p-1.5 shadow-inner",
-                        table.bgClass,
-                        table.borderClass
-                      )}
-                    >
-                      <table className="w-full table-fixed border-separate border-spacing-x-1.5 border-spacing-y-0.5">
-                        <thead>
-                          <tr>
-                            <th className="w-20 rounded-md bg-[#f1f5f9] px-1 py-0.5 text-left text-[11px] font-bold">
-                              Microbe
-                            </th>
-                            {indices.map((idx) => (
-                              <th
-                                key={idx}
-                                className={cn(
-                                  "rounded-t-md border border-[#cbd5e1] border-b-0 bg-[#e2e8f0] px-3 py-0.5 text-center text-[11px] font-bold",
-                                  highlightedColumns.has(idx) && "border-[#16a34a] bg-[#dcfce7]"
-                                )}
-                              >
-                                <span
-                                  className={cn(
-                                    "inline-flex min-w-7 justify-center rounded px-1 py-0.5 text-[10px] font-semibold text-white",
-                                    table.start === 0 ? "bg-[#2563eb]" : "bg-[#6366f1]",
-                                    highlightedColumns.has(idx) && "bg-[#16a34a]"
-                                  )}
-                                >
-                                  M{idx + 1}
-                                </span>
-                              </th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {[0, 1, 2].map((attrIndex) => {
-                            const key = PHASE4_ATTRIBUTE_KEYS[attrIndex]
-                            return (
-                              <tr key={`p4-row-${attrIndex}`}>
-                                <td className="whitespace-nowrap px-1 py-0.5 text-[10px] font-semibold text-[#374151]">
-                                  {attrNames[attrIndex] || `Attribute ${attrIndex + 1}`}
-                                </td>
-                                {indices.map((idx) => (
-                                  <td
-                                    key={`p4-${attrIndex}-${idx}`}
-                                    className={cn(
-                                      "border-x border-[#cbd5e1] px-3 py-0.5",
-                                      attrIndex % 2 === 0 ? "bg-white" : "bg-[#f1f5f9]",
-                                      highlightedColumns.has(idx) && "border-[#16a34a] bg-[#dcfce7]"
-                                    )}
-                                  >
-                                    <Input
-                                      type="number"
-                                      min={1}
-                                      max={10}
-                                      value={microbeData[key][idx]}
-                                      onChange={(e) => handleMicrobeValueChange(key, idx, e.target.value)}
-                                      onKeyDown={(e) => handleMicrobeInputKeyDown(e, idx, attrIndex)}
-                                      data-microbe-index={idx}
-                                      data-attribute-index={attrIndex}
-                                      className="h-6 border-2 border-[#94a3b8] px-1 text-center text-[10px] font-medium"
-                                    />
-                                  </td>
-                                ))}
-                              </tr>
-                            )
-                          })}
-                          <tr>
-                            <td className="bg-[#f1f5f9] px-1 py-0.5 text-[10px] font-semibold">
-                              Desired Trait
-                            </td>
-                            {indices.map((idx) => (
-                              <td
-                                key={`des-${idx}`}
-                                className={cn(
-                                  "border-x border-[#cbd5e1] bg-[#f1f5f9] px-3 py-0.5",
-                                  highlightedColumns.has(idx) && "border-[#16a34a] bg-[#dcfce7]"
-                                )}
-                              >
-                                <div className="flex h-6 items-center justify-center rounded-md border bg-white">
-                                  <Checkbox
-                                    checked={microbeData.desirable[idx]}
-                                    onCheckedChange={(v) => handleCheckboxChange("desirable", idx, v === true)}
-                                  />
-                                </div>
-                              </td>
-                            ))}
-                          </tr>
-                          <tr>
-                            <td className="bg-white px-1 py-0.5 text-[10px] font-semibold">
-                              Undesired Trait
-                            </td>
-                            {indices.map((idx) => (
-                              <td
-                                key={`undes-${idx}`}
-                                className={cn(
-                                  "rounded-b-md border-x border-b border-[#cbd5e1] bg-white px-3 py-0.5",
-                                  highlightedColumns.has(idx) && "border-[#16a34a] bg-[#dcfce7]"
-                                )}
-                              >
-                                <div className="flex h-6 items-center justify-center rounded-md border bg-white">
-                                  <Checkbox
-                                    checked={microbeData.undesirable[idx]}
-                                    onCheckedChange={(v) => handleCheckboxChange("undesirable", idx, v === true)}
-                                  />
-                                </div>
-                              </td>
-                            ))}
-                          </tr>
-                        </tbody>
-                      </table>
+              <div className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-5">
+                {Array.from({ length: PHASE4_MICROBE_COUNT }, (_, idx) => (
+                  <div
+                    key={`p4-card-${idx}`}
+                    className={cn(
+                      "rounded-lg border border-[#cbd5e1] bg-[#f8fbff] p-2 shadow-inner",
+                      highlightedColumns.has(idx) && "border-[#16a34a] bg-[#dcfce7]"
+                    )}
+                  >
+                    <div className="mb-1 flex justify-center">
+                      <span
+                        className={cn(
+                          "inline-flex min-w-7 justify-center rounded px-1 py-0.5 text-[10px] font-semibold text-white",
+                          idx < 5 ? "bg-[#2563eb]" : "bg-[#6366f1]",
+                          highlightedColumns.has(idx) && "bg-[#16a34a]"
+                        )}
+                      >
+                        M{idx + 1}
+                      </span>
                     </div>
-                  )
-                })}
+                    <div className="space-y-1">
+                      {[0, 1, 2].map((attrIndex) => {
+                        const key = PHASE4_ATTRIBUTE_KEYS[attrIndex]
+                        return (
+                          <div key={`p4-card-${idx}-attr-${attrIndex}`} className="grid grid-cols-[1fr_auto] items-center gap-1">
+                            <span className="truncate text-[10px] font-semibold text-[#374151]">
+                              {attrNames[attrIndex] || `Attribute ${attrIndex + 1}`}
+                            </span>
+                            <Input
+                              type="number"
+                              min={1}
+                              max={10}
+                              value={microbeData[key][idx]}
+                              onChange={(e) => handleMicrobeValueChange(key, idx, e.target.value)}
+                              onKeyDown={(e) => handleMicrobeInputKeyDown(e, idx, attrIndex)}
+                              data-microbe-index={idx}
+                              data-attribute-index={attrIndex}
+                              className="h-6 w-14 border-2 border-[#94a3b8] px-1 text-center text-[10px] font-medium"
+                            />
+                          </div>
+                        )
+                      })}
+                      <div className="grid grid-cols-[1fr_auto] items-center gap-1">
+                        <span className="truncate text-[10px] font-semibold text-[#374151]">Desired</span>
+                        <div className="flex h-6 w-14 items-center justify-center rounded-md border bg-white">
+                          <Checkbox
+                            checked={microbeData.desirable[idx]}
+                            onCheckedChange={(v) => handleCheckboxChange("desirable", idx, v === true)}
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-[1fr_auto] items-center gap-1">
+                        <span className="truncate text-[10px] font-semibold text-[#374151]">Undesired</span>
+                        <div className="flex h-6 w-14 items-center justify-center rounded-md border bg-white">
+                          <Checkbox
+                            checked={microbeData.undesirable[idx]}
+                            onCheckedChange={(v) => handleCheckboxChange("undesirable", idx, v === true)}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </section>

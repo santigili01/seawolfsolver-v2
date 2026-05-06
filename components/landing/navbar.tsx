@@ -1,33 +1,37 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import Link from "next/link";
-import { Menu, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
 
 const navLinks = [
   { href: "#how-it-works", label: "How It Works" },
-  { href: "#features", label: "Features" },
   { href: "#pricing", label: "Pricing" },
-  { href: "#faq", label: "FAQ" },
-];
+]
 
 export function Navbar() {
-  const [isOpen, setIsOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false)
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8)
+    onScroll()
+    window.addEventListener("scroll", onScroll)
+    return () => window.removeEventListener("scroll", onScroll)
+  }, [])
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <nav
+      className={`sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85 ${
+        scrolled ? "border-b border-border" : "border-b border-transparent"
+      }`}
+    >
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-        {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
-          <span className="text-2xl">🐺</span>
-          <span className="text-lg font-bold text-foreground">
-            Sea Wolf Solver
-          </span>
+          <span className="text-lg">🧫</span>
+          <span className="text-lg font-bold tracking-tight text-foreground">SeaWolfPrep</span>
         </Link>
 
-        {/* Desktop Navigation */}
-        <div className="hidden items-center gap-8 md:flex">
+        <div className="flex items-center gap-4 sm:gap-6">
           {navLinks.map((link) => (
             <Link
               key={link.href}
@@ -37,49 +41,11 @@ export function Navbar() {
               {link.label}
             </Link>
           ))}
-        </div>
-
-        {/* CTA Button */}
-        <div className="hidden md:block">
-          <Button asChild>
-            <Link href="/solver">Try the Solver</Link>
+          <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90">
+            <Link href="/simulator">Free Demo</Link>
           </Button>
         </div>
-
-        {/* Mobile Menu Button */}
-        <button
-          className="md:hidden"
-          onClick={() => setIsOpen(!isOpen)}
-          aria-label="Toggle menu"
-        >
-          {isOpen ? (
-            <X className="size-6 text-foreground" />
-          ) : (
-            <Menu className="size-6 text-foreground" />
-          )}
-        </button>
       </div>
-
-      {/* Mobile Navigation */}
-      {isOpen && (
-        <div className="border-t border-border bg-background px-4 py-4 md:hidden">
-          <div className="flex flex-col gap-4">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-                onClick={() => setIsOpen(false)}
-              >
-                {link.label}
-              </Link>
-            ))}
-            <Button asChild className="mt-2 w-full">
-              <Link href="/solver">Try the Solver</Link>
-            </Button>
-          </div>
-        </div>
-      )}
     </nav>
-  );
+  )
 }

@@ -3,40 +3,45 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion";
+} from "@/components/ui/accordion"
 
 const faqs = [
   {
-    question: "What is the McKinsey Seawolf game?",
+    question: "How is this different from a $25 Excel solver?",
     answer:
-      "Seawolf is one of the games in McKinsey Solve, McKinsey's gamified assessment. In the final phase you must select the optimal combination of 3 microbes out of 10 to treat an ecosystem site. Each microbe has attributes and traits that must match the site requirements.",
+      "Excel solvers only handle the Treatment phase (Phase 4) and require macro-enabled files — which many corporate laptops block and security tools flag. SeaWolfPrep is fully browser-based, covers all 4 phases including the Prospect Pool, and includes a full simulator. No downloads.",
   },
   {
-    question: "How does the solver work?",
+    question: "How is this different from Prepmatter or PSG Cracked?",
     answer:
-      "You input the 10 microbes' attribute values and check their traits. The solver instantly evaluates all 120 possible combinations of 3 and identifies which one maximizes your score based on the site's target ranges and trait requirements.",
+      "Same realistic gameplay, 5–10× cheaper, and you keep access forever. Prepmatter charges $239 for 6 months. PSG Cracked charges ~$165. We charge $25, one-time, lifetime.",
   },
   {
-    question: "Is using this tool allowed during the assessment?",
+    question: "Is SeaWolfPrep affiliated with McKinsey?",
     answer:
-      "The solver is a preparation and practice tool. Use it to understand the logic and practice before your assessment date.",
+      "No. SeaWolfPrep is an independent prep tool. McKinsey, Solve, and Sea Wolf are trademarks of McKinsey & Company. We are not affiliated with, endorsed by, or connected to McKinsey in any way.",
   },
   {
-    question: "What's included with my purchase?",
+    question: "What McKinsey Solve format does this cover?",
     answer:
-      "You get the web-based solver, the Excel version, and access to the free practice simulator — all with one payment.",
+      "The current 2026 format: 65-minute test with Redrock Study + Sea Wolf. We cover Sea Wolf in full. Redrock simulator is on the roadmap.",
   },
   {
-    question: "Do I need to install anything?",
+    question: "Can I get a refund?",
     answer:
-      "No. The web solver works directly in your browser. The Excel file opens in any version of Excel or Google Sheets.",
+      "Yes — 14-day refund if you haven't used more than one simulator run. Email us at contact@seawolfprep.com.",
   },
   {
-    question: "What if I need help?",
+    question: "Does the free demo count toward my paid access?",
     answer:
-      "Email us at support@seawolfsolver.com and we'll respond within 24 hours.",
+      "No. The free demo is a separate fixed scenario. Your paid account starts fresh with all 300+ scenarios available.",
   },
-];
+  {
+    question: "Will you add Redrock and Sustainable Futures Lab?",
+    answer:
+      "Yes. Redrock is next on the roadmap. Current buyers get free access when it launches.",
+  },
+]
 
 export function FAQ() {
   return (
@@ -47,11 +52,8 @@ export function FAQ() {
       <div className="mx-auto max-w-3xl">
         <div className="text-center">
           <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-            Frequently Asked Questions
+            Questions
           </h2>
-          <p className="mt-4 text-lg text-muted-foreground">
-            Everything you need to know about the Sea Wolf Solver
-          </p>
         </div>
 
         <Accordion type="single" collapsible className="mt-12">
@@ -68,5 +70,5 @@ export function FAQ() {
         </Accordion>
       </div>
     </section>
-  );
+  )
 }
