@@ -415,6 +415,26 @@ const MICROBE_PALETTE = [
   "#A8D8EA",
   "#C3EDC0",
   "#FFD93D",
+  "#F5A97F",
+  "#8BD3E6",
+  "#B8F2A1",
+  "#C6A0F6",
+  "#F8C8DC",
+  "#7DD3FC",
+  "#86EFAC",
+  "#FDBA74",
+  "#FCA5A5",
+  "#A7F3D0",
+  "#93C5FD",
+  "#DDD6FE",
+  "#FDE68A",
+  "#FBCFE8",
+  "#67E8F9",
+  "#BBF7D0",
+  "#F9A8D4",
+  "#C4B5FD",
+  "#BAE6FD",
+  "#D9F99D",
 ]
 
 const MicrobeBlob1 = ({ color = "#FF6B6B" }: { color?: string }) => (
@@ -506,6 +526,171 @@ const MicrobeBlob10 = ({ color = "#FFD93D" }: { color?: string }) => (
   </svg>
 )
 
+const MicrobeBlob11 = ({ color = "#F5A97F" }: { color?: string }) => (
+  <svg viewBox="0 0 80 80" className="h-16 w-16">
+    <rect x="18" y="18" width="44" height="44" rx="14" fill={color} />
+    <circle cx="32" cy="34" r="4" fill="white" opacity="0.45" />
+    <path d="M18 40 L10 40" stroke={color} strokeWidth="3" />
+    <path d="M62 40 L70 40" stroke={color} strokeWidth="3" />
+  </svg>
+)
+const MicrobeBlob12 = ({ color = "#8BD3E6" }: { color?: string }) => (
+  <svg viewBox="0 0 80 80" className="h-16 w-16">
+    <path d="M40 12 C58 12 66 24 66 40 C66 58 54 68 40 68 C24 68 14 56 14 40 C14 24 22 12 40 12Z" fill={color} />
+    <ellipse cx="38" cy="32" rx="8" ry="5" fill="white" opacity="0.35" />
+    <circle cx="24" cy="48" r="4" fill={color} />
+    <circle cx="56" cy="48" r="4" fill={color} />
+  </svg>
+)
+const MicrobeBlob13 = ({ color = "#B8F2A1" }: { color?: string }) => (
+  <svg viewBox="0 0 80 80" className="h-16 w-16">
+    <ellipse cx="40" cy="40" rx="24" ry="22" fill={color} />
+    <circle cx="29" cy="30" r="6" fill={color} />
+    <circle cx="53" cy="30" r="5" fill={color} />
+    <circle cx="40" cy="50" r="7" fill="white" opacity="0.22" />
+  </svg>
+)
+const MicrobeBlob14 = ({ color = "#C6A0F6" }: { color?: string }) => (
+  <svg viewBox="0 0 80 80" className="h-16 w-16">
+    <path d="M40 14 L58 24 L62 42 L50 58 L30 62 L18 46 L22 26 Z" fill={color} />
+    <circle cx="37" cy="34" r="3" fill="white" opacity="0.55" />
+    <path d="M22 26 L14 20" stroke={color} strokeWidth="2.5" />
+    <path d="M58 24 L66 18" stroke={color} strokeWidth="2.5" />
+  </svg>
+)
+const MicrobeBlob15 = ({ color = "#F8C8DC" }: { color?: string }) => (
+  <svg viewBox="0 0 80 80" className="h-16 w-16">
+    <ellipse cx="40" cy="42" rx="26" ry="18" fill={color} />
+    <circle cx="28" cy="42" r="3" fill="white" opacity="0.45" />
+    <circle cx="52" cy="42" r="3" fill="white" opacity="0.45" />
+    <path d="M14 42 Q8 38 10 32" stroke={color} strokeWidth="3" fill="none" />
+    <path d="M66 42 Q72 38 70 32" stroke={color} strokeWidth="3" fill="none" />
+  </svg>
+)
+const MicrobeBlob16 = ({ color = "#7DD3FC" }: { color?: string }) => (
+  <svg viewBox="0 0 80 80" className="h-16 w-16">
+    <rect x="20" y="20" width="40" height="40" rx="20" fill={color} />
+    <path d="M24 24 Q40 10 56 24" stroke={color} strokeWidth="3" fill="none" />
+    <circle cx="35" cy="36" r="3" fill="white" opacity="0.5" />
+    <circle cx="46" cy="44" r="5" fill="white" opacity="0.2" />
+  </svg>
+)
+const MicrobeBlob17 = ({ color = "#86EFAC" }: { color?: string }) => (
+  <svg viewBox="0 0 80 80" className="h-16 w-16">
+    <path d="M40 14 C55 16 64 28 62 44 C60 60 48 68 34 64 C20 60 14 44 20 30 C24 20 30 14 40 14Z" fill={color} />
+    <circle cx="34" cy="32" r="4" fill="white" opacity="0.5" />
+    <path d="M26 62 L22 72" stroke={color} strokeWidth="2" />
+    <path d="M38 66 L38 76" stroke={color} strokeWidth="2" />
+    <path d="M50 64 L54 74" stroke={color} strokeWidth="2" />
+  </svg>
+)
+const MicrobeBlob18 = ({ color = "#FDBA74" }: { color?: string }) => (
+  <svg viewBox="0 0 80 80" className="h-16 w-16">
+    <path d="M40 16 L54 24 L60 40 L54 56 L40 64 L26 56 L20 40 L26 24 Z" fill={color} />
+    <circle cx="40" cy="40" r="9" fill="white" opacity="0.2" />
+    <path d="M40 16 L40 8" stroke={color} strokeWidth="2" />
+  </svg>
+)
+const MicrobeBlob19 = ({ color = "#FCA5A5" }: { color?: string }) => (
+  <svg viewBox="0 0 80 80" className="h-16 w-16">
+    <ellipse cx="40" cy="40" rx="23" ry="21" fill={color} />
+    <circle cx="28" cy="34" r="3" fill="white" opacity="0.5" />
+    <path d="M22 26 L14 20" stroke={color} strokeWidth="2.5" />
+    <path d="M58 26 L66 20" stroke={color} strokeWidth="2.5" />
+    <path d="M24 54 L15 60" stroke={color} strokeWidth="2.5" />
+    <path d="M56 54 L65 60" stroke={color} strokeWidth="2.5" />
+  </svg>
+)
+const MicrobeBlob20 = ({ color = "#A7F3D0" }: { color?: string }) => (
+  <svg viewBox="0 0 80 80" className="h-16 w-16">
+    <path d="M18 40 C18 24 30 14 42 16 C54 18 62 28 62 40 C62 54 54 64 40 64 C26 64 18 54 18 40Z" fill={color} />
+    <ellipse cx="39" cy="31" rx="7" ry="4.5" fill="white" opacity="0.35" />
+    <circle cx="22" cy="40" r="3.5" fill={color} />
+    <circle cx="58" cy="40" r="3.5" fill={color} />
+  </svg>
+)
+const MicrobeBlob21 = ({ color = "#93C5FD" }: { color?: string }) => (
+  <svg viewBox="0 0 80 80" className="h-16 w-16">
+    <rect x="16" y="18" width="48" height="44" rx="18" fill={color} />
+    <circle cx="30" cy="32" r="4" fill="white" opacity="0.45" />
+    <path d="M24 18 L20 8" stroke={color} strokeWidth="2.5" />
+    <path d="M56 18 L60 8" stroke={color} strokeWidth="2.5" />
+  </svg>
+)
+const MicrobeBlob22 = ({ color = "#DDD6FE" }: { color?: string }) => (
+  <svg viewBox="0 0 80 80" className="h-16 w-16">
+    <ellipse cx="40" cy="42" rx="25" ry="16" fill={color} />
+    <ellipse cx="40" cy="42" rx="10" ry="6" fill="white" opacity="0.25" />
+    <path d="M16 42 Q8 42 10 50" stroke={color} strokeWidth="3" fill="none" />
+    <path d="M64 42 Q72 42 70 50" stroke={color} strokeWidth="3" fill="none" />
+  </svg>
+)
+const MicrobeBlob23 = ({ color = "#FDE68A" }: { color?: string }) => (
+  <svg viewBox="0 0 80 80" className="h-16 w-16">
+    <path d="M40 14 C50 14 60 22 62 34 C64 50 54 64 40 66 C26 64 16 50 18 34 C20 22 30 14 40 14Z" fill={color} />
+    <circle cx="34" cy="32" r="3" fill="white" opacity="0.5" />
+    <circle cx="46" cy="48" r="6" fill="white" opacity="0.2" />
+  </svg>
+)
+const MicrobeBlob24 = ({ color = "#FBCFE8" }: { color?: string }) => (
+  <svg viewBox="0 0 80 80" className="h-16 w-16">
+    <path d="M40 12 L52 18 L60 30 L58 46 L48 58 L32 62 L20 52 L16 36 L24 22 Z" fill={color} />
+    <circle cx="36" cy="34" r="4" fill="white" opacity="0.45" />
+    <path d="M40 12 L40 4" stroke={color} strokeWidth="2.5" />
+    <path d="M24 22 L16 16" stroke={color} strokeWidth="2.5" />
+  </svg>
+)
+const MicrobeBlob25 = ({ color = "#67E8F9" }: { color?: string }) => (
+  <svg viewBox="0 0 80 80" className="h-16 w-16">
+    <ellipse cx="40" cy="40" rx="22" ry="24" fill={color} />
+    <ellipse cx="36" cy="30" rx="6" ry="4" fill="white" opacity="0.35" />
+    <path d="M26 62 L22 72" stroke={color} strokeWidth="2.2" />
+    <path d="M40 64 L40 74" stroke={color} strokeWidth="2.2" />
+    <path d="M54 62 L58 72" stroke={color} strokeWidth="2.2" />
+  </svg>
+)
+const MicrobeBlob26 = ({ color = "#BBF7D0" }: { color?: string }) => (
+  <svg viewBox="0 0 80 80" className="h-16 w-16">
+    <rect x="18" y="20" width="44" height="40" rx="12" fill={color} />
+    <circle cx="30" cy="34" r="3" fill="white" opacity="0.5" />
+    <circle cx="50" cy="46" r="5" fill="white" opacity="0.2" />
+    <path d="M18 40 L10 36" stroke={color} strokeWidth="2.5" />
+    <path d="M62 40 L70 36" stroke={color} strokeWidth="2.5" />
+  </svg>
+)
+const MicrobeBlob27 = ({ color = "#F9A8D4" }: { color?: string }) => (
+  <svg viewBox="0 0 80 80" className="h-16 w-16">
+    <ellipse cx="40" cy="40" rx="24" ry="19" fill={color} />
+    <path d="M20 32 Q14 20 24 14" stroke={color} strokeWidth="3" fill="none" />
+    <path d="M60 32 Q66 20 56 14" stroke={color} strokeWidth="3" fill="none" />
+    <circle cx="33" cy="36" r="3.5" fill="white" opacity="0.45" />
+  </svg>
+)
+const MicrobeBlob28 = ({ color = "#C4B5FD" }: { color?: string }) => (
+  <svg viewBox="0 0 80 80" className="h-16 w-16">
+    <path d="M40 18 C56 18 64 30 62 44 C60 58 50 66 40 66 C28 66 18 56 18 44 C18 30 24 18 40 18Z" fill={color} />
+    <circle cx="30" cy="38" r="4" fill="white" opacity="0.45" />
+    <path d="M18 44 Q10 44 12 52" stroke={color} strokeWidth="2.5" fill="none" />
+    <path d="M62 44 Q70 44 68 52" stroke={color} strokeWidth="2.5" fill="none" />
+  </svg>
+)
+const MicrobeBlob29 = ({ color = "#BAE6FD" }: { color?: string }) => (
+  <svg viewBox="0 0 80 80" className="h-16 w-16">
+    <ellipse cx="40" cy="40" rx="20" ry="22" fill={color} />
+    <circle cx="32" cy="32" r="3.2" fill="white" opacity="0.5" />
+    <path d="M34 20 L30 10" stroke={color} strokeWidth="2.5" />
+    <path d="M46 20 L50 10" stroke={color} strokeWidth="2.5" />
+    <path d="M40 62 L40 74" stroke={color} strokeWidth="2.5" />
+  </svg>
+)
+const MicrobeBlob30 = ({ color = "#D9F99D" }: { color?: string }) => (
+  <svg viewBox="0 0 80 80" className="h-16 w-16">
+    <path d="M40 14 L56 22 L64 38 L58 56 L42 64 L24 58 L16 40 L24 24 Z" fill={color} />
+    <circle cx="36" cy="34" r="3.5" fill="white" opacity="0.45" />
+    <circle cx="46" cy="46" r="6" fill="white" opacity="0.2" />
+  </svg>
+)
+
 const microbeComponents = [
   MicrobeBlob1,
   MicrobeBlob2,
@@ -517,6 +702,26 @@ const microbeComponents = [
   MicrobeBlob8,
   MicrobeBlob9,
   MicrobeBlob10,
+  MicrobeBlob11,
+  MicrobeBlob12,
+  MicrobeBlob13,
+  MicrobeBlob14,
+  MicrobeBlob15,
+  MicrobeBlob16,
+  MicrobeBlob17,
+  MicrobeBlob18,
+  MicrobeBlob19,
+  MicrobeBlob20,
+  MicrobeBlob21,
+  MicrobeBlob22,
+  MicrobeBlob23,
+  MicrobeBlob24,
+  MicrobeBlob25,
+  MicrobeBlob26,
+  MicrobeBlob27,
+  MicrobeBlob28,
+  MicrobeBlob29,
+  MicrobeBlob30,
 ]
 
 function blobIdx(pool: Microbe[], id: string) {
