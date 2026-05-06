@@ -2290,77 +2290,79 @@ function GamePhase3PoolPanel({
         </div>
       </div>
 
-      <div className="relative z-10 mt-6 flex flex-col items-center">
-        <div className="flex gap-4">
-          {candidates.map((candidate, idx) => {
-            const m = candidate.microbe
-            const isSelected = pickId === m.id
-            const anotherSelected = pickId !== null && !isSelected
-            const blobColor = MICROBE_PALETTE[idx % MICROBE_PALETTE.length] ?? "#808080"
-            const Svg = microbeComponents[idx % microbeComponents.length] ?? MicrobeBlob1
-            return (
-              <button
-                key={m.id}
-                type="button"
-                onClick={() => setPickId((prev) => (prev === m.id ? null : m.id))}
-                className={`flex h-[220px] w-[160px] flex-col rounded-xl border-2 bg-white p-2 text-left shadow-lg transition-all ${
-                  isSelected ? "border-[#4ECDC4] bg-[#ecfdfb]" : "border-[#d1d5db]"
-                } ${anotherSelected ? "opacity-60" : "opacity-100"}`}
-              >
-                <div className="mb-1 w-full text-center text-sm font-bold text-gray-800 line-clamp-1">{m.name}</div>
-                <div className="mb-1 flex shrink-0 justify-center">
-                  <Svg color={blobColor} />
-                </div>
-                <div className="mt-auto flex w-full flex-col items-center gap-2 px-1">
-                  <SlotAttributeRow Mobility={m.Mobility} Agility={m.Agility} Size={m.Size} />
-                  <TraitBadgeChip trait={m.trait} chipClassName="h-8 w-8" />
-                </div>
-              </button>
-            )
-          })}
+      <div className="relative z-[5] mx-auto mt-4 mb-4 w-[min(900px,calc(100%-18rem))] rounded-2xl border border-white/40 bg-[rgba(235,247,245,0.88)] p-4 shadow-xl backdrop-blur-sm">
+        <div className="relative z-10 flex flex-col items-center">
+          <div className="flex gap-4">
+            {candidates.map((candidate, idx) => {
+              const m = candidate.microbe
+              const isSelected = pickId === m.id
+              const anotherSelected = pickId !== null && !isSelected
+              const blobColor = MICROBE_PALETTE[idx % MICROBE_PALETTE.length] ?? "#808080"
+              const Svg = microbeComponents[idx % microbeComponents.length] ?? MicrobeBlob1
+              return (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => setPickId((prev) => (prev === m.id ? null : m.id))}
+                  className={`flex h-[220px] w-[160px] flex-col rounded-xl border-2 bg-white p-2 text-left shadow-lg transition-all ${
+                    isSelected ? "border-[#4ECDC4] bg-[#ecfdfb]" : "border-[#d1d5db]"
+                  } ${anotherSelected ? "opacity-60" : "opacity-100"}`}
+                >
+                  <div className="mb-1 w-full text-center text-sm font-bold text-gray-800 line-clamp-1">{m.name}</div>
+                  <div className="mb-1 flex shrink-0 justify-center">
+                    <Svg color={blobColor} />
+                  </div>
+                  <div className="mt-auto flex w-full flex-col items-center gap-2 px-1">
+                    <SlotAttributeRow Mobility={m.Mobility} Agility={m.Agility} Size={m.Size} />
+                    <TraitBadgeChip trait={m.trait} chipClassName="h-8 w-8" />
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+          <button
+            type="button"
+            disabled={!pickId}
+            onClick={confirmRound}
+            className={`mt-5 rounded-lg px-6 py-2 font-medium ${
+              pickId ? "cursor-pointer bg-[rgba(20,30,50,0.9)] text-white hover:bg-[rgba(30,40,60,0.95)]" : "cursor-not-allowed bg-gray-500/50 text-gray-300"
+            }`}
+          >
+            Confirm Selection
+          </button>
         </div>
-        <button
-          type="button"
-          disabled={!pickId}
-          onClick={confirmRound}
-          className={`mt-5 rounded-lg px-6 py-2 font-medium ${
-            pickId ? "cursor-pointer bg-[rgba(20,30,50,0.9)] text-white hover:bg-[rgba(30,40,60,0.95)]" : "cursor-not-allowed bg-gray-500/50 text-gray-300"
-          }`}
-        >
-          Confirm Selection
-        </button>
-      </div>
 
-      <div className="relative z-10 mt-8 flex justify-center">
-        <div className="grid w-[864px] gap-4 [grid-template-columns:repeat(5,160px)]">
-          {Array.from({ length: GRID_SLOTS }, (_, idx) => {
-            const m = pool[idx]
-            if (!m) {
+        <div className="relative z-10 mt-6 flex justify-center overflow-x-auto">
+          <div className="grid w-[864px] gap-4 [grid-template-columns:repeat(5,160px)]">
+            {Array.from({ length: GRID_SLOTS }, (_, idx) => {
+              const m = pool[idx]
+              if (!m) {
+                return (
+                  <div
+                    key={`pool-empty-${idx}`}
+                    className="h-[160px] w-[160px] rounded-xl border-2 border-dashed border-gray-300 bg-white/40"
+                  />
+                )
+              }
+              const blobColor = MICROBE_PALETTE[idx % MICROBE_PALETTE.length] ?? "#808080"
+              const Svg = microbeComponents[idx] ?? MicrobeBlob1
               return (
                 <div
-                  key={`pool-empty-${idx}`}
-                  className="h-[160px] w-[160px] rounded-xl border-2 border-dashed border-gray-300 bg-white/40"
-                />
+                  key={m.id}
+                  className="flex h-[160px] w-[160px] cursor-default flex-col rounded-xl border-2 border-[#d1d5db] bg-white p-2 text-left shadow-lg"
+                >
+                  <div className="mb-1 w-full text-center text-sm font-bold text-gray-800 line-clamp-1">{m.name}</div>
+                  <div className="mb-1 flex shrink-0 justify-center">
+                    <Svg color={blobColor} />
+                  </div>
+                  <div className="mt-auto flex w-full items-center justify-between gap-1 px-1">
+                    <MicrobeAttributeRow Mobility={m.Mobility} Agility={m.Agility} Size={m.Size} />
+                    <TraitBadgeChip trait={m.trait} />
+                  </div>
+                </div>
               )
-            }
-            const blobColor = MICROBE_PALETTE[idx % MICROBE_PALETTE.length] ?? "#808080"
-            const Svg = microbeComponents[idx] ?? MicrobeBlob1
-            return (
-              <div
-                key={m.id}
-                className="flex h-[160px] w-[160px] cursor-default flex-col rounded-xl border-2 border-[#d1d5db] bg-white p-2 text-left shadow-lg"
-              >
-                <div className="mb-1 w-full text-center text-sm font-bold text-gray-800 line-clamp-1">{m.name}</div>
-                <div className="mb-1 flex shrink-0 justify-center">
-                  <Svg color={blobColor} />
-                </div>
-                <div className="mt-auto flex w-full items-center justify-between gap-1 px-1">
-                  <MicrobeAttributeRow Mobility={m.Mobility} Agility={m.Agility} Size={m.Size} />
-                  <TraitBadgeChip trait={m.trait} />
-                </div>
-              </div>
-            )
-          })}
+            })}
+          </div>
         </div>
       </div>
 
@@ -2549,116 +2551,118 @@ function GamePhase4TreatmentPanel({
         </div>
       </div>
 
-      <div className="relative z-10 mt-6 flex justify-center gap-3">
-        {[0, 1, 2].map((slotIndex) => {
-          const sel = selected[slotIndex]
-          if (!sel) {
+      <div className="relative z-[5] mx-auto mt-4 mb-4 w-[min(900px,calc(100%-18rem))] rounded-2xl border border-white/40 bg-[rgba(235,247,245,0.88)] p-4 shadow-xl backdrop-blur-sm">
+        <div className="relative z-10 flex justify-center gap-3">
+          {[0, 1, 2].map((slotIndex) => {
+            const sel = selected[slotIndex]
+            if (!sel) {
+              return (
+                <div
+                  key={`slot-empty-${slotIndex}`}
+                  className="flex h-[220px] w-[160px] items-center justify-center rounded-xl border-2 border-dashed border-white/50 bg-white/30 transition-all hover:bg-white/40"
+                  aria-label={`Selection slot empty ${slotIndex + 1}`}
+                >
+                  <span className="h-8 w-8 shrink-0 rounded border-2 border-dashed border-white/40" aria-hidden />
+                </div>
+              )
+            }
+            const bi = Math.max(0, microbes.findIndex((m) => m.id === sel.id))
+            const col = MICROBE_PALETTE[bi % MICROBE_PALETTE.length] ?? "#808080"
+            const Svg = microbeComponents[bi] ?? MicrobeBlob1
+            const inv = getInviableAttributes(sel, scenario)
             return (
               <div
-                key={`slot-empty-${slotIndex}`}
-                className="flex h-[220px] w-[160px] items-center justify-center rounded-xl border-2 border-dashed border-white/50 bg-white/30 transition-all hover:bg-white/40"
-                aria-label={`Selection slot empty ${slotIndex + 1}`}
+                key={`${sel.id}-slot-${slotIndex}`}
+                role="button"
+                tabIndex={0}
+                onClick={() => removeMicrobeId(sel.id)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault()
+                    removeMicrobeId(sel.id)
+                  }
+                }}
+                className="relative flex h-[220px] w-[160px] shrink-0 cursor-pointer flex-col items-center text-center rounded-xl border-2 border-solid border-blue-400 bg-white shadow-lg"
               >
-                <span className="h-8 w-8 shrink-0 rounded border-2 border-dashed border-white/40" aria-hidden />
+                {inv.length > 0 ? (
+                  <div className="absolute top-1 right-1 z-[2]">
+                    <Tooltip text="An inviable microbe cannot mathematically contribute to a valid average for one or more attributes, regardless of what other microbes are selected.">
+                      <span className="inline-flex text-amber-600">
+                        <HelpCircle className="h-4 w-4" />
+                      </span>
+                    </Tooltip>
+                  </div>
+                ) : null}
+                <div className="flex min-h-0 w-full flex-1 flex-col items-center justify-between gap-1 px-2 py-2 text-center">
+                  <div className="flex h-16 w-16 shrink-0 items-center justify-center [&>svg]:block [&>svg]:h-full [&>svg]:w-full [&>svg]:max-h-full [&>svg]:max-w-full">
+                    <Svg color={col} />
+                  </div>
+                  <p className="line-clamp-2 w-full text-center text-[14px] font-bold leading-tight text-gray-800">{sel.name}</p>
+                  <div className="flex w-full flex-col items-center text-center">
+                    <SlotAttributeRow Mobility={sel.Mobility} Agility={sel.Agility} Size={sel.Size} inviableAttributes={inv} />
+                  </div>
+                  <SlotTraitBadge trait={sel.trait} />
+                </div>
               </div>
             )
-          }
-          const bi = Math.max(0, microbes.findIndex((m) => m.id === sel.id))
-          const col = MICROBE_PALETTE[bi % MICROBE_PALETTE.length] ?? "#808080"
-          const Svg = microbeComponents[bi] ?? MicrobeBlob1
-          const inv = getInviableAttributes(sel, scenario)
-          return (
-            <div
-              key={`${sel.id}-slot-${slotIndex}`}
-              role="button"
-              tabIndex={0}
-              onClick={() => removeMicrobeId(sel.id)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault()
-                  removeMicrobeId(sel.id)
-                }
-              }}
-              className="relative flex h-[220px] w-[160px] shrink-0 cursor-pointer flex-col items-center text-center rounded-xl border-2 border-solid border-blue-400 bg-white shadow-lg"
-            >
-              {inv.length > 0 ? (
-                <div className="absolute top-1 right-1 z-[2]">
-                  <Tooltip text="An inviable microbe cannot mathematically contribute to a valid average for one or more attributes, regardless of what other microbes are selected.">
-                    <span className="inline-flex text-amber-600">
-                      <HelpCircle className="h-4 w-4" />
-                    </span>
-                  </Tooltip>
-                </div>
-              ) : null}
-              <div className="flex min-h-0 w-full flex-1 flex-col items-center justify-between gap-1 px-2 py-2 text-center">
-                <div className="flex h-16 w-16 shrink-0 items-center justify-center [&>svg]:block [&>svg]:h-full [&>svg]:w-full [&>svg]:max-h-full [&>svg]:max-w-full">
-                  <Svg color={col} />
-                </div>
-                <p className="line-clamp-2 w-full text-center text-[14px] font-bold leading-tight text-gray-800">{sel.name}</p>
-                <div className="flex w-full flex-col items-center text-center">
-                  <SlotAttributeRow Mobility={sel.Mobility} Agility={sel.Agility} Size={sel.Size} inviableAttributes={inv} />
-                </div>
-                <SlotTraitBadge trait={sel.trait} />
-              </div>
-            </div>
-          )
-        })}
-      </div>
-      <div className="relative z-10 mt-4 flex justify-center">
-        <button
-          type="button"
-          disabled={selected.length !== 3}
-          onClick={submit}
-          className={`rounded-lg px-6 py-2 font-medium transition-all ${
-            selected.length === 3
-              ? "cursor-pointer bg-[rgba(20,30,50,0.9)] text-white hover:bg-[rgba(30,40,60,0.95)]"
-              : "cursor-not-allowed bg-gray-500/50 text-gray-300"
-          }`}
-        >
-          Submit Treatment
-        </button>
-      </div>
+          })}
+        </div>
+        <div className="relative z-10 mt-4 flex justify-center">
+          <button
+            type="button"
+            disabled={selected.length !== 3}
+            onClick={submit}
+            className={`rounded-lg px-6 py-2 font-medium transition-all ${
+              selected.length === 3
+                ? "cursor-pointer bg-[rgba(20,30,50,0.9)] text-white hover:bg-[rgba(30,40,60,0.95)]"
+                : "cursor-not-allowed bg-gray-500/50 text-gray-300"
+            }`}
+          >
+            Submit Treatment
+          </button>
+        </div>
 
-      <div className="relative z-10 mx-auto mt-6 grid max-w-[900px] grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-3 px-4">
-        {Array.from({ length: GRID_SLOTS }, (_, idx) => {
-          const microbe = microbes[idx]
-          if (!microbe) {
-            return <div key={`cell-${idx}`} className={trayReserveClass} aria-hidden />
-          }
-          const MicrobeSvg = microbeComponents[idx] ?? MicrobeBlob1
-          const blobColor = MICROBE_PALETTE[idx % MICROBE_PALETTE.length] ?? "#808080"
-          const isSel = selectedIds.has(microbe.id)
-          const invAttrs = getInviableAttributes(microbe, scenario)
-          if (isSel) {
+        <div className="relative z-10 mx-auto mt-6 grid max-w-[900px] grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-3 px-2">
+          {Array.from({ length: GRID_SLOTS }, (_, idx) => {
+            const microbe = microbes[idx]
+            if (!microbe) {
+              return <div key={`cell-${idx}`} className={trayReserveClass} aria-hidden />
+            }
+            const MicrobeSvg = microbeComponents[idx] ?? MicrobeBlob1
+            const blobColor = MICROBE_PALETTE[idx % MICROBE_PALETTE.length] ?? "#808080"
+            const isSel = selectedIds.has(microbe.id)
+            const invAttrs = getInviableAttributes(microbe, scenario)
+            if (isSel) {
+              return (
+                <div key={microbe.id} className="min-h-[140px] rounded-xl border-2 border-dashed border-white/30 bg-white/20" />
+              )
+            }
             return (
-              <div key={microbe.id} className="min-h-[140px] rounded-xl border-2 border-dashed border-white/30 bg-white/20" />
+              <button
+                key={microbe.id}
+                type="button"
+                disabled={selected.length >= 3}
+                className="flex min-h-[140px] cursor-pointer flex-col rounded-xl border-2 border-transparent bg-white p-2 text-left shadow-lg transition-all hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60"
+                onClick={() => togglePick(microbe)}
+              >
+                <div className="mb-1 w-full text-center text-sm font-bold text-gray-800 line-clamp-1">{microbe.name}</div>
+                <div className="mb-1 flex shrink-0 justify-center">
+                  <MicrobeSvg color={blobColor} />
+                </div>
+                <div className="mt-auto flex w-full items-center justify-between gap-1 px-1">
+                  <MicrobeAttributeRow
+                    Mobility={microbe.Mobility}
+                    Agility={microbe.Agility}
+                    Size={microbe.Size}
+                    inviableAttributes={invAttrs}
+                    highlightInviable
+                  />
+                  <TraitBadgeChip trait={microbe.trait} />
+                </div>
+              </button>
             )
-          }
-          return (
-            <button
-              key={microbe.id}
-              type="button"
-              disabled={selected.length >= 3}
-              className="flex min-h-[140px] cursor-pointer flex-col rounded-xl border-2 border-transparent bg-white p-2 text-left shadow-lg transition-all hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60"
-              onClick={() => togglePick(microbe)}
-            >
-              <div className="mb-1 w-full text-center text-sm font-bold text-gray-800 line-clamp-1">{microbe.name}</div>
-              <div className="mb-1 flex shrink-0 justify-center">
-                <MicrobeSvg color={blobColor} />
-              </div>
-              <div className="mt-auto flex w-full items-center justify-between gap-1 px-1">
-                <MicrobeAttributeRow
-                  Mobility={microbe.Mobility}
-                  Agility={microbe.Agility}
-                  Size={microbe.Size}
-                  inviableAttributes={invAttrs}
-                  highlightInviable
-                />
-                <TraitBadgeChip trait={microbe.trait} />
-              </div>
-            </button>
-          )
-        })}
+          })}
+        </div>
       </div>
 
       <div className="absolute right-6 bottom-8 z-20">
