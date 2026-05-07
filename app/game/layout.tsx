@@ -8,11 +8,11 @@ type GameLayoutProps = {
 }
 
 export default async function GameLayout({ children }: GameLayoutProps) {
-  const { userId } = await auth()
-  if (!userId) redirect('/sign-in')
+  // const { userId } = await auth()
+  // if (!userId) redirect('/sign-in')
 
-  const hasAccess = await userHasAccess(userId)
-  if (!hasAccess) redirect('/pricing')
+  // const hasAccess = await userHasAccess(userId)
+  // if (!hasAccess) redirect('/pricing')
 
   return <>{children}</>
 }
