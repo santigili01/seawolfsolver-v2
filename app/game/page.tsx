@@ -1648,7 +1648,7 @@ function GamePhase2Panel({
   }
 
   return (
-    <div className="relative min-h-[calc(100vh-8rem)] w-full overflow-auto pb-[18rem]">
+    <div className="relative h-[calc(100vh-8rem)] w-full overflow-hidden">
       <div className="pointer-events-none absolute inset-0 z-[1] opacity-20">
         <div className="absolute top-20 left-20 h-48 w-32 rounded-lg bg-orange-500/30" />
         <div className="absolute top-32 left-60 h-32 w-20 rounded-lg bg-blue-400/30" />
@@ -1733,8 +1733,8 @@ function GamePhase2Panel({
         ) : null}
       </div>
 
-      <div className="relative z-[5] mx-auto mt-[4.5rem] mb-4 flex min-h-0 w-[min(900px,calc(100%-18rem))] gap-6 rounded-2xl border border-white/30 bg-white/95 p-5 shadow-xl backdrop-blur-sm">
-        <div className="flex w-[220px] shrink-0 flex-col">
+      <div className="relative z-[5] mx-auto mt-[4.5rem] mb-4 flex h-[calc(100%-6rem)] min-h-0 w-[min(900px,calc(100%-18rem))] gap-6 overflow-hidden rounded-2xl border border-white/30 bg-white/95 p-5 shadow-xl backdrop-blur-sm">
+        <div className="flex w-[200px] shrink-0 flex-col overflow-y-auto pr-1">
           {reviewMode ? (
             <div className="flex flex-col gap-3">
               <p className="text-sm font-semibold text-gray-800">All microbes categorized.</p>
@@ -1761,7 +1761,7 @@ function GamePhase2Panel({
               {displayedMicrobe ? (
                 <div className="flex flex-1 flex-col rounded-xl border border-gray-200 bg-gray-50/80 p-4 shadow-inner">
                   <p className="mb-3 text-center text-base font-bold text-gray-900">{displayedMicrobe.name}</p>
-                  <div className="mb-3 flex justify-center [&>svg]:h-20 [&>svg]:w-20">
+                  <div className="mb-3 flex justify-center [&>svg]:h-16 [&>svg]:w-16">
                     <Svg color={col} />
                   </div>
                   <p className="mb-2 text-xs font-bold uppercase tracking-wide text-gray-500">Attributes</p>
@@ -1834,7 +1834,7 @@ function GamePhase2Panel({
           )}
         </div>
 
-        <div className="flex min-w-0 flex-1 gap-3">
+        <div className="flex min-w-0 flex-1 gap-3 overflow-hidden">
           {columnsPhase2.map((colDef) => (
             <div key={colDef.title} className="flex min-w-0 flex-1 flex-col rounded-lg border border-gray-200 bg-white/60 p-3">
               <div className="mb-3 flex flex-col gap-1 border-b border-gray-200 pb-2">
@@ -1843,7 +1843,7 @@ function GamePhase2Panel({
                   {colDef.badge}: {colDef.items.length}
                 </span>
               </div>
-              <div className="flex flex-col gap-2 overflow-y-auto pr-1" style={{ maxHeight: "min(560px,calc(100vh-13rem))" }}>
+              <div className="flex flex-1 flex-col gap-2 overflow-y-auto pr-1">
                 {colDef.items.map(({ m, poolMs }) => {
                   const uid = `${colDef.title}-${m.id}-${m.name}`
                   const open = expandedColumnIds.has(uid)
@@ -1865,10 +1865,10 @@ function GamePhase2Panel({
                         onClick={() => toggleExpand(uid)}
                         className="flex w-full items-center gap-2 px-2 py-2 text-left hover:bg-gray-50"
                       >
-                        <span className="[&>svg]:block [&>svg]:h-10 [&>svg]:w-10">
-                          <span className="flex shrink-0 scale-90">{collapsedBlobCard(m, poolMs)}</span>
+                        <span className="[&>svg]:block [&>svg]:h-8 [&>svg]:w-8">
+                          <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden">{collapsedBlobCard(m, poolMs)}</span>
                         </span>
-                        <span className="min-w-0 flex-1 truncate text-sm font-semibold text-gray-800">{m.name}</span>
+                        <span className="min-w-0 flex-1 text-xs leading-tight font-semibold break-words text-gray-800">{m.name}</span>
                         <ChevronDown className={`h-4 w-4 shrink-0 text-gray-500 transition-transform ${open ? "rotate-180" : ""}`} />
                       </button>
                       {open ? (
@@ -2056,7 +2056,7 @@ function GamePhase0Panel({
   const p2SelectedEquivalent = choice === "keep" ? ("keep" as const) : choice === "return" ? ("discard" as const) : null
 
   return (
-    <div className="relative min-h-[calc(100vh-8rem)] w-full overflow-auto pb-[18rem]">
+    <div className="relative h-[calc(100vh-8rem)] w-full overflow-hidden">
       <div className="pointer-events-none absolute inset-0 z-[1] opacity-20">
         <div className="absolute top-20 left-20 h-48 w-32 rounded-lg bg-orange-500/30" />
         <div className="absolute top-32 left-60 h-32 w-20 rounded-lg bg-blue-400/30" />
@@ -2129,8 +2129,8 @@ function GamePhase0Panel({
         </div>
       </div>
 
-      <div className="relative z-[5] mx-auto mt-[4.5rem] mb-4 flex min-h-0 w-[min(900px,calc(100%-18rem))] gap-6 rounded-2xl border border-white/30 bg-white/95 p-5 shadow-xl backdrop-blur-sm">
-        <div className="flex w-[220px] shrink-0 flex-col">
+      <div className="relative z-[5] mx-auto mt-[4.5rem] mb-4 flex h-[calc(100%-6rem)] min-h-0 w-[min(900px,calc(100%-18rem))] gap-6 overflow-hidden rounded-2xl border border-white/30 bg-white/95 p-5 shadow-xl backdrop-blur-sm">
+        <div className="flex w-[200px] shrink-0 flex-col overflow-y-auto pr-1">
           {reviewMode ? (
             <div className="flex flex-col gap-3">
               <p className="text-sm font-semibold text-gray-800">All microbes reviewed.</p>
@@ -2155,7 +2155,7 @@ function GamePhase0Panel({
               {displayedMicrobe ? (
                 <div className="flex flex-1 flex-col rounded-xl border border-gray-200 bg-gray-50/80 p-4 shadow-inner">
                   <p className="mb-3 text-center text-base font-bold text-gray-900">{displayedMicrobe.name}</p>
-                  <div className="mb-3 flex justify-center [&>svg]:h-20 [&>svg]:w-20">
+                  <div className="mb-3 flex justify-center [&>svg]:h-16 [&>svg]:w-16">
                     <Svg color={col} />
                   </div>
                   <p className="mb-2 text-xs font-bold uppercase tracking-wide text-gray-500">Attributes</p>
@@ -2212,7 +2212,7 @@ function GamePhase0Panel({
           )}
         </div>
 
-        <div className="flex min-w-0 flex-1 gap-3">
+        <div className="flex min-w-0 flex-1 gap-3 overflow-hidden">
           {columnsPhase0.map((colDef) => (
             <div key={colDef.title} className="flex min-w-0 flex-1 flex-col rounded-lg border border-gray-200 bg-white/60 p-3">
               <div className="mb-3 flex flex-col gap-1 border-b border-gray-200 pb-2">
@@ -2221,7 +2221,7 @@ function GamePhase0Panel({
                   {colDef.badge}: {colDef.items.length}
                 </span>
               </div>
-              <div className="flex flex-col gap-2 overflow-y-auto pr-1" style={{ maxHeight: "min(560px,calc(100vh-13rem))" }}>
+              <div className="flex flex-1 flex-col gap-2 overflow-y-auto pr-1">
                 {colDef.items.map(({ m: mm, poolMs }) => {
                   const uid = `${colDef.title}-${mm.id}-${mm.name}`
                   const open = expandedColumnIds.has(uid)
@@ -2234,10 +2234,10 @@ function GamePhase0Panel({
                         onClick={() => toggleExpand(uid)}
                         className="flex w-full items-center gap-2 px-2 py-2 text-left hover:bg-gray-50"
                       >
-                        <span className="[&>svg]:block [&>svg]:h-10 [&>svg]:w-10">
-                          <span className="flex shrink-0 scale-90">{collapsedBlobCard(mm, poolMs)}</span>
+                        <span className="[&>svg]:block [&>svg]:h-8 [&>svg]:w-8">
+                          <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden">{collapsedBlobCard(mm, poolMs)}</span>
                         </span>
-                        <span className="min-w-0 flex-1 truncate text-sm font-semibold text-gray-800">{mm.name}</span>
+                        <span className="min-w-0 flex-1 text-xs leading-tight font-semibold break-words text-gray-800">{mm.name}</span>
                         <ChevronDown className={`h-4 w-4 shrink-0 text-gray-500 transition-transform ${open ? "rotate-180" : ""}`} />
                       </button>
                       {open ? (
