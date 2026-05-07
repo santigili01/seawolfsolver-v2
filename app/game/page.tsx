@@ -1155,6 +1155,7 @@ function GamePhase1ProfilingPanel({
   onComplete: (score: import("@/lib/game-scoring").Phase1Score, picks: GSelectionItem[]) => void
 }) {
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(() => new Set())
+  const [showConfirm, setShowConfirm] = useState(false)
   const [sliderPositions, setSliderPositions] = useState<Record<string, number>>({
     Mobility: 4,
     Agility: 4,
@@ -1375,14 +1376,16 @@ function GamePhase1ProfilingPanel({
           <button
             type="button"
             disabled={!canSubmit}
-            onClick={submit}
+            onClick={() => {
+              if (selectedKeys.size === 2) setShowConfirm(true)
+            }}
             className={`min-w-[200px] rounded-lg px-10 py-2.5 text-sm font-semibold transition-colors ${
               canSubmit
                 ? "cursor-pointer bg-[rgba(20,30,50,0.9)] text-white hover:bg-[rgba(30,40,60,0.95)]"
                 : "cursor-not-allowed bg-gray-300 text-gray-500"
             }`}
           >
-            Submit
+            Confirm Selection
           </button>
         </div>
       </div>
@@ -1442,6 +1445,42 @@ function GamePhase1ProfilingPanel({
           Skip →
         </button>
       ) : null}
+      {showConfirm ? (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50">
+          <div className="mx-4 w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl">
+            <h3 className="mb-2 text-lg font-bold text-gray-900">Confirm your selection</h3>
+            <p className="mb-1 text-sm text-gray-600">You have selected:</p>
+            <ul className="mb-4 space-y-1 text-sm font-semibold text-gray-800">
+              {itemsFromKeys(selectedKeys).map((item) => (
+                <li key={`${item.type}-${item.name}`} className="flex items-center gap-2">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#4ECDC4]" />
+                  {item.type === "attribute" ? `${item.name} (${item.selectedMin}–${item.selectedMax})` : item.name}
+                </li>
+              ))}
+            </ul>
+            <p className="mb-5 text-sm text-gray-500">You won&apos;t be able to change these after confirming.</p>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setShowConfirm(false)}
+                className="flex-1 rounded-lg border border-gray-300 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+              >
+                Go Back
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowConfirm(false)
+                  submit()
+                }}
+                className="flex-1 rounded-lg bg-[rgba(20,30,50,0.9)] py-2.5 text-sm font-semibold text-white hover:bg-[rgba(30,40,60,0.95)]"
+              >
+                Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }
@@ -1485,6 +1524,7 @@ function GamePhase2Panel({
 }) {
   const [idx, setIdx] = useState(0)
   const [picked, setPicked] = useState<P2Pick | null>(null)
+  const [reviewMode, setReviewMode] = useState(false)
   const [decisions, setDecisions] = useState<{ id: string; choice: P2Pick }[]>([])
   const [bucketState, setBucketState] = useState<{ b1: Microbe[]; b2: Microbe[]; ret: Microbe[] }>({
     b1: [],
@@ -1584,7 +1624,27 @@ function GamePhase2Panel({
       setIdx((i) => i + 1)
       return
     }
-    finalize(nextDec)
+    setReviewMode(true)
+  }
+
+  const reassignMicrobe = (microbeId: string, from: P2Pick, to: P2Pick, uid: string) => {
+    setBucketState((prev) => {
+      const fromKey = from === "site1" ? "b1" : from === "site2" ? "b2" : "ret"
+      const toKey = to === "site1" ? "b1" : to === "site2" ? "b2" : "ret"
+      const microbe = prev[fromKey].find((x) => x.id === microbeId)
+      if (!microbe) return prev
+      return {
+        ...prev,
+        [fromKey]: prev[fromKey].filter((x) => x.id !== microbeId),
+        [toKey]: [...prev[toKey], microbe],
+      }
+    })
+    setDecisions((prev) => prev.map((d) => (d.id === microbeId ? { ...d, choice: to } : d)))
+    setExpandedColumnIds((prev) => {
+      const n = new Set(prev)
+      n.delete(uid)
+      return n
+    })
   }
 
   return (
@@ -1675,85 +1735,103 @@ function GamePhase2Panel({
 
       <div className="relative z-[5] mx-auto mt-[4.5rem] mb-4 flex min-h-0 w-[min(900px,calc(100%-18rem))] gap-6 rounded-2xl border border-white/30 bg-white/95 p-5 shadow-xl backdrop-blur-sm">
         <div className="flex w-[220px] shrink-0 flex-col">
-          <div className="mb-2 flex flex-wrap items-baseline gap-2">
-            <h2 className="text-lg font-bold text-gray-900">Categorize Microbes</h2>
-            <span className="rounded-full bg-teal-100 px-2.5 py-0.5 text-xs font-semibold text-teal-800">
-              Microbes remaining: {remainingCount}
-            </span>
-          </div>
-
-          {displayedMicrobe ? (
-            <div className="flex flex-1 flex-col rounded-xl border border-gray-200 bg-gray-50/80 p-4 shadow-inner">
-              <p className="mb-3 text-center text-base font-bold text-gray-900">{displayedMicrobe.name}</p>
-              <div className="mb-3 flex justify-center [&>svg]:h-20 [&>svg]:w-20">
-                <Svg color={col} />
-              </div>
-              <p className="mb-2 text-xs font-bold uppercase tracking-wide text-gray-500">Attributes</p>
-              <SlotAttributeRow
-                Mobility={displayedMicrobe.Mobility}
-                Agility={displayedMicrobe.Agility}
-                Size={displayedMicrobe.Size}
-              />
-              <p className="mb-2 mt-4 text-xs font-bold uppercase tracking-wide text-gray-500">Trait</p>
-              <div className="flex items-center gap-2">
-                <TraitBadgeChip trait={displayedMicrobe.trait} chipClassName="h-8 w-8" />
-                <span className="text-sm font-medium" style={{ color: traitColor(displayedMicrobe.trait) }}>
-                  {displayedMicrobe.trait}
-                </span>
-              </div>
+          {reviewMode ? (
+            <div className="flex flex-col gap-3">
+              <p className="text-sm font-semibold text-gray-800">All microbes categorized.</p>
+              <p className="text-sm text-gray-500">
+                Review your assignments in the columns. You can still reassign microbes before continuing.
+              </p>
+              <button
+                type="button"
+                onClick={() => finalize(decisions)}
+                className="w-full rounded-lg bg-[rgba(20,30,50,0.9)] py-3 text-sm font-semibold text-white hover:bg-[rgba(30,40,60,0.95)]"
+              >
+                Continue
+              </button>
             </div>
           ) : (
-            <p className="text-sm text-gray-500">Nothing to categorize.</p>
+            <>
+              <div className="mb-2 flex flex-wrap items-baseline gap-2">
+                <h2 className="text-lg font-bold text-gray-900">Categorize Microbes</h2>
+                <span className="rounded-full bg-teal-100 px-2.5 py-0.5 text-xs font-semibold text-teal-800">
+                  Microbes remaining: {remainingCount}
+                </span>
+              </div>
+
+              {displayedMicrobe ? (
+                <div className="flex flex-1 flex-col rounded-xl border border-gray-200 bg-gray-50/80 p-4 shadow-inner">
+                  <p className="mb-3 text-center text-base font-bold text-gray-900">{displayedMicrobe.name}</p>
+                  <div className="mb-3 flex justify-center [&>svg]:h-20 [&>svg]:w-20">
+                    <Svg color={col} />
+                  </div>
+                  <p className="mb-2 text-xs font-bold uppercase tracking-wide text-gray-500">Attributes</p>
+                  <SlotAttributeRow
+                    Mobility={displayedMicrobe.Mobility}
+                    Agility={displayedMicrobe.Agility}
+                    Size={displayedMicrobe.Size}
+                  />
+                  <p className="mb-2 mt-4 text-xs font-bold uppercase tracking-wide text-gray-500">Trait</p>
+                  <div className="flex items-center gap-2">
+                    <TraitBadgeChip trait={displayedMicrobe.trait} chipClassName="h-8 w-8" />
+                    <span className="text-sm font-medium" style={{ color: traitColor(displayedMicrobe.trait) }}>
+                      {displayedMicrobe.trait}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500">Nothing to categorize.</p>
+              )}
+
+              <p className="mb-2 mt-5 text-sm font-semibold text-gray-800">Select Category</p>
+              <div className="flex shrink-0 flex-col gap-2">
+                <label className="flex cursor-pointer items-start gap-2 text-sm leading-snug text-gray-800">
+                  <input
+                    type="radio"
+                    name="p2cat-game"
+                    checked={picked === "site1"}
+                    onChange={() => setPicked("site1")}
+                    className="mt-0.5 h-4 w-4 shrink-0"
+                  />
+                  <span className="min-w-0 break-words">{site1Label}</span>
+                </label>
+                {isLastSite ? null : (
+                  <label className="flex cursor-pointer items-start gap-2 text-sm leading-snug text-gray-800">
+                    <input
+                      type="radio"
+                      name="p2cat-game"
+                      checked={picked === "site2"}
+                      onChange={() => setPicked("site2")}
+                      className="mt-0.5 h-4 w-4 shrink-0"
+                    />
+                    <span className="min-w-0 break-words">{site2Label}</span>
+                  </label>
+                )}
+                <label className="flex cursor-pointer items-center gap-2 text-sm text-gray-800">
+                  <input
+                    type="radio"
+                    name="p2cat-game"
+                    checked={picked === "return"}
+                    onChange={() => setPicked("return")}
+                    className="h-4 w-4"
+                  />
+                  Return
+                </label>
+              </div>
+
+              <button
+                type="button"
+                disabled={!displayedMicrobe || picked === null}
+                onClick={submitOne}
+                className={`mt-4 w-full shrink-0 rounded-lg py-3 text-sm font-semibold transition-colors ${
+                  displayedMicrobe && picked !== null
+                    ? "cursor-pointer bg-[rgba(20,30,50,0.9)] text-white hover:bg-[rgba(30,40,60,0.95)]"
+                    : "cursor-not-allowed bg-gray-300 text-gray-500"
+                }`}
+              >
+                Submit Selection
+              </button>
+            </>
           )}
-
-          <p className="mb-2 mt-5 text-sm font-semibold text-gray-800">Select Category</p>
-          <div className="flex shrink-0 flex-col gap-2">
-            <label className="flex cursor-pointer items-start gap-2 text-sm leading-snug text-gray-800">
-              <input
-                type="radio"
-                name="p2cat-game"
-                checked={picked === "site1"}
-                onChange={() => setPicked("site1")}
-                className="mt-0.5 h-4 w-4 shrink-0"
-              />
-              <span className="min-w-0 break-words">{site1Label}</span>
-            </label>
-            {isLastSite ? null : (
-              <label className="flex cursor-pointer items-start gap-2 text-sm leading-snug text-gray-800">
-                <input
-                  type="radio"
-                  name="p2cat-game"
-                  checked={picked === "site2"}
-                  onChange={() => setPicked("site2")}
-                  className="mt-0.5 h-4 w-4 shrink-0"
-                />
-                <span className="min-w-0 break-words">{site2Label}</span>
-              </label>
-            )}
-            <label className="flex cursor-pointer items-center gap-2 text-sm text-gray-800">
-              <input
-                type="radio"
-                name="p2cat-game"
-                checked={picked === "return"}
-                onChange={() => setPicked("return")}
-                className="h-4 w-4"
-              />
-              Return
-            </label>
-          </div>
-
-          <button
-            type="button"
-            disabled={!displayedMicrobe || picked === null}
-            onClick={submitOne}
-            className={`mt-4 w-full shrink-0 rounded-lg py-3 text-sm font-semibold transition-colors ${
-              displayedMicrobe && picked !== null
-                ? "cursor-pointer bg-[rgba(20,30,50,0.9)] text-white hover:bg-[rgba(30,40,60,0.95)]"
-                : "cursor-not-allowed bg-gray-300 text-gray-500"
-            }`}
-          >
-            Submit Selection
-          </button>
         </div>
 
         <div className="flex min-w-0 flex-1 gap-3">
@@ -1769,6 +1847,17 @@ function GamePhase2Panel({
                 {colDef.items.map(({ m, poolMs }) => {
                   const uid = `${colDef.title}-${m.id}-${m.name}`
                   const open = expandedColumnIds.has(uid)
+                  const fromPick: P2Pick =
+                    colDef.title === site1Label ? "site1" : colDef.title === site2Label ? "site2" : "return"
+                  const targets: { pick: P2Pick; label: string }[] =
+                    fromPick === "site1"
+                      ? [{ pick: "return", label: "Return" }, ...(isLastSite ? [] : [{ pick: "site2" as const, label: site2Label }])]
+                      : fromPick === "site2"
+                        ? [
+                            { pick: "site1", label: site1Label },
+                            { pick: "return", label: "Return" },
+                          ]
+                        : [{ pick: "site1", label: site1Label }, ...(isLastSite ? [] : [{ pick: "site2" as const, label: site2Label }])]
                   return (
                     <div key={uid} className="rounded-lg border border-gray-200 bg-white shadow-sm">
                       <button
@@ -1790,6 +1879,18 @@ function GamePhase2Panel({
                             <span style={{ color: traitColor(m.trait) }} className="text-xs font-medium">
                               {m.trait}
                             </span>
+                          </div>
+                          <div className="mt-2 flex gap-2">
+                            {targets.map((target) => (
+                              <button
+                                key={`${uid}-${target.pick}`}
+                                type="button"
+                                onClick={() => reassignMicrobe(m.id, fromPick, target.pick, uid)}
+                                className="rounded-md border border-gray-300 px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100"
+                              >
+                                Move to {target.label}
+                              </button>
+                            ))}
                           </div>
                         </div>
                       ) : null}
@@ -1881,6 +1982,7 @@ function GamePhase0Panel({
   const [i, setI] = useState(0)
   const [rows, setRows] = useState<Phase0DecisionInput[]>([])
   const [choice, setChoice] = useState<"keep" | "return" | null>(null)
+  const [reviewMode, setReviewMode] = useState(false)
   const [expandedColumnIds, setExpandedColumnIds] = useState<Set<string>>(() => new Set())
   const [keyExpanded, setKeyExpanded] = useState(false)
 
@@ -1927,10 +2029,20 @@ function GamePhase0Panel({
     setRows(next)
     setChoice(null)
     if (i >= taggedMicrobes.length - 1) {
-      onComplete(scorePhase0(next))
+      setRows(next)
+      setReviewMode(true)
       return
     }
     setI((x) => x + 1)
+  }
+
+  const reassignP0Microbe = (microbeId: string, to: "keep" | "return", uid: string) => {
+    setRows((prev) => prev.map((d) => ((d.microbe as Microbe).id === microbeId ? { ...d, playerChoice: to } : d)))
+    setExpandedColumnIds((prev) => {
+      const n = new Set(prev)
+      n.delete(uid)
+      return n
+    })
   }
 
   if (taggedMicrobes.length === 0) return null
@@ -2019,69 +2131,85 @@ function GamePhase0Panel({
 
       <div className="relative z-[5] mx-auto mt-[4.5rem] mb-4 flex min-h-0 w-[min(900px,calc(100%-18rem))] gap-6 rounded-2xl border border-white/30 bg-white/95 p-5 shadow-xl backdrop-blur-sm">
         <div className="flex w-[220px] shrink-0 flex-col">
-          <div className="mb-2 flex flex-wrap items-baseline gap-2">
-            <h2 className="text-lg font-bold text-gray-900">Review Microbes</h2>
-            <span className="rounded-full bg-teal-100 px-2.5 py-0.5 text-xs font-semibold text-teal-800">
-              Microbes remaining: {remainingCount}
-            </span>
-          </div>
-
-          {displayedMicrobe ? (
-            <div className="flex flex-1 flex-col rounded-xl border border-gray-200 bg-gray-50/80 p-4 shadow-inner">
-              <p className="mb-3 text-center text-base font-bold text-gray-900">{displayedMicrobe.name}</p>
-              <div className="mb-3 flex justify-center [&>svg]:h-20 [&>svg]:w-20">
-                <Svg color={col} />
-              </div>
-              <p className="mb-2 text-xs font-bold uppercase tracking-wide text-gray-500">Attributes</p>
-              <SlotAttributeRow {...displayedMicrobe} />
-              <p className="mb-2 mt-4 text-xs font-bold uppercase tracking-wide text-gray-500">Trait</p>
-              <div className="flex items-center gap-2">
-                <TraitBadgeChip trait={displayedMicrobe.trait} chipClassName="h-8 w-8" />
-                <span className="text-sm font-medium" style={{ color: traitColor(displayedMicrobe.trait) }}>
-                  {displayedMicrobe.trait}
-                </span>
-              </div>
+          {reviewMode ? (
+            <div className="flex flex-col gap-3">
+              <p className="text-sm font-semibold text-gray-800">All microbes reviewed.</p>
+              <p className="text-sm text-gray-500">You can still reassign microbes before continuing.</p>
+              <button
+                type="button"
+                onClick={() => onComplete(scorePhase0(rows))}
+                className="w-full rounded-lg bg-[rgba(20,30,50,0.9)] py-3 text-sm font-semibold text-white hover:bg-[rgba(30,40,60,0.95)]"
+              >
+                Continue
+              </button>
             </div>
           ) : (
-            <p className="text-sm text-gray-500">Nothing to review.</p>
+            <>
+              <div className="mb-2 flex flex-wrap items-baseline gap-2">
+                <h2 className="text-lg font-bold text-gray-900">Review Microbes</h2>
+                <span className="rounded-full bg-teal-100 px-2.5 py-0.5 text-xs font-semibold text-teal-800">
+                  Microbes remaining: {remainingCount}
+                </span>
+              </div>
+
+              {displayedMicrobe ? (
+                <div className="flex flex-1 flex-col rounded-xl border border-gray-200 bg-gray-50/80 p-4 shadow-inner">
+                  <p className="mb-3 text-center text-base font-bold text-gray-900">{displayedMicrobe.name}</p>
+                  <div className="mb-3 flex justify-center [&>svg]:h-20 [&>svg]:w-20">
+                    <Svg color={col} />
+                  </div>
+                  <p className="mb-2 text-xs font-bold uppercase tracking-wide text-gray-500">Attributes</p>
+                  <SlotAttributeRow {...displayedMicrobe} />
+                  <p className="mb-2 mt-4 text-xs font-bold uppercase tracking-wide text-gray-500">Trait</p>
+                  <div className="flex items-center gap-2">
+                    <TraitBadgeChip trait={displayedMicrobe.trait} chipClassName="h-8 w-8" />
+                    <span className="text-sm font-medium" style={{ color: traitColor(displayedMicrobe.trait) }}>
+                      {displayedMicrobe.trait}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500">Nothing to review.</p>
+              )}
+
+              <p className="mb-2 mt-5 text-sm font-semibold text-gray-800">Select Category</p>
+              <div className="flex shrink-0 flex-col gap-2">
+                <label className="flex cursor-pointer items-start gap-2 text-sm leading-snug text-gray-800">
+                  <input
+                    type="radio"
+                    name="p0cat-game"
+                    checked={p2SelectedEquivalent === "keep"}
+                    onChange={() => setChoice("keep")}
+                    className="mt-0.5 h-4 w-4 shrink-0"
+                  />
+                  <span className="min-w-0 break-words">{site1Label}</span>
+                </label>
+                <label className="flex cursor-pointer items-center gap-2 text-sm text-gray-800">
+                  <input
+                    type="radio"
+                    name="p0cat-game"
+                    checked={p2SelectedEquivalent === "discard"}
+                    onChange={() => setChoice("return")}
+                    className="h-4 w-4"
+                  />
+                  Return
+                </label>
+              </div>
+
+              <button
+                type="button"
+                disabled={!displayedMicrobe || choice === null}
+                onClick={confirm}
+                className={`mt-4 w-full shrink-0 rounded-lg py-3 text-sm font-semibold transition-colors ${
+                  displayedMicrobe && choice !== null
+                    ? "cursor-pointer bg-[rgba(20,30,50,0.9)] text-white hover:bg-[rgba(30,40,60,0.95)]"
+                    : "cursor-not-allowed bg-gray-300 text-gray-500"
+                }`}
+              >
+                Submit Selection
+              </button>
+            </>
           )}
-
-          <p className="mb-2 mt-5 text-sm font-semibold text-gray-800">Select Category</p>
-          <div className="flex shrink-0 flex-col gap-2">
-            <label className="flex cursor-pointer items-start gap-2 text-sm leading-snug text-gray-800">
-              <input
-                type="radio"
-                name="p0cat-game"
-                checked={p2SelectedEquivalent === "keep"}
-                onChange={() => setChoice("keep")}
-                className="mt-0.5 h-4 w-4 shrink-0"
-              />
-              <span className="min-w-0 break-words">{site1Label}</span>
-            </label>
-            <label className="flex cursor-pointer items-center gap-2 text-sm text-gray-800">
-              <input
-                type="radio"
-                name="p0cat-game"
-                checked={p2SelectedEquivalent === "discard"}
-                onChange={() => setChoice("return")}
-                className="h-4 w-4"
-              />
-              Return
-            </label>
-          </div>
-
-          <button
-            type="button"
-            disabled={!displayedMicrobe || choice === null}
-            onClick={confirm}
-            className={`mt-4 w-full shrink-0 rounded-lg py-3 text-sm font-semibold transition-colors ${
-              displayedMicrobe && choice !== null
-                ? "cursor-pointer bg-[rgba(20,30,50,0.9)] text-white hover:bg-[rgba(30,40,60,0.95)]"
-                : "cursor-not-allowed bg-gray-300 text-gray-500"
-            }`}
-          >
-            Submit Selection
-          </button>
         </div>
 
         <div className="flex min-w-0 flex-1 gap-3">
@@ -2097,6 +2225,8 @@ function GamePhase0Panel({
                 {colDef.items.map(({ m: mm, poolMs }) => {
                   const uid = `${colDef.title}-${mm.id}-${mm.name}`
                   const open = expandedColumnIds.has(uid)
+                  const moveTo = colDef.title === site1Label ? "return" : "keep"
+                  const moveLabel = moveTo === "return" ? "Return" : site1Label
                   return (
                     <div key={uid} className="rounded-lg border border-gray-200 bg-white shadow-sm">
                       <button
@@ -2118,6 +2248,15 @@ function GamePhase0Panel({
                             <span style={{ color: traitColor(mm.trait) }} className="text-xs font-medium">
                               {mm.trait}
                             </span>
+                          </div>
+                          <div className="mt-2 flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => reassignP0Microbe(mm.id, moveTo, uid)}
+                              className="rounded-md border border-gray-300 px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100"
+                            >
+                              Move to {moveLabel}
+                            </button>
                           </div>
                         </div>
                       ) : null}
@@ -2809,7 +2948,6 @@ function GamePhase4TreatmentPanel({
             const svgIdx = svgMap.get(sel.id) ?? 0
             const col = MICROBE_PALETTE[svgIdx % MICROBE_PALETTE.length] ?? "#808080"
             const Svg = microbeComponents[svgIdx % microbeComponents.length] ?? MicrobeBlob1
-            const inv = getInviableAttributes(sel, scenario)
             return (
               <div
                 key={`${sel.id}-slot-${slotIndex}`}
@@ -2824,22 +2962,13 @@ function GamePhase4TreatmentPanel({
                 }}
                 className="relative flex h-[220px] w-[160px] shrink-0 cursor-pointer flex-col items-center text-center rounded-xl border-2 border-solid border-blue-400 bg-white shadow-lg"
               >
-                {inv.length > 0 ? (
-                  <div className="absolute top-1 right-1 z-[2]">
-                    <Tooltip text="An inviable microbe cannot mathematically contribute to a valid average for one or more attributes, regardless of what other microbes are selected.">
-                      <span className="inline-flex text-amber-600">
-                        <HelpCircle className="h-4 w-4" />
-                      </span>
-                    </Tooltip>
-                  </div>
-                ) : null}
                 <div className="flex min-h-0 w-full flex-1 flex-col items-center justify-between gap-1 px-2 py-2 text-center">
                   <div className="flex h-16 w-16 shrink-0 items-center justify-center [&>svg]:block [&>svg]:h-full [&>svg]:w-full [&>svg]:max-h-full [&>svg]:max-w-full">
                     <Svg color={col} />
                   </div>
                   <p className="line-clamp-2 w-full text-center text-[14px] font-bold leading-tight text-gray-800">{sel.name}</p>
                   <div className="flex w-full flex-col items-center text-center">
-                    <SlotAttributeRow Mobility={sel.Mobility} Agility={sel.Agility} Size={sel.Size} inviableAttributes={inv} />
+                    <SlotAttributeRow Mobility={sel.Mobility} Agility={sel.Agility} Size={sel.Size} />
                   </div>
                   <SlotTraitBadge trait={sel.trait} />
                 </div>
@@ -2872,7 +3001,6 @@ function GamePhase4TreatmentPanel({
             const MicrobeSvg = microbeComponents[svgIdx % microbeComponents.length] ?? MicrobeBlob1
             const blobColor = MICROBE_PALETTE[svgIdx % MICROBE_PALETTE.length] ?? "#808080"
             const isSel = selectedIds.has(microbe.id)
-            const invAttrs = getInviableAttributes(microbe, scenario)
             if (isSel) {
               return (
                 <div key={microbe.id} className="min-h-[140px] rounded-xl border-2 border-dashed border-white/30 bg-white/20" />
@@ -2891,13 +3019,7 @@ function GamePhase4TreatmentPanel({
                   <MicrobeSvg color={blobColor} />
                 </div>
                 <div className="mt-auto flex w-full items-center justify-between gap-1 px-1">
-                  <MicrobeAttributeRow
-                    Mobility={microbe.Mobility}
-                    Agility={microbe.Agility}
-                    Size={microbe.Size}
-                    inviableAttributes={invAttrs}
-                    highlightInviable
-                  />
+                  <MicrobeAttributeRow Mobility={microbe.Mobility} Agility={microbe.Agility} Size={microbe.Size} />
                   <TraitBadgeChip trait={microbe.trait} />
                 </div>
               </button>
