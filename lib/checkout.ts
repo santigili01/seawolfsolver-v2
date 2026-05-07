@@ -1,7 +1,7 @@
 export function getCheckoutUrl(variantId: string, userId: string, email: string): string {
   const base = variantId === process.env.NEXT_PUBLIC_LMS_VARIANT_SIMULATOR
-    ? `https://seawolfprep.lemonsqueezy.com/checkout/buy/${process.env.NEXT_PUBLIC_LMS_VARIANT_SIMULATOR}`
-    : `https://seawolfprep.lemonsqueezy.com/checkout/buy/${process.env.NEXT_PUBLIC_LMS_VARIANT_SIMULATOR_SOLVER}`
+    ? `https://seawolfprep.lemonsqueezy.com/checkout/buy/${process.env.NEXT_PUBLIC_LMS_VARIANT_SIMULATOR_UUID}`
+    : `https://seawolfprep.lemonsqueezy.com/checkout/buy/${process.env.NEXT_PUBLIC_LMS_VARIANT_SIMULATOR_SOLVER_UUID}`
   
   const params = new URLSearchParams({
     'checkout[custom][user_id]': userId,
