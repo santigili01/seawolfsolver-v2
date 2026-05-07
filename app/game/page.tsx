@@ -253,31 +253,37 @@ function scenarioToSiteReq(s: ScenarioRequirements): GSiteRequirements {
 function correctP2Choice(
   pool: CategorizationPool,
   id: string,
+  isLastSite = false,
 ): "site1" | "site2" | "return" {
   if (pool.correct_categorization.site1.some((x) => x.id === id)) return "site1"
-  if (pool.correct_categorization.site2.some((x) => x.id === id)) return "site2"
+  if (pool.correct_categorization.site2.some((x) => x.id === id)) {
+    return isLastSite ? "return" : "site2"
+  }
   return "return"
 }
 
-function correctP2Reason(pool: CategorizationPool, id: string): string {
+function correctP2Reason(pool: CategorizationPool, id: string, isLastSite = false): string {
   const all = [
     ...pool.correct_categorization.site1.map((x) => ({ ...x, c: "site1" as const })),
-    ...pool.correct_categorization.site2.map((x) => ({ ...x, c: "site2" as const })),
+    ...pool.correct_categorization.site2.map((x) => ({
+      ...x,
+      c: isLastSite ? ("return" as const) : ("site2" as const),
+    })),
     ...pool.correct_categorization.return.map((x) => ({ ...x, c: "return" as const })),
   ]
   return all.find((x) => x.id === id)?.reason ?? ""
 }
 
-function devPhase2PerfectComplete(pool: CategorizationPool): {
+function devPhase2PerfectComplete(pool: CategorizationPool, isLastSite = false): {
   score: ReturnType<typeof scorePhase2>
   tagged: Microbe[]
   rows: Phase2DecisionRow[]
 } {
   const rows: Phase2DecisionRow[] = pool.microbes.map((m) => {
-    const c = correctP2Choice(pool, m.id)
-    return { microbeId: m.id, playerChoice: c, correctChoice: c, reason: correctP2Reason(pool, m.id) }
+    const c = correctP2Choice(pool, m.id, isLastSite)
+    return { microbeId: m.id, playerChoice: c, correctChoice: c, reason: correctP2Reason(pool, m.id, isLastSite) }
   })
-  const tagged = pool.microbes.filter((m) => correctP2Choice(pool, m.id) === "site2")
+  const tagged = pool.microbes.filter((m) => correctP2Choice(pool, m.id, isLastSite) === "site2")
   return { score: scorePhase2(rows), tagged, rows }
 }
 
@@ -1543,7 +1549,7 @@ function GamePhase2Panel({
   const siteStickyReq = pool.site1_requirements
   const nextReq = pool.site2_requirements
   const revealedForInsight = pool.revealed_characteristic as RevealedCharacteristic
-  const showInsightSection = Boolean(nextReq && revealedForInsight)
+  const showInsightSection = Boolean(nextReq && revealedForInsight && !isLastSite)
 
   const site1Label = `Site ${displaySiteNum}`
   const site2Label = `Site ${displaySiteNum + 1}`
@@ -1594,8 +1600,8 @@ function GamePhase2Panel({
     const rows: Phase2DecisionRow[] = rowsDec.map((d) => ({
       microbeId: d.id,
       playerChoice: d.choice,
-      correctChoice: correctP2Choice(pool, d.id),
-      reason: correctP2Reason(pool, d.id),
+      correctChoice: correctP2Choice(pool, d.id, isLastSite),
+      reason: correctP2Reason(pool, d.id, isLastSite),
     }))
     const score = scorePhase2(rows)
     const b2: Microbe[] = []
@@ -1951,7 +1957,7 @@ function GamePhase2Panel({
           type="button"
           className={DEV_SKIP_BTN_CLASS}
           onClick={() => {
-            const { score, tagged, rows } = devPhase2PerfectComplete(pool)
+            const { score, tagged, rows } = devPhase2PerfectComplete(pool, isLastSite)
             onComplete(score, tagged, rows)
           }}
         >
@@ -3409,6 +3415,7 @@ function GameResultsFull({
         <div className="space-y-4">
           {siteDetail.map((entry, siteIdx) => {
             const s = entry.site
+            const isLastSite = siteIdx === siteDetail.length - 1 || s.siteNumber === 3
             const req = entry.scenarios
             const pool = entry.treatmentPool.length ? entry.treatmentPool : (s.phase4.selectedMicrobes as Microbe[])
             const checklistRows = buildGamePhase4Checklist(s.phase4, req)
@@ -3723,6 +3730,8 @@ function GameResultsFull({
                     </div>
                     <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-5">
                       {s.phase2.decisions.map((d) => {
+                        const effectiveChoice = (c: "site1" | "site2" | "return") =>
+                          isLastSite && c === "site2" ? "return" : c
                         const wrong = d.playerChoice !== d.correctChoice
                         const ex = s.phase2.explanation.incorrect.find((i) => i.id === d.microbeId)
                         const pm = entry.catPoolMicrobes.find((x) => x.id === d.microbeId) ?? pool.find((x) => x.id === d.microbeId) ?? null
@@ -3747,10 +3756,10 @@ function GameResultsFull({
                               </div>
                             ) : null}
                             <div className="mt-1 text-gray-600">
-                              You: <span className="font-medium">{phase2ChoiceLabel(d.playerChoice, siteIdx + 1)}</span>
+                              You: <span className="font-medium">{phase2ChoiceLabel(effectiveChoice(d.playerChoice), siteIdx + 1)}</span>
                             </div>
                             <div className="text-gray-600">
-                              Correct: <span className="font-medium">{phase2ChoiceLabel(d.correctChoice, siteIdx + 1)}</span>
+                              Correct: <span className="font-medium">{phase2ChoiceLabel(effectiveChoice(d.correctChoice), siteIdx + 1)}</span>
                             </div>
                             {wrong && rewrittenReason ? (
                               <ul className="mt-1 list-disc space-y-0.5 pl-4 text-red-600">
