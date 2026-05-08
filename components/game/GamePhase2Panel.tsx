@@ -25,6 +25,7 @@ import {
   traitIcon,
 } from "@/lib/game-visuals"
 import { traitColor } from "@/lib/game-helpers"
+import { GameHelpModal } from "@/components/game/GameHelpModal"
 
 export type P2Pick = "site1" | "site2" | "return"
 
@@ -56,6 +57,7 @@ export function GamePhase2Panel({
   })
   const [expandedColumnIds, setExpandedColumnIds] = useState<Set<string>>(() => new Set())
   const [keyExpanded, setKeyExpanded] = useState(false)
+  const [showHelp, setShowHelp] = useState(false)
 
   const displayedMicrobe = pool.microbes[idx] ?? null
   const p2SvgMap = useMemo(() => assignUniqueSvgIndices(pool.microbes), [pool.microbes])
@@ -189,10 +191,14 @@ export function GamePhase2Panel({
           <span className="text-sm text-gray-400">Task Instructions</span>
         </div>
         <p className="mb-4 text-sm leading-relaxed text-white/90">
-          <span className="font-semibold">Categorize Microbes.</span> Categorize 10 microbes into Current Site, Next Site, or
-          Return based on the site information panel.
+          <span className="font-semibold">Evaluate each microbe</span> against the available site data and assign it to the most
+          appropriate destination.
         </p>
-        <button type="button" className="flex cursor-pointer items-center gap-2 text-blue-400 hover:text-blue-300">
+        <button
+          type="button"
+          onClick={() => setShowHelp(true)}
+          className="flex cursor-pointer items-center gap-2 text-blue-400 hover:text-blue-300"
+        >
           <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-500">
             <HelpCircle className="h-4 w-4 text-white" />
           </div>
@@ -481,6 +487,7 @@ export function GamePhase2Panel({
           Skip →
         </button>
       ) : null}
+      <GameHelpModal open={showHelp} onClose={() => setShowHelp(false)} />
     </div>
   )
 }

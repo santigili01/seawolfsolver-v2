@@ -22,6 +22,7 @@ import {
   traitIcon,
 } from "@/lib/game-visuals"
 import { traitColor } from "@/lib/game-helpers"
+import { GameHelpModal } from "@/components/game/GameHelpModal"
 
 // ─── Phase wrappers ───────────────────────────────────────────────────────────
 
@@ -42,6 +43,7 @@ export function GamePhase1ProfilingPanel({
 }) {
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(() => new Set())
   const [showConfirm, setShowConfirm] = useState(false)
+  const [showHelp, setShowHelp] = useState(false)
   const [sliderPositions, setSliderPositions] = useState<Record<string, number>>({
     Mobility: 4,
     Agility: 4,
@@ -124,10 +126,13 @@ export function GamePhase1ProfilingPanel({
           <span className="text-sm text-gray-400">Task Instructions</span>
         </div>
         <p className="mb-4 text-sm leading-relaxed text-white/90">
-          Select 2 microbe characteristics to program into the Database for your current Profile. The Site Information
-          is shown on the notepad taped to the monitor.
+          Review the site requirements and select 2 characteristics that best match this location&apos;s needs.
         </p>
-        <button type="button" className="flex cursor-pointer items-center gap-2 text-blue-400 hover:text-blue-300">
+        <button
+          type="button"
+          onClick={() => setShowHelp(true)}
+          className="flex cursor-pointer items-center gap-2 text-blue-400 hover:text-blue-300"
+        >
           <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-500">
             <HelpCircle className="h-4 w-4 text-white" />
           </div>
@@ -367,6 +372,7 @@ export function GamePhase1ProfilingPanel({
           </div>
         </div>
       ) : null}
+      <GameHelpModal open={showHelp} onClose={() => setShowHelp(false)} />
     </div>
   )
 }

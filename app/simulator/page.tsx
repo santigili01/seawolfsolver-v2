@@ -1453,8 +1453,8 @@ export default function SimulatorPage() {
           <span className="text-sm text-gray-400">Task Instructions</span>
         </div>
         <p className="mb-4 text-sm leading-relaxed text-white/90">
-          <span className="font-semibold">Select 3 microbes</span> whose averaged Attributes and collective Traits most
-          effectively match the Site Information.
+          <span className="font-semibold">Identify the 3 microbes</span> whose combined attributes and traits most
+          closely satisfy this site&apos;s treatment conditions.
         </p>
         <div className="flex cursor-pointer items-center gap-2 text-blue-400 hover:text-blue-300">
           <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-500">

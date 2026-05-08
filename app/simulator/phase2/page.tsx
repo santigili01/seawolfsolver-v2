@@ -556,7 +556,7 @@ export default function Phase2Page() {
           <span className="text-sm text-gray-400">Task Instructions</span>
         </div>
         <p className="mb-2 text-sm leading-relaxed text-white/90">
-          Select 1 microbe from the 3 candidates above to add to your Prospect Pool.
+          Assess the 3 candidates and select the one that best strengthens your prospect pool.
         </p>
         <p className="mb-4 text-xs text-white/70">Round {currentRoundIdx + 1} of 4</p>
         <div className="flex cursor-pointer items-center gap-2 text-blue-400 hover:text-blue-300">

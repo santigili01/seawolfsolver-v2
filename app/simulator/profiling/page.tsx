@@ -569,8 +569,7 @@ export default function ProfilingSimulatorPage() {
           <span className="text-sm text-gray-400">Task Instructions</span>
         </div>
         <p className="mb-4 text-sm leading-relaxed text-white/90">
-          Select 2 microbe characteristics to program into the Database for your current Profile. The Site Information
-          is shown on the notepad taped to the monitor.
+          Review the site requirements and select 2 characteristics that best match this location&apos;s needs.
         </p>
         <button type="button" className="flex cursor-pointer items-center gap-2 text-blue-400 hover:text-blue-300">
           <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-500">

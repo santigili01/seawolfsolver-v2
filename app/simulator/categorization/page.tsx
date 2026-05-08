@@ -979,13 +979,13 @@ export default function CategorizationSimulatorPage() {
         <p className="mb-4 text-sm leading-relaxed text-white/90">
           {isPhase0 ? (
             <>
-              <span className="font-semibold">Review Microbes.</span> Review microbes you reserved for this site. With
-              full site information now available, confirm or discard each one.
+              <span className="font-semibold">You have full site information available.</span> Reassess the microbes you
+              reserved and decide which to retain.
             </>
           ) : (
             <>
-              <span className="font-semibold">Categorize Microbes.</span> Categorize 10 microbes into Current Site, Next
-              Site, or Return based on the site information panel.
+              <span className="font-semibold">Evaluate each microbe</span> against the available site data and assign it
+              to the most appropriate destination.
             </>
           )}
         </p>

@@ -26,6 +26,7 @@ import {
   attributeKeyIcon,
   traitIcon,
 } from "@/lib/game-visuals"
+import { GameHelpModal } from "@/components/game/GameHelpModal"
 
 export function GamePhase4TreatmentPanel({
   builtPool,
@@ -46,6 +47,7 @@ export function GamePhase4TreatmentPanel({
 }) {
   const [selected, setSelected] = useState<Microbe[]>([])
   const [keyExpanded, setKeyExpanded] = useState(false)
+  const [showHelp, setShowHelp] = useState(false)
   const microbes = builtPool.slice(0, GRID_SLOTS)
 
   const keyTraits = useMemo(() => {
@@ -102,15 +104,19 @@ export function GamePhase4TreatmentPanel({
           <span className="text-sm text-gray-400">Task Instructions</span>
         </div>
         <p className="mb-4 text-sm leading-relaxed text-white/90">
-          <span className="font-semibold">Select 3 microbes</span> whose averaged Attributes and collective Traits most effectively match
-          the Site Information.
+          <span className="font-semibold">Identify the 3 microbes </span> whose combined attributes and traits most closely satisfy
+          this site&apos;s treatment conditions.
         </p>
-        <div className="flex cursor-pointer items-center gap-2 text-blue-400 hover:text-blue-300">
+        <button
+          type="button"
+          onClick={() => setShowHelp(true)}
+          className="flex cursor-pointer items-center gap-2 text-blue-400 hover:text-blue-300"
+        >
           <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-500">
             <HelpCircle className="h-4 w-4 text-white" />
           </div>
           <span className="text-sm">Help</span>
-        </div>
+        </button>
       </div>
 
       <div className="absolute top-20 right-6 z-10 w-56 rounded-lg bg-[#FFF9C4] p-4 shadow-lg">
@@ -313,6 +319,7 @@ export function GamePhase4TreatmentPanel({
           Skip →
         </button>
       ) : null}
+      <GameHelpModal open={showHelp} onClose={() => setShowHelp(false)} />
     </div>
   )
 }

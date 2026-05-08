@@ -29,6 +29,7 @@ import {
   TraitBadgeChip,
   traitIcon,
 } from "@/lib/game-visuals"
+import { GameHelpModal } from "@/components/game/GameHelpModal"
 
 export function GamePhase3PoolPanel({
   prospect,
@@ -50,6 +51,7 @@ export function GamePhase3PoolPanel({
   const [pickId, setPickId] = useState<string | null>(null)
   const [picks, setPicks] = useState<string[]>([])
   const [keyExpanded, setKeyExpanded] = useState(false)
+  const [showHelp, setShowHelp] = useState(false)
   const set = prospect.choose_sets[roundIdx]
   const allP3Microbes = useMemo(() => {
     const seen = new Map<string, Microbe>()
@@ -134,17 +136,21 @@ export function GamePhase3PoolPanel({
           <span className="text-sm text-gray-400">Task Instructions</span>
         </div>
         <p className="mb-2 text-sm leading-relaxed text-white/90">
-          Select 1 microbe from the 3 candidates above to add to your Prospect Pool.
+          Assess the 3 candidates and select the one that best strengthens your prospect pool.
         </p>
         <p className="mb-4 text-xs text-white/70">
           Round {roundIdx + 1} of {TOTAL_P3_ROUNDS}
         </p>
-        <div className="flex cursor-pointer items-center gap-2 text-blue-400 hover:text-blue-300">
+        <button
+          type="button"
+          onClick={() => setShowHelp(true)}
+          className="flex cursor-pointer items-center gap-2 text-blue-400 hover:text-blue-300"
+        >
           <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-500">
             <HelpCircle className="h-4 w-4 text-white" />
           </div>
           <span className="text-sm">Help</span>
-        </div>
+        </button>
       </div>
 
       <div className="absolute top-20 right-6 z-10 w-56 rounded-lg bg-[#FFF9C4] p-4 shadow-lg">
@@ -322,6 +328,7 @@ export function GamePhase3PoolPanel({
           Skip →
         </button>
       ) : null}
+      <GameHelpModal open={showHelp} onClose={() => setShowHelp(false)} />
     </div>
   )
 }

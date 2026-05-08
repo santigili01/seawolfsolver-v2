@@ -22,6 +22,7 @@ import {
   TraitBadgeChip,
   traitIcon,
 } from "@/lib/game-visuals"
+import { GameHelpModal } from "@/components/game/GameHelpModal"
 
 export function GamePhase0Panel({
   taggedMicrobes,
@@ -46,6 +47,7 @@ export function GamePhase0Panel({
   const [reviewMode, setReviewMode] = useState(false)
   const [expandedColumnIds, setExpandedColumnIds] = useState<Set<string>>(() => new Set())
   const [keyExpanded, setKeyExpanded] = useState(false)
+  const [showHelp, setShowHelp] = useState(false)
 
   const m = taggedMicrobes[i]
   const req = scenarioToSiteReq(scenario)
@@ -135,10 +137,14 @@ export function GamePhase0Panel({
           <span className="text-sm text-gray-400">Task Instructions</span>
         </div>
         <p className="mb-4 text-sm leading-relaxed text-white/90">
-          <span className="font-semibold">Review Microbes.</span> Review microbes you reserved for this site. With full site
-          information now available, confirm or discard each one.
+          <span className="font-semibold">You have full site information available.</span> Reassess the microbes you reserved and
+          decide which to retain.
         </p>
-        <button type="button" className="flex cursor-pointer items-center gap-2 text-blue-400 hover:text-blue-300">
+        <button
+          type="button"
+          onClick={() => setShowHelp(true)}
+          className="flex cursor-pointer items-center gap-2 text-blue-400 hover:text-blue-300"
+        >
           <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-500">
             <HelpCircle className="h-4 w-4 text-white" />
           </div>
@@ -378,6 +384,7 @@ export function GamePhase0Panel({
           Skip →
         </button>
       ) : null}
+      <GameHelpModal open={showHelp} onClose={() => setShowHelp(false)} />
     </div>
   )
 }
