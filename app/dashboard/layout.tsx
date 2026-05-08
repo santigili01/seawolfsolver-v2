@@ -1,17 +1,13 @@
-import type { Metadata } from "next"
 import { auth, currentUser } from "@clerk/nextjs/server"
 import { redirect } from "next/navigation"
-import { DashboardShell } from "@/components/dashboard/dashboard-shell"
-import { resolveTier } from "@/lib/dashboard-access"
-import { userHasAccess } from "@/lib/access"
+import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar"
+import { membershipShortLabel, resolveTier, type AccessTier } from "@/lib/dashboard-access"
 import { supabaseAdmin } from "@/utils/supabase/admin"
 
-export const metadata: Metadata = {
-  title: "Dashboard | SeaWolfPrep",
-  description: "Your account overview, access status, and game activity.",
-}
-
-export default async function DashboardPage() {
+async function loadDashboardSidebarProps(): Promise<{
+  displayName: string
+  accessTier: AccessTier
+}> {
   const { userId } = await auth()
   if (!userId) redirect("/sign-in?redirect_url=/dashboard")
 
@@ -30,14 +26,17 @@ export default async function DashboardPage() {
 
   const variantIds = (purchases ?? []).map((p) => p.variant_id).filter(Boolean)
   const accessTier = resolveTier(variantIds)
-  const hasAccess = await userHasAccess(userId)
+
+  return { displayName, accessTier }
+}
+
+export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const { displayName, accessTier } = await loadDashboardSidebarProps()
 
   return (
-    <DashboardShell
-      displayName={displayName}
-      email={email}
-      accessTier={accessTier}
-      hasAccess={hasAccess}
-    />
+    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-950">
+      <DashboardSidebar displayName={displayName} planShortLabel={membershipShortLabel(accessTier)} />
+      <div className="min-w-0 flex-1">{children}</div>
+    </div>
   )
 }

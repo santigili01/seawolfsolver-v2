@@ -40,10 +40,13 @@ export function PracticeSidebar() {
           <DollarSign className="h-4 w-4" />
           Pricing
         </Link>
-        <div className="flex cursor-not-allowed items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 opacity-50">
+        <Link
+          href="/dashboard/settings"
+          className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100"
+        >
           <Settings className="h-4 w-4" />
-          Settings (coming soon)
-        </div>
+          Settings
+        </Link>
       </nav>
     </aside>
   )
