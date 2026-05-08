@@ -96,13 +96,13 @@ export function DashboardShell({
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Quick actions</h2>
           <div className="mt-3 grid gap-2 sm:grid-cols-2">
             <Link
-              href="/game"
+              href="/practice/sea-wolf"
               className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
             >
               Start full simulator
             </Link>
             <Link
-              href="/solver"
+              href="/practice/solver"
               className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
             >
               Open solver

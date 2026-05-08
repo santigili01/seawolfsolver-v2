@@ -14,7 +14,7 @@ export default function SolverPage() {
       <header className="w-full bg-[#1a202c] px-6 py-4">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between">
           <div className="text-lg font-bold text-white">SeaWolfPrep</div>
-          <Link href="/game" className="text-sm font-semibold text-[#4ECDC4] hover:underline">
+          <Link href="/practice/sea-wolf" className="text-sm font-semibold text-[#4ECDC4] hover:underline">
             Back to Game
           </Link>
         </div>

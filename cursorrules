@@ -14,12 +14,13 @@ Players practice all 4 game phases across 3 sites in a 30-minute session.
 
 ```
 app/
-  game/
-    page.tsx              — main game orchestrator (state, routing, phase switching)
-    layout.tsx            — server-side auth + purchase gate
-  solver/
-    page.tsx              — solver shell
-  simulator/             — standalone phase simulators (DO NOT TOUCH)
+  practice/
+    layout.tsx            — practice shell + auth choke point + DashboardSidebar
+    page.tsx              — practice hub
+    sea-wolf/
+      page.tsx            — full Sea Wolf simulator (orchestrator; was app/game/page.tsx)
+    solver/
+      page.tsx            — solver shell (was app/solver/page.tsx)
   page.tsx               — landing page (imports from components/landing/)
   pricing/page.tsx
   sign-in/, sign-up/
@@ -54,7 +55,7 @@ proxy.ts                 — Clerk middleware (Next.js 16 convention, not middle
 ---
 
 ## Infrastructure
-- **Auth:** Clerk — proxy.ts protects /game
+- **Auth:** Clerk — proxy.ts matches `/practice(.*)` (protect hook commented like before)
 - **Payments:** Lemon Squeezy — webhook at /api/webhooks/lemonsqueezy
 - **Database:** Supabase — users + purchases tables. Uses publishable/secret key naming (NOT anon/service_role)
 - **Hosting:** Vercel — auto-deploys from main branch
@@ -102,10 +103,10 @@ proxy.ts                 — Clerk middleware (Next.js 16 convention, not middle
 ## Critical Rules — Read Before Every Change
 
 1. **NEVER modify `lib/game-scoring.ts`** — all scoring logic lives here, it has 41 passing unit tests
-2. **Full Sea Wolf UI lives under `/game` + `components/game/*`** — do not resurrect duplicate phase routes under `app/simulator/`
+2. **Full Sea Wolf UI lives under `/practice/sea-wolf` + `components/game/*`** — do not resurrect duplicate phase routes under `app/simulator/`
 3. **DEV_MODE is `true` during development, must be `false` before launch** — it lives in `lib/game-helpers.ts`
 4. **`phase2_pools.json` contains Phase 3 data** — naming is a historical error, do not rename or change references
-5. **Never import from `app/game/page.tsx`** — it's a page file, not a module. Shared code lives in `lib/`
+5. **Never import from `app/practice/sea-wolf/page.tsx`** — it's a page file, not a module. Shared code lives in `lib/`
 6. **Microbe SVG uniqueness:** use `assignUniqueSvgIndices()` from `lib/game-helpers.ts` — never use position-based index
 7. **Phase 3→4 SVG consistency:** `p3SvgMap` is passed from Phase 3 to Phase 4 via `onComplete` prop
 8. **Site 3 Phase 2:** `isLastSite=true` remaps `correct_categorization.site2` → return. Do not remove this.

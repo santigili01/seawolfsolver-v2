@@ -39,7 +39,7 @@ export function PracticeHub() {
           title="Sea Wolf"
           subtitle="30 MINUTES"
           description="Full 4-phase simulation across 3 sites. Tests pattern recognition and decision-making under time pressure."
-          href="/game"
+          href="/practice/sea-wolf"
           cta="Play"
         />
         <GameCard
@@ -47,7 +47,7 @@ export function PracticeHub() {
           title="Sea Wolf Solver"
           subtitle="TOOL"
           description="Manual-input solver for all 4 phases. Use it alongside the real assessment."
-          href="/solver"
+          href="/practice/solver"
           cta="Open"
         />
       </div>

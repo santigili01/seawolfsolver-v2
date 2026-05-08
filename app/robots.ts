@@ -5,7 +5,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/api/", "/sign-in", "/sign-up"],
+      disallow: ["/api/", "/sign-in", "/sign-up", "/practice"],
     },
     sitemap: "https://seawolfsolver-v2.vercel.app/sitemap.xml",
   }

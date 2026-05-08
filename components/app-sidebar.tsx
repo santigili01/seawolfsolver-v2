@@ -8,9 +8,9 @@ import { cn } from "@/lib/utils"
 const navItems = [
   { label: "Dashboard", href: "/dashboard", emoji: "📊" },
   { label: "Back to Home", href: "/", emoji: "🏠" },
-  { label: "Sea Wolf", href: "/game", emoji: "🎮" },
+  { label: "Sea Wolf", href: "/practice/sea-wolf", emoji: "🎮" },
   { label: "Content", href: "/content", emoji: "📄" },
-  { label: "Solver", href: "/solver", emoji: "🔧" },
+  { label: "Solver", href: "/practice/solver", emoji: "🔧" },
 ]
 
 export function AppSidebar() {
