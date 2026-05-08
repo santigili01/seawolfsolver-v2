@@ -6,6 +6,7 @@ import { LogOut } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const navItems = [
+  { label: "Dashboard", href: "/dashboard", emoji: "📊" },
   { label: "Back to Home", href: "/", emoji: "🏠" },
   { label: "AI Simulator", href: "/simulator", emoji: "🤖" },
   { label: "Content", href: "/content", emoji: "📄" },

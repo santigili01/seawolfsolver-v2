@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { DollarSign, Gamepad2, Home, Settings } from "lucide-react"
+import { DollarSign, Gamepad2, Home, LayoutDashboard, Settings } from "lucide-react"
 
 export function PracticeSidebar() {
   return (
@@ -12,6 +12,13 @@ export function PracticeSidebar() {
       </div>
 
       <nav className="space-y-2">
+        <Link
+          href="/dashboard"
+          className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100"
+        >
+          <LayoutDashboard className="h-4 w-4" />
+          Dashboard
+        </Link>
         <Link
           href="/practice"
           className="flex items-center gap-3 rounded-lg bg-[#1a202c] px-3 py-2 text-sm font-medium text-white"
