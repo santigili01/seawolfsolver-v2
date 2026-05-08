@@ -56,28 +56,20 @@ export async function SettingsBillingCard() {
         </div>
       </div>
 
-      <div className="mt-5 space-y-4 border-t border-gray-200 pt-5 dark:border-gray-700">
-        <div className="overflow-hidden rounded-lg border border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-950">
-          <div className="border-b border-gray-200 px-3 py-2 text-xs font-medium text-gray-600 dark:border-gray-700 dark:text-gray-400">
-            Lemon Squeezy — orders & receipts
-          </div>
-          <iframe
-            title="Lemon Squeezy customer portal"
-            src="https://app.lemonsqueezy.com/my-orders"
-            className="h-[min(520px,70vh)] w-full bg-white dark:bg-gray-900"
-          />
-        </div>
-        <p className="text-xs text-gray-500 dark:text-gray-400">
-          If the panel does not load (blocked by your browser), open Lemon Squeezy in a new tab.
-        </p>
-        <Link
-          href="https://app.lemonsqueezy.com/my-orders"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex w-full items-center justify-center rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800"
-        >
-          View receipt / manage order →
-        </Link>
+      <div className="mt-5 border-t border-gray-200 pt-5 dark:border-gray-700">
+        {purchase ? (
+          <Link
+            href="/api/billing-portal"
+            prefetch={false}
+            className="block w-full rounded-lg border border-gray-200 px-4 py-2 text-center text-sm text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800"
+          >
+            View order & receipt →
+          </Link>
+        ) : (
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            After you purchase, a personalized order and receipt link will appear here.
+          </p>
+        )}
       </div>
     </section>
   )

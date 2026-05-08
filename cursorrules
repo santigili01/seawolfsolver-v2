@@ -102,7 +102,7 @@ proxy.ts                 — Clerk middleware (Next.js 16 convention, not middle
 ## Critical Rules — Read Before Every Change
 
 1. **NEVER modify `lib/game-scoring.ts`** — all scoring logic lives here, it has 41 passing unit tests
-2. **NEVER touch `app/simulator/*`** — standalone simulators are separate from /game
+2. **Full Sea Wolf UI lives under `/game` + `components/game/*`** — do not resurrect duplicate phase routes under `app/simulator/`
 3. **DEV_MODE is `true` during development, must be `false` before launch** — it lives in `lib/game-helpers.ts`
 4. **`phase2_pools.json` contains Phase 3 data** — naming is a historical error, do not rename or change references
 5. **Never import from `app/game/page.tsx`** — it's a page file, not a module. Shared code lives in `lib/`

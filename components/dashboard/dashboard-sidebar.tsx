@@ -2,16 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import {
-  BarChart3,
-  DollarSign,
-  Gamepad2,
-  Home,
-  Inbox,
-  LayoutDashboard,
-  Settings,
-  Sparkles,
-} from "lucide-react"
+import { BarChart3, Gamepad2, Home, Inbox, Settings, Sparkles } from "lucide-react"
 import { DashboardSidebarThemeToggle } from "@/components/dashboard/dashboard-sidebar-theme-toggle"
 
 function itemClasses(active: boolean) {
@@ -23,9 +14,11 @@ function itemClasses(active: boolean) {
 export function DashboardSidebar({
   displayName,
   planShortLabel,
+  showUpgrade,
 }: {
   displayName: string
   planShortLabel: string
+  showUpgrade: boolean
 }) {
   const pathname = usePathname()
 
@@ -42,13 +35,9 @@ export function DashboardSidebar({
         </div>
 
         <nav className="space-y-1">
-          <Link href="/" className={itemClasses(pathname === "/")}>
+          <Link href="/dashboard" className={itemClasses(pathname === "/dashboard")}>
             <Home className="h-4 w-4 shrink-0" />
             Home
-          </Link>
-          <Link href="/dashboard" className={itemClasses(pathname === "/dashboard")}>
-            <LayoutDashboard className="h-4 w-4 shrink-0" />
-            Dashboard
           </Link>
           <Link href="/practice" className={itemClasses(pathname === "/practice")}>
             <Gamepad2 className="h-4 w-4 shrink-0" />
@@ -62,10 +51,6 @@ export function DashboardSidebar({
             <Inbox className="h-4 w-4 shrink-0" />
             Inbox
           </Link>
-          <Link href="/pricing" className={itemClasses(pathname === "/pricing")}>
-            <DollarSign className="h-4 w-4 shrink-0" />
-            Pricing
-          </Link>
           <Link href="/dashboard/settings" className={itemClasses(pathname === "/dashboard/settings")}>
             <Settings className="h-4 w-4 shrink-0" />
             Settings
@@ -74,13 +59,15 @@ export function DashboardSidebar({
       </div>
 
       <div className="mt-auto space-y-3 border-t border-gray-200 p-4 dark:border-gray-800">
-        <Link
-          href="/pricing"
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-amber-100 px-3 py-2 text-sm font-semibold text-amber-950 hover:bg-amber-200 dark:bg-amber-900/40 dark:text-amber-100 dark:hover:bg-amber-900/60"
-        >
-          <Sparkles className="h-4 w-4 shrink-0" />
-          Upgrade plan
-        </Link>
+        {showUpgrade ? (
+          <Link
+            href="/pricing"
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-amber-100 px-3 py-2 text-sm font-semibold text-amber-950 hover:bg-amber-200 dark:bg-amber-900/40 dark:text-amber-100 dark:hover:bg-amber-900/60"
+          >
+            <Sparkles className="h-4 w-4 shrink-0" />
+            Upgrade plan
+          </Link>
+        ) : null}
         <div>
           <p className="mb-1.5 text-xs font-medium text-gray-500 dark:text-gray-400">Appearance</p>
           <DashboardSidebarThemeToggle compact />

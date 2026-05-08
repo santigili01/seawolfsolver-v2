@@ -47,22 +47,13 @@ export default async function BillingPage() {
           ) : null}
         </div>
 
-        <div className="mb-6 overflow-hidden rounded-lg border border-gray-100 bg-gray-50">
-          <iframe
-            title="Lemon Squeezy customer portal"
-            src="https://app.lemonsqueezy.com/my-orders"
-            className="h-[min(420px,55vh)] w-full bg-white"
-          />
-        </div>
-
         {purchase ? (
           <Link
-            href="https://app.lemonsqueezy.com/my-orders"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block w-full rounded-lg border border-gray-200 px-4 py-2 text-center text-sm text-gray-700 transition-colors hover:bg-gray-50"
+            href="/api/billing-portal"
+            prefetch={false}
+            className="mb-6 block w-full rounded-lg border border-gray-200 px-4 py-2 text-center text-sm text-gray-700 transition-colors hover:bg-gray-50"
           >
-            View receipt / manage order →
+            View order & receipt →
           </Link>
         ) : null}
       </div>

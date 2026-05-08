@@ -102,7 +102,7 @@ export function Pricing() {
           </p>
           <p className="mt-4 text-sm text-muted-foreground">
             Not ready to buy? Play one full Sea Wolf scenario free — no signup, full insights included.{" "}
-            <Link href="/simulator" className="font-medium text-primary hover:underline">
+            <Link href="/game" className="font-medium text-primary hover:underline">
               → Try Free Demo
             </Link>
           </p>

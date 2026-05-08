@@ -42,7 +42,7 @@ export function Navbar() {
             </Link>
           ))}
           <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90">
-            <Link href="/simulator">Free Demo</Link>
+            <Link href="/game">Free Demo</Link>
           </Button>
         </div>
       </div>

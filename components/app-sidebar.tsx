@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils"
 const navItems = [
   { label: "Dashboard", href: "/dashboard", emoji: "📊" },
   { label: "Back to Home", href: "/", emoji: "🏠" },
-  { label: "AI Simulator", href: "/simulator", emoji: "🤖" },
+  { label: "Sea Wolf", href: "/game", emoji: "🎮" },
   { label: "Content", href: "/content", emoji: "📄" },
   { label: "Solver", href: "/solver", emoji: "🔧" },
 ]

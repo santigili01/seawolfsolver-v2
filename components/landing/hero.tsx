@@ -25,7 +25,7 @@ export function Hero() {
 
         <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Button size="lg" asChild className="bg-primary text-primary-foreground hover:bg-primary/90">
-            <Link href="/simulator">Play Free Demo →</Link>
+            <Link href="/game">Play Free Demo →</Link>
           </Button>
           <Button size="lg" variant="outline" asChild>
             <Link href="#pricing">See Pricing</Link>

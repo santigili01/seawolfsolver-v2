@@ -14,10 +14,7 @@ import { GamePhase4TreatmentPanel } from "@/components/game/GamePhase4TreatmentP
 import { GameResultsFull } from "@/components/game/GameResultsFull"
 import { computeBehaviouralScore, type PhaseBehaviourData } from "@/lib/behavioural-scoring"
 
-/**
- * Full-session Seawolf simulator: /game
- * Standalone simulator routes are untouched; phases are inlined wrappers here.
- */
+/** Full-session Sea Wolf flow: `/game` (all phases in one run). */
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react"
 

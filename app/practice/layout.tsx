@@ -2,9 +2,9 @@ import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar"
 import { getDashboardSidebarPayload } from "@/lib/dashboard-sidebar-server"
 import { membershipShortLabel } from "@/lib/dashboard-access"
 
-export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default async function PracticeLayout({ children }: { children: React.ReactNode }) {
   const { displayName, accessTier, hasPurchases } = await getDashboardSidebarPayload({
-    redirectPath: "/dashboard",
+    redirectPath: "/practice",
   })
 
   return (
