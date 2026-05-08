@@ -13,7 +13,7 @@ export default function SolverPage() {
     <div className="min-h-screen bg-gradient-to-b from-[#4ECDC4] to-[#2BA8A0]">
       <header className="w-full bg-[#1a202c] px-6 py-4">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between">
-          <div className="text-lg font-bold text-white">SolvePrep</div>
+          <div className="text-lg font-bold text-white">SeaWolfPrep</div>
           <Link href="/game" className="text-sm font-semibold text-[#4ECDC4] hover:underline">
             Back to Game
           </Link>

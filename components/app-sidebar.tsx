@@ -20,7 +20,7 @@ export function AppSidebar() {
       {/* Logo */}
       <div className="flex items-center gap-2 px-4 py-4">
         <span className="text-lg" aria-hidden="true">🐺</span>
-        <span className="font-bold text-sidebar-foreground">[YOUR COMPANY NAME]</span>
+        <span className="font-bold text-sidebar-foreground">SeaWolfPrep</span>
       </div>
 
       {/* Navigation */}
@@ -61,11 +61,11 @@ export function AppSidebar() {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-sidebar-foreground truncate">
-              seawolfsolver
+              seawolfprep
               <span className="ml-1 text-xs text-blue-300">⚡ Elite</span>
             </p>
             <p className="text-xs text-slate-300 truncate">
-              seawolfsolver@solveprep.com
+              support@seawolfprep.com
             </p>
           </div>
           <button className="p-1 text-slate-300 hover:text-white transition-colors">

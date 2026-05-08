@@ -198,7 +198,7 @@
 ## 5. Polish & UX Issues
 
 - **Visual consistency / IA drift**
-  - Mixed branding labels (“SeaWolfPrep”, “SolvePrep”, placeholder company naming in sidebar).
+  - Mixed branding labels (“SeaWolfPrep”, placeholder company naming in sidebar).
   - Landing sections and game surfaces feel like different design systems in places.
 
 - **Responsive/mobile gaps**
@@ -251,7 +251,7 @@
 - **P1 / S / YES** — Add per-route metadata exports for `app/page.tsx`, `/pricing`, `/game`, `/solver`, and simulator routes.
 - **P1 / S / YES** — Add `app/robots.ts` and `app/sitemap.ts`.
 - **P1 / S / YES** — Remove or replace no-op `components/landing/social-proof.tsx`.
-- **P1 / S / YES** — Clean branding/copy inconsistencies (e.g., “SolvePrep” vs “SeaWolfPrep”, placeholder labels).
+- **P1 / S / YES** — Clean branding/copy inconsistencies (placeholder labels and inconsistent naming).
 - **P1 / M / NO** — Implement logged-in dashboard/practice hub route with purchase-aware navigation.
 - **P1 / M / NO** — Persist full game results to Supabase (runs + per-site/per-phase breakdown).
 - **P1 / M / PARTIAL** — Add cookie consent banner/preferences for analytics/compliance.
