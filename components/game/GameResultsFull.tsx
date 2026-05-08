@@ -995,9 +995,9 @@ export function GameResultsFull({
                         })}
                       </div>
                       <p
-                        className={`mt-4 border-t border-[#e2e8f0] pt-4 text-lg tabular-nums ${gameResultsOptimalScoreLineClass(s.phase4.optimalScore)}`}
+                        className={`mt-4 border-t border-[#e2e8f0] pt-4 text-lg tabular-nums ${gameResultsOptimalScoreLineClass(s.phase4.score)}`}
                       >
-                        Your score: {s.phase4.optimalScore}/100
+                        Your score: {s.phase4.score}/100
                       </p>
                     </div>
                   </section>
