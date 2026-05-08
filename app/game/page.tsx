@@ -220,7 +220,7 @@ export default function FullGamePage() {
           phase1Picks: p1SelectionsBySite[ix],
           scenarios: cfg.scenarios[siteRow.siteNumber - 1]!,
           treatmentPool: treatmentPoolsBySite[ix] ?? [],
-          catPoolMicrobes: ix === 0 ? cfg.catPool12.microbes : ix === 1 ? cfg.catPool23.microbes : [],
+          catPoolMicrobes: ix === 0 ? cfg.catPool12.microbes : ix === 1 ? cfg.catPool23.microbes : cfg.catPoolSite3.microbes,
           prospectChooseSets: ix === 0 ? cfg.prospectA.choose_sets : ix === 1 ? cfg.prospectB.choose_sets : cfg.prospectC.choose_sets,
           revealedChar: ix === 0 ? cfg.catPool12.revealed_characteristic : ix === 1 ? cfg.catPool23.revealed_characteristic : null,
         }))}

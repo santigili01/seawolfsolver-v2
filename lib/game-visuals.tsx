@@ -593,54 +593,66 @@ export function MicrobeAttributeRow({
   highlightInviable?: boolean
 }) {
   const inv = inviableAttributes
-  const valueSpan = (name: "Mobility" | "Agility" | "Size", value: number) =>
-    highlightInviable && inv.includes(name) ? (
-      <span
-        className="tabular-nums leading-none"
-        style={{ color: "#dc2626", fontWeight: "bold" }}
-        title={INVIABLE_ATTRIBUTE_TITLE}
-      >
-        • {value}
+  const statWithTooltip = (
+    name: "Mobility" | "Agility" | "Size",
+    value: number,
+    icon: ReactNode,
+    label: string,
+  ) => {
+    const isInviable = highlightInviable && inv.includes(name)
+    const base = (
+      <span className="inline-flex items-center gap-0.5">
+        {icon}
+        {isInviable ? (
+          <span
+            className="tabular-nums leading-none decoration-dotted underline underline-offset-2"
+            style={{ color: "#dc2626", fontWeight: "bold" }}
+          >
+            • {value}
+          </span>
+        ) : (
+          <span className="tabular-nums leading-none text-gray-700">{value}</span>
+        )}
       </span>
-    ) : (
-      <span className="tabular-nums leading-none text-gray-700">{value}</span>
     )
+    return isInviable ? <Tooltip text={INVIABLE_ATTRIBUTE_TITLE}>{base}</Tooltip> : <Tooltip text={label}>{base}</Tooltip>
+  }
 
   return (
     <div className="flex min-w-0 flex-wrap items-center gap-2 text-[12px] leading-none">
-      <Tooltip text="Mobility">
-        <span className="inline-flex items-center gap-0.5">
-          <svg className="h-3.5 w-3.5 shrink-0 text-gray-500" viewBox="0 0 16 16" fill="currentColor">
-            <rect x="1" y="1" width="4" height="4" />
-            <rect x="6" y="1" width="4" height="4" />
-            <rect x="11" y="1" width="4" height="4" />
-            <rect x="1" y="6" width="4" height="4" />
-            <rect x="6" y="6" width="4" height="4" />
-            <rect x="11" y="6" width="4" height="4" />
-            <rect x="1" y="11" width="4" height="4" />
-            <rect x="6" y="11" width="4" height="4" />
-            <rect x="11" y="11" width="4" height="4" />
-          </svg>
-          {valueSpan("Mobility", Mobility)}
-        </span>
-      </Tooltip>
-      <Tooltip text="Agility">
-        <span className="inline-flex items-center gap-0.5">
-          <svg className="h-3.5 w-3.5 shrink-0 text-yellow-500" viewBox="0 0 16 16" fill="currentColor">
-            <path d="M9 1L4 9h4l-1 6 5-8H8l1-6z" />
-          </svg>
-          {valueSpan("Agility", Agility)}
-        </span>
-      </Tooltip>
-      <Tooltip text="Size">
-        <span className="inline-flex items-center gap-0.5">
-          <svg className="h-3.5 w-3.5 shrink-0 text-blue-400" viewBox="0 0 16 16" fill="currentColor">
-            <path d="M1 15L1 1L15 15H1Z" opacity="0.6" />
-            <path d="M1 1L15 15" stroke="currentColor" strokeWidth="1.5" fill="none" />
-          </svg>
-          {valueSpan("Size", Size)}
-        </span>
-      </Tooltip>
+      {statWithTooltip(
+        "Mobility",
+        Mobility,
+        <svg className="h-3.5 w-3.5 shrink-0 text-gray-500" viewBox="0 0 16 16" fill="currentColor">
+          <rect x="1" y="1" width="4" height="4" />
+          <rect x="6" y="1" width="4" height="4" />
+          <rect x="11" y="1" width="4" height="4" />
+          <rect x="1" y="6" width="4" height="4" />
+          <rect x="6" y="6" width="4" height="4" />
+          <rect x="11" y="6" width="4" height="4" />
+          <rect x="1" y="11" width="4" height="4" />
+          <rect x="6" y="11" width="4" height="4" />
+          <rect x="11" y="11" width="4" height="4" />
+        </svg>,
+        "Mobility",
+      )}
+      {statWithTooltip(
+        "Agility",
+        Agility,
+        <svg className="h-3.5 w-3.5 shrink-0 text-yellow-500" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M9 1L4 9h4l-1 6 5-8H8l1-6z" />
+        </svg>,
+        "Agility",
+      )}
+      {statWithTooltip(
+        "Size",
+        Size,
+        <svg className="h-3.5 w-3.5 shrink-0 text-blue-400" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M1 15L1 1L15 15H1Z" opacity="0.6" />
+          <path d="M1 1L15 15" stroke="currentColor" strokeWidth="1.5" fill="none" />
+        </svg>,
+        "Size",
+      )}
     </div>
   )
 }
@@ -659,13 +671,14 @@ export function SlotAttributeRow({
   const inv = new Set(inviableAttributes)
   const stat = (name: "Mobility" | "Agility" | "Size", value: number) =>
     inv.has(name) ? (
-      <span
-        className="font-bold tabular-nums decoration-dotted underline-offset-2"
-        style={{ color: "#dc2626" }}
-        title={INVIABLE_ATTRIBUTE_TITLE}
-      >
-        ⓘ {value}
-      </span>
+      <Tooltip text={INVIABLE_ATTRIBUTE_TITLE}>
+        <span
+          className="font-bold tabular-nums decoration-dotted underline underline-offset-2"
+          style={{ color: "#dc2626" }}
+        >
+          ⓘ {value}
+        </span>
+      </Tooltip>
     ) : (
       <span className="font-bold tabular-nums text-gray-800">{value}</span>
     )
