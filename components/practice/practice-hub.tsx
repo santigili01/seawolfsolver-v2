@@ -33,7 +33,7 @@ export function PracticeHub() {
       <p className="mt-10 text-xs tracking-widest text-gray-500 uppercase">START A RUN</p>
       <h2 className="mt-2 text-2xl font-bold text-gray-900">Games &amp; Tools</h2>
 
-      <div className="mt-4 grid max-w-3xl gap-4 sm:grid-cols-2">
+      <div className="mt-4 grid max-w-5xl gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <GameCard
           badge={{ label: "Available", tone: "green" }}
           title="Sea Wolf"
@@ -41,6 +41,14 @@ export function PracticeHub() {
           description="Full 4-phase simulation across 3 sites. Tests pattern recognition and decision-making under time pressure."
           href="/practice/sea-wolf"
           cta="Play"
+        />
+        <GameCard
+          badge={{ label: "Phase 4", tone: "blue" }}
+          title="Treatment Practice"
+          subtitle="STANDALONE · PHASE 4"
+          description="Drill the treatment selection phase in isolation. Choose your difficulty and find the optimal microbe combination."
+          href="/practice/sea-wolf-treatment"
+          cta="Practice"
         />
         <GameCard
           badge={{ label: "Tool", tone: "gray" }}
