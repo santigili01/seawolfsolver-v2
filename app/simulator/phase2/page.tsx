@@ -517,6 +517,7 @@ export default function Phase2Page() {
   }
 
   const candidates = currentChooseSet?.candidates ?? []
+  const scenarioLabel = scenarioRequirements.name.replace(/\s*\(sample\)\s*$/i, "")
 
   return (
     <div className="relative h-screen w-full overflow-hidden bg-gradient-to-br from-[#4ECDC4] to-[#2BA8A0]">
@@ -558,6 +559,7 @@ export default function Phase2Page() {
         <p className="mb-2 text-sm leading-relaxed text-white/90">
           Assess the 3 candidates and select the one that best strengthens your prospect pool.
         </p>
+        <p className="mb-2 text-xs text-white/70">Standalone simulator: choices here do not affect the full `/game` run.</p>
         <p className="mb-4 text-xs text-white/70">Round {currentRoundIdx + 1} of 4</p>
         <div className="flex cursor-pointer items-center gap-2 text-blue-400 hover:text-blue-300">
           <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-500">
@@ -569,7 +571,7 @@ export default function Phase2Page() {
 
       <div className="absolute top-20 right-6 z-10 w-56 rounded-lg bg-[#FFF9C4] p-4 shadow-lg">
         <h3 className="mb-3 text-sm font-bold text-gray-800 uppercase">Site 1 Information</h3>
-        <p className="mb-3 text-xs font-medium text-gray-700">{scenarioRequirements.name}</p>
+        <p className="mb-3 text-xs font-medium text-gray-700">{scenarioLabel}</p>
         <div className="mb-3">
           <div className="mb-1 flex items-center gap-1">
             <span className="h-2 w-2 rounded-full bg-gray-800" />

@@ -1,7 +1,7 @@
 "use client"
 
 /**
- * Microbe Categorization simulator — Step 2 (with Phase 0 review).
+ * Standalone microbe categorization simulator (with Phase 0 review).
  * Visual components copied from app/simulator/page.tsx per project convention.
  */
 
@@ -665,6 +665,7 @@ export default function CategorizationSimulatorPage() {
     currentPhase === "p2_site0_site2" || currentPhase === "p2_site0_site3"
 
   const poolForKey = phaseContext?.pool ?? site1Pool
+  const scenarioLabel = (phaseContext?.scenarioLabel ?? "").replace(/\s*\(sample\)\s*$/i, "")
 
   const keyTraits = useMemo(() => {
     if (!scenariosFile || !poolForKey) return []
@@ -989,6 +990,7 @@ export default function CategorizationSimulatorPage() {
             </>
           )}
         </p>
+        <p className="mb-4 text-xs text-white/70">Standalone simulator: this run is isolated from `/game` progression.</p>
         <button type="button" className="flex cursor-pointer items-center gap-2 text-blue-400 hover:text-blue-300">
           <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-500">
             <HelpCircle className="h-4 w-4 text-white" />
@@ -1001,7 +1003,7 @@ export default function CategorizationSimulatorPage() {
         <h3 className="mb-2 text-sm font-bold text-gray-800 uppercase">
           Site {phaseContext.currentSiteNum} Information
         </h3>
-        <p className="mb-3 text-xs font-medium text-gray-700">{phaseContext.scenarioLabel}</p>
+        <p className="mb-3 text-xs font-medium text-gray-700">{scenarioLabel}</p>
         <div className="mb-3">
           <div className="mb-1 flex items-center gap-1">
             <span className="h-2 w-2 rounded-full bg-gray-800" />

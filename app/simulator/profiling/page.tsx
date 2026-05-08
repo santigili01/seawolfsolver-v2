@@ -1,7 +1,7 @@
 "use client"
 
 /**
- * Phase 1 — Build Microbe Profile (Seawolf Step 1).
+ * Standalone Phase 1 — Build Microbe Profile.
  * Visual shell copied from app/simulator/page.tsx; panel layout per spec.
  */
 
@@ -506,6 +506,7 @@ export default function ProfilingSimulatorPage() {
   }
 
   const req = scenario
+  const scenarioLabel = req.name.replace(/\s*\(sample\)\s*$/i, "")
   const canSubmit = selectedKeys.size === 2
 
   return (
@@ -571,6 +572,7 @@ export default function ProfilingSimulatorPage() {
         <p className="mb-4 text-sm leading-relaxed text-white/90">
           Review the site requirements and select 2 characteristics that best match this location&apos;s needs.
         </p>
+        <p className="mb-4 text-xs text-white/70">Standalone simulator: progress here does not carry into `/game`.</p>
         <button type="button" className="flex cursor-pointer items-center gap-2 text-blue-400 hover:text-blue-300">
           <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-500">
             <HelpCircle className="h-4 w-4 text-white" />
@@ -581,7 +583,7 @@ export default function ProfilingSimulatorPage() {
 
       <div className="absolute top-20 right-6 z-10 w-[15rem] max-h-[calc(100vh-6rem)] overflow-y-auto rounded-lg bg-[#FFF9C4] p-4 shadow-lg">
         <h3 className="mb-2 text-sm font-bold text-gray-800 uppercase">Site 1 Information</h3>
-        <p className="mb-3 text-xs font-medium text-gray-700">{req.name}</p>
+        <p className="mb-3 text-xs font-medium text-gray-700">{scenarioLabel}</p>
         <div className="mb-3">
           <div className="mb-1 flex items-center gap-1">
             <span className="h-2 w-2 rounded-full bg-gray-800" />
