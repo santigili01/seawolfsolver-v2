@@ -1,5 +1,12 @@
 import Link from "next/link"
+import type { Metadata } from "next"
 import { SeawolfSolver } from "@/components/seawolf-solver"
+
+export const metadata: Metadata = {
+  title: "Sea Wolf Solver | SeaWolfPrep",
+  description:
+    "Manual-input solver for all 4 phases of the McKinsey Solve Sea Wolf assessment.",
+}
 
 export default function SolverPage() {
   return (

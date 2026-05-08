@@ -3,6 +3,13 @@ import { currentUser } from '@clerk/nextjs/server'
 import { getCheckoutUrl } from '@/lib/checkout'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import type { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "Pricing | SeaWolfPrep",
+  description:
+    "One-time payment, lifetime access. Practice the McKinsey Solve Sea Wolf assessment.",
+}
 
 export default async function PricingPage() {
   const user = await currentUser()
