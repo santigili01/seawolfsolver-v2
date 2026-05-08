@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useRef, useState } from "react"
 import { ChevronDown, ChevronUp, HelpCircle, Star } from "lucide-react"
 import { scorePhase0, type Phase0DecisionInput } from "@/lib/game-scoring"
 import {
@@ -23,6 +23,7 @@ import {
   traitIcon,
 } from "@/lib/game-visuals"
 import { GameHelpModal } from "@/components/game/GameHelpModal"
+import type { PhaseBehaviourData } from "@/lib/behavioural-scoring"
 
 export function GamePhase0Panel({
   taggedMicrobes,
@@ -31,6 +32,7 @@ export function GamePhase0Panel({
   blobPalettePool,
   attributesListForKey,
   traitListFull,
+  onBehaviourData,
   onComplete,
 }: {
   taggedMicrobes: Microbe[]
@@ -39,6 +41,7 @@ export function GamePhase0Panel({
   blobPalettePool: Microbe[]
   attributesListForKey: string[]
   traitListFull: string[]
+  onBehaviourData: (d: PhaseBehaviourData) => void
   onComplete: (score: import("@/lib/game-scoring").Phase0Score) => void
 }) {
   const [i, setI] = useState(0)
@@ -48,6 +51,10 @@ export function GamePhase0Panel({
   const [expandedColumnIds, setExpandedColumnIds] = useState<Set<string>>(() => new Set())
   const [keyExpanded, setKeyExpanded] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
+  const clickCountRef = useRef(0)
+  const switchCountRef = useRef(0)
+  const reassignmentsRef = useRef(0)
+  const lastChoiceRef = useRef<"keep" | "return" | null>(null)
 
   const m = taggedMicrobes[i]
   const req = scenarioToSiteReq(scenario)
@@ -88,9 +95,11 @@ export function GamePhase0Panel({
 
   const confirm = () => {
     if (!m || choice === null) return
+    clickCountRef.current += 1
     const next = [...rows, { microbe: { ...m, name: m.name }, playerChoice: choice, siteRequirements: req }]
     setRows(next)
     setChoice(null)
+    lastChoiceRef.current = null
     if (i >= taggedMicrobes.length - 1) {
       setRows(next)
       setReviewMode(true)
@@ -100,6 +109,7 @@ export function GamePhase0Panel({
   }
 
   const reassignP0Microbe = (microbeId: string, to: "keep" | "return", uid: string) => {
+    reassignmentsRef.current += 1
     setRows((prev) => prev.map((d) => ((d.microbe as Microbe).id === microbeId ? { ...d, playerChoice: to } : d)))
     setExpandedColumnIds((prev) => {
       const n = new Set(prev)
@@ -204,7 +214,18 @@ export function GamePhase0Panel({
               <p className="text-sm text-gray-500">You can still reassign microbes before continuing.</p>
               <button
                 type="button"
-                onClick={() => onComplete(scorePhase0(rows))}
+                onClick={() => {
+                  clickCountRef.current += 1
+                  onBehaviourData({
+                    phase: "phase0",
+                    siteNumber: displaySiteNum as 1 | 2 | 3,
+                    clickCount: clickCountRef.current,
+                    minClicks: taggedMicrobes.length * 2 + 1,
+                    answerSwitches: switchCountRef.current,
+                    reassignments: reassignmentsRef.current,
+                  })
+                  onComplete(scorePhase0(rows))
+                }}
                 className="w-full rounded-lg bg-[rgba(20,30,50,0.9)] py-3 text-sm font-semibold text-white hover:bg-[rgba(30,40,60,0.95)]"
               >
                 Continue
@@ -246,7 +267,12 @@ export function GamePhase0Panel({
                     type="radio"
                     name="p0cat-game"
                     checked={p2SelectedEquivalent === "keep"}
-                    onChange={() => setChoice("keep")}
+                    onChange={() => {
+                      clickCountRef.current += 1
+                      if (lastChoiceRef.current && lastChoiceRef.current !== "keep") switchCountRef.current += 1
+                      lastChoiceRef.current = "keep"
+                      setChoice("keep")
+                    }}
                     className="mt-0.5 h-4 w-4 shrink-0"
                   />
                   <span className="min-w-0 break-words">{site1Label}</span>
@@ -256,7 +282,12 @@ export function GamePhase0Panel({
                     type="radio"
                     name="p0cat-game"
                     checked={p2SelectedEquivalent === "discard"}
-                    onChange={() => setChoice("return")}
+                    onChange={() => {
+                      clickCountRef.current += 1
+                      if (lastChoiceRef.current && lastChoiceRef.current !== "return") switchCountRef.current += 1
+                      lastChoiceRef.current = "return"
+                      setChoice("return")
+                    }}
                     className="h-4 w-4"
                   />
                   Return
@@ -380,7 +411,22 @@ export function GamePhase0Panel({
       </div>
 
       {DEV_MODE ? (
-        <button type="button" className={DEV_SKIP_BTN_CLASS} onClick={() => onComplete(devPhase0AllKeep(taggedMicrobes, scenario))}>
+        <button
+          type="button"
+          className={DEV_SKIP_BTN_CLASS}
+          onClick={() => {
+            clickCountRef.current += 1
+            onBehaviourData({
+              phase: "phase0",
+              siteNumber: displaySiteNum as 1 | 2 | 3,
+              clickCount: clickCountRef.current,
+              minClicks: taggedMicrobes.length * 2 + 1,
+              answerSwitches: switchCountRef.current,
+              reassignments: reassignmentsRef.current,
+            })
+            onComplete(devPhase0AllKeep(taggedMicrobes, scenario))
+          }}
+        >
           Skip →
         </button>
       ) : null}

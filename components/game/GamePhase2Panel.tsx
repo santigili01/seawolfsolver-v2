@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useRef, useState } from "react"
 import { ChevronDown, ChevronUp, HelpCircle, Star } from "lucide-react"
 import { scorePhase2, type Phase2DecisionRow } from "@/lib/game-scoring"
 import {
@@ -26,6 +26,7 @@ import {
 } from "@/lib/game-visuals"
 import { traitColor } from "@/lib/game-helpers"
 import { GameHelpModal } from "@/components/game/GameHelpModal"
+import type { PhaseBehaviourData } from "@/lib/behavioural-scoring"
 
 export type P2Pick = "site1" | "site2" | "return"
 
@@ -36,6 +37,7 @@ export function GamePhase2Panel({
   attributesListForKey,
   traitListFull,
   isLastSite,
+  onBehaviourData,
   onComplete,
 }: {
   pool: CategorizationPool
@@ -44,6 +46,7 @@ export function GamePhase2Panel({
   attributesListForKey: string[]
   traitListFull: string[]
   isLastSite: boolean
+  onBehaviourData: (d: PhaseBehaviourData) => void
   onComplete: (result: import("@/lib/game-scoring").Phase2Score, tagged: Microbe[], rows: Phase2DecisionRow[]) => void
 }) {
   const [idx, setIdx] = useState(0)
@@ -58,6 +61,9 @@ export function GamePhase2Panel({
   const [expandedColumnIds, setExpandedColumnIds] = useState<Set<string>>(() => new Set())
   const [keyExpanded, setKeyExpanded] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
+  const clickCountRef = useRef(0)
+  const switchCountRef = useRef(0)
+  const reassignmentsRef = useRef(0)
 
   const displayedMicrobe = pool.microbes[idx] ?? null
   const p2SvgMap = useMemo(() => assignUniqueSvgIndices(pool.microbes), [pool.microbes])
@@ -130,11 +136,20 @@ export function GamePhase2Panel({
         b2.push(m)
       }
     }
+    onBehaviourData({
+      phase: "phase2",
+      siteNumber: displaySiteNum as 1 | 2 | 3,
+      clickCount: clickCountRef.current,
+      minClicks: 21,
+      answerSwitches: switchCountRef.current,
+      reassignments: reassignmentsRef.current,
+    })
     onComplete(score, b2, rows)
   }
 
   const submitOne = () => {
     if (!displayedMicrobe || picked === null) return
+    clickCountRef.current += 1
     const nextDec = [...decisions, { id: displayedMicrobe.id, choice: picked }]
     const k = picked === "site1" ? "b1" : picked === "site2" ? "b2" : "ret"
     const nextBuckets = {
@@ -153,6 +168,7 @@ export function GamePhase2Panel({
   }
 
   const reassignMicrobe = (microbeId: string, from: P2Pick, to: P2Pick, uid: string) => {
+    reassignmentsRef.current += 1
     setBucketState((prev) => {
       const fromKey = from === "site1" ? "b1" : from === "site2" ? "b2" : "ret"
       const toKey = to === "site1" ? "b1" : to === "site2" ? "b2" : "ret"
@@ -272,7 +288,10 @@ export function GamePhase2Panel({
               </p>
               <button
                 type="button"
-                onClick={() => finalize(decisions)}
+                onClick={() => {
+                  clickCountRef.current += 1
+                  finalize(decisions)
+                }}
                 className="w-full rounded-lg bg-[rgba(20,30,50,0.9)] py-3 text-sm font-semibold text-white hover:bg-[rgba(30,40,60,0.95)]"
               >
                 Continue
@@ -318,7 +337,11 @@ export function GamePhase2Panel({
                     type="radio"
                     name="p2cat-game"
                     checked={picked === "site1"}
-                    onChange={() => setPicked("site1")}
+                    onChange={() => {
+                      clickCountRef.current += 1
+                      if (picked !== null && picked !== "site1") switchCountRef.current += 1
+                      setPicked("site1")
+                    }}
                     className="mt-0.5 h-4 w-4 shrink-0"
                   />
                   <span className="min-w-0 break-words">{site1Label}</span>
@@ -329,7 +352,11 @@ export function GamePhase2Panel({
                       type="radio"
                       name="p2cat-game"
                       checked={picked === "site2"}
-                      onChange={() => setPicked("site2")}
+                      onChange={() => {
+                        clickCountRef.current += 1
+                        if (picked !== null && picked !== "site2") switchCountRef.current += 1
+                        setPicked("site2")
+                      }}
                       className="mt-0.5 h-4 w-4 shrink-0"
                     />
                     <span className="min-w-0 break-words">{site2Label}</span>
@@ -340,7 +367,11 @@ export function GamePhase2Panel({
                     type="radio"
                     name="p2cat-game"
                     checked={picked === "return"}
-                    onChange={() => setPicked("return")}
+                    onChange={() => {
+                      clickCountRef.current += 1
+                      if (picked !== null && picked !== "return") switchCountRef.current += 1
+                      setPicked("return")
+                    }}
                     className="h-4 w-4"
                   />
                   Return
@@ -480,7 +511,16 @@ export function GamePhase2Panel({
           type="button"
           className={DEV_SKIP_BTN_CLASS}
           onClick={() => {
+            clickCountRef.current += 1
             const { score, tagged, rows } = devPhase2PerfectComplete(pool, isLastSite)
+            onBehaviourData({
+              phase: "phase2",
+              siteNumber: displaySiteNum as 1 | 2 | 3,
+              clickCount: clickCountRef.current,
+              minClicks: 21,
+              answerSwitches: switchCountRef.current,
+              reassignments: reassignmentsRef.current,
+            })
             onComplete(score, tagged, rows)
           }}
         >

@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useRef, useState } from "react"
 import { ChevronDown, ChevronUp, HelpCircle, Star } from "lucide-react"
 import {
   combinations3,
@@ -30,6 +30,7 @@ import {
   traitIcon,
 } from "@/lib/game-visuals"
 import { GameHelpModal } from "@/components/game/GameHelpModal"
+import type { PhaseBehaviourData } from "@/lib/behavioural-scoring"
 
 export function GamePhase3PoolPanel({
   prospect,
@@ -37,6 +38,7 @@ export function GamePhase3PoolPanel({
   displaySiteNum,
   attributesListForKey,
   scenariosFileTraits,
+  onBehaviourData,
   onComplete,
 }: {
   prospect: ProspectScenarioJson
@@ -44,6 +46,7 @@ export function GamePhase3PoolPanel({
   displaySiteNum: number
   attributesListForKey: string[]
   scenariosFileTraits: string[]
+  onBehaviourData: (d: PhaseBehaviourData) => void
   onComplete: (score: import("@/lib/game-scoring").Phase3Score, pool: Microbe[], svgMap: Map<string, number>) => void
 }) {
   const [pool, setPool] = useState<Microbe[]>(() => [...prospect.preloaded_microbes])
@@ -52,6 +55,8 @@ export function GamePhase3PoolPanel({
   const [picks, setPicks] = useState<string[]>([])
   const [keyExpanded, setKeyExpanded] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
+  const clickCountRef = useRef(0)
+  const switchCountRef = useRef(0)
   const set = prospect.choose_sets[roundIdx]
   const allP3Microbes = useMemo(() => {
     const seen = new Map<string, Microbe>()
@@ -72,6 +77,7 @@ export function GamePhase3PoolPanel({
 
   const confirmRound = () => {
     if (!set || !pickId) return
+    clickCountRef.current += 1
     const chosen = set.candidates.find((c) => c.microbe.id === pickId)?.microbe
     if (!chosen) return
     const nextPickIds = [...picks, pickId]
@@ -105,6 +111,13 @@ export function GamePhase3PoolPanel({
         playerPickIds: nextPickIds,
         originalMaxScore: prospect.original_max_score,
         playerPoolMaxScore,
+      })
+      onBehaviourData({
+        phase: "phase3",
+        siteNumber: displaySiteNum as 1 | 2 | 3,
+        clickCount: clickCountRef.current,
+        minClicks: 8,
+        answerSwitches: switchCountRef.current,
       })
       onComplete(finalScore, builtOrdered, p3SvgMap)
       return
@@ -211,7 +224,14 @@ export function GamePhase3PoolPanel({
                 <button
                   key={m.id}
                   type="button"
-                  onClick={() => setPickId((prev) => (prev === m.id ? null : m.id))}
+                  onClick={() =>
+                    setPickId((prev) => {
+                      clickCountRef.current += 1
+                      const next = prev === m.id ? null : m.id
+                      if (prev !== null && next !== null && prev !== next) switchCountRef.current += 1
+                      return next
+                    })
+                  }
                   className={`flex h-[220px] w-[160px] flex-col rounded-xl border-2 bg-white p-2 text-left shadow-lg transition-all ${
                     isSelected ? "border-[#4ECDC4] bg-[#ecfdfb]" : "border-[#d1d5db]"
                   } ${anotherSelected ? "opacity-60" : "opacity-100"}`}
@@ -321,7 +341,15 @@ export function GamePhase3PoolPanel({
           type="button"
           className={DEV_SKIP_BTN_CLASS}
           onClick={() => {
+            clickCountRef.current += 1
             const { score, pool: p } = devPhase3AutoPool(prospect, scenario)
+            onBehaviourData({
+              phase: "phase3",
+              siteNumber: displaySiteNum as 1 | 2 | 3,
+              clickCount: clickCountRef.current,
+              minClicks: 8,
+              answerSwitches: switchCountRef.current,
+            })
             onComplete(score, p, p3SvgMap)
           }}
         >

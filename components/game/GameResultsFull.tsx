@@ -21,6 +21,7 @@ import {
   traitColor,
   traitChipBg,
 } from "@/lib/game-helpers"
+import type { BehaviouralScore } from "@/lib/behavioural-scoring"
 
 export function phase2ChoiceLabel(choice: "site1" | "site2" | "return", siteNum: number) {
   if (choice === "site1") return `Site ${siteNum}`
@@ -156,10 +157,12 @@ export function buildGamePhase4Checklist(p4: Phase4Score, scenario: ScenarioRequ
 
 export function GameResultsFull({
   gameScore,
+  behaviouralScore,
   totalSeconds,
   siteDetail,
 }: {
   gameScore: import("@/lib/game-scoring").GameScore
+  behaviouralScore: BehaviouralScore
   totalSeconds: number
   siteDetail: {
     site: SiteScore
@@ -213,7 +216,7 @@ export function GameResultsFull({
       </header>
 
       <div className="mx-auto max-w-7xl px-4 pb-12 pt-[calc(3.5rem+1rem)] sm:px-6 lg:px-8">
-        <div className="mb-8 grid gap-4 sm:grid-cols-3">
+        <div className="mb-8 grid gap-4 sm:grid-cols-4">
           <div className={statCard}>
             <p className="text-sm font-medium text-gray-500">Overall Score</p>
             <p className={`mt-1 text-3xl font-bold tabular-nums ${gameResultsScoreDisplayColorClass(gameScore.globalAverage)}`}>
@@ -232,6 +235,21 @@ export function GameResultsFull({
               <span className={`rounded-full px-2 py-1 text-xs font-semibold ${gameResultsScoreChipClass(gameScore.perPhaseAverages.phase0)}`}>P0: {Math.round(gameScore.perPhaseAverages.phase0)}%</span>
               <span className={`rounded-full px-2 py-1 text-xs font-semibold ${gameResultsScoreChipClass(gameScore.perPhaseAverages.phase3)}`}>P3: {Math.round(gameScore.perPhaseAverages.phase3)}%</span>
               <span className={`rounded-full px-2 py-1 text-xs font-semibold ${gameResultsScoreChipClass(gameScore.perPhaseAverages.phase4)}`}>P4: {Math.round(gameScore.perPhaseAverages.phase4)}%</span>
+            </div>
+          </div>
+          <div className={statCard}>
+            <p className="text-sm font-medium text-gray-500">Behavioural Score</p>
+            <p className={`mt-1 text-3xl font-bold tabular-nums ${gameResultsScoreDisplayColorClass(behaviouralScore.overall)}`}>
+              {behaviouralScore.overall}%
+            </p>
+            <div className="mt-2 flex items-center justify-center gap-2 text-xs text-gray-500">
+              <span>
+                Efficiency: <span className="font-semibold text-gray-700">{behaviouralScore.efficiency}%</span>
+              </span>
+              <span className="text-gray-300">·</span>
+              <span>
+                Behaviour: <span className="font-semibold text-gray-700">{behaviouralScore.behaviour}%</span>
+              </span>
             </div>
           </div>
         </div>

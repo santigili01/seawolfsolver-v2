@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { ChevronDown, ChevronUp, HelpCircle, Star } from "lucide-react"
 import type { SelectionItem as GSelectionItem } from "@/lib/game-scoring"
 import { scorePhase1 } from "@/lib/game-scoring"
@@ -23,6 +23,7 @@ import {
 } from "@/lib/game-visuals"
 import { traitColor } from "@/lib/game-helpers"
 import { GameHelpModal } from "@/components/game/GameHelpModal"
+import type { PhaseBehaviourData } from "@/lib/behavioural-scoring"
 
 // ─── Phase wrappers ───────────────────────────────────────────────────────────
 
@@ -32,6 +33,7 @@ export function GamePhase1ProfilingPanel({
   traits,
   attributesListForKey,
   scenariosFileTraits,
+  onBehaviourData,
   onComplete,
 }: {
   scenario: ScenarioRequirements
@@ -39,6 +41,7 @@ export function GamePhase1ProfilingPanel({
   traits: string[]
   attributesListForKey: string[]
   scenariosFileTraits: string[]
+  onBehaviourData: (d: PhaseBehaviourData) => void
   onComplete: (score: import("@/lib/game-scoring").Phase1Score, picks: GSelectionItem[]) => void
 }) {
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(() => new Set())
@@ -51,6 +54,9 @@ export function GamePhase1ProfilingPanel({
   })
 
   const [keyExpanded, setKeyExpanded] = useState(false)
+  const clickCountRef = useRef(0)
+  const switchCountRef = useRef(0)
+  const hadTwoSelectedRef = useRef(false)
 
   useEffect(() => {
     setSliderPositions({
@@ -61,6 +67,7 @@ export function GamePhase1ProfilingPanel({
   }, [scenario])
 
   const toggleItem = (item: GSelectionItem) => {
+    clickCountRef.current += 1
     const k = selectionKey(item.type, item.name)
     setSelectedKeys((prev) => {
       const next = new Set(prev)
@@ -69,11 +76,25 @@ export function GamePhase1ProfilingPanel({
         if (next.size >= 2) return prev
         next.add(k)
       }
+      if (hadTwoSelectedRef.current) {
+        let changed = prev.size !== next.size
+        if (!changed && prev.size === next.size) {
+          for (const key of prev) {
+            if (!next.has(key)) {
+              changed = true
+              break
+            }
+          }
+        }
+        if (changed) switchCountRef.current += 1
+      }
+      if (next.size === 2) hadTwoSelectedRef.current = true
       return next
     })
   }
 
   const handleSlider = useCallback((name: string, val: number) => {
+    clickCountRef.current += 1
     setSliderPositions((p) => ({ ...p, [name]: clampSliderStart(val) }))
   }, [])
 
@@ -98,6 +119,13 @@ export function GamePhase1ProfilingPanel({
     const score = scorePhase1({
       playerSelection: picks,
       scenario: { ...scenarioToSiteReq(scenario), name: scenario.name },
+    })
+    onBehaviourData({
+      phase: "phase1",
+      siteNumber: stickySiteNumber as 1 | 2 | 3,
+      clickCount: clickCountRef.current,
+      minClicks: 4,
+      answerSwitches: switchCountRef.current,
     })
     onComplete(score, picks)
   }
@@ -268,7 +296,10 @@ export function GamePhase1ProfilingPanel({
             type="button"
             disabled={!canSubmit}
             onClick={() => {
-              if (selectedKeys.size === 2) setShowConfirm(true)
+              if (selectedKeys.size === 2) {
+                clickCountRef.current += 1
+                setShowConfirm(true)
+              }
             }}
             className={`min-w-[200px] rounded-lg px-10 py-2.5 text-sm font-semibold transition-colors ${
               canSubmit
@@ -329,7 +360,15 @@ export function GamePhase1ProfilingPanel({
           type="button"
           className={DEV_SKIP_BTN_CLASS}
           onClick={() => {
+            clickCountRef.current += 1
             const { score, picks } = devPhase1SkipScoreAndPicks(scenario)
+            onBehaviourData({
+              phase: "phase1",
+              siteNumber: stickySiteNumber as 1 | 2 | 3,
+              clickCount: clickCountRef.current,
+              minClicks: 4,
+              answerSwitches: switchCountRef.current,
+            })
             onComplete(score, picks)
           }}
         >
@@ -361,6 +400,7 @@ export function GamePhase1ProfilingPanel({
               <button
                 type="button"
                 onClick={() => {
+                  clickCountRef.current += 1
                   setShowConfirm(false)
                   submit()
                 }}

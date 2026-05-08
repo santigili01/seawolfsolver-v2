@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useRef, useState } from "react"
 import { ChevronDown, ChevronUp, HelpCircle, Star } from "lucide-react"
 import {
   scorePhase4,
@@ -11,6 +11,7 @@ import {
   DEV_SKIP_BTN_CLASS,
   DEV_MODE,
   devScoreAtPct75,
+  getInviableAttributes,
   scenarioToSiteReq,
   traitColor,
 } from "@/lib/game-helpers"
@@ -27,6 +28,7 @@ import {
   traitIcon,
 } from "@/lib/game-visuals"
 import { GameHelpModal } from "@/components/game/GameHelpModal"
+import type { PhaseBehaviourData } from "@/lib/behavioural-scoring"
 
 export function GamePhase4TreatmentPanel({
   builtPool,
@@ -35,6 +37,7 @@ export function GamePhase4TreatmentPanel({
   displaySiteNum,
   attributesListForKey,
   scenariosFileTraits,
+  onBehaviourData,
   onComplete,
 }: {
   builtPool: Microbe[]
@@ -43,11 +46,16 @@ export function GamePhase4TreatmentPanel({
   displaySiteNum: number
   attributesListForKey: string[]
   scenariosFileTraits: string[]
+  onBehaviourData: (d: PhaseBehaviourData) => void
   onComplete: (s: Phase4Score) => void
 }) {
   const [selected, setSelected] = useState<Microbe[]>([])
   const [keyExpanded, setKeyExpanded] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
+  const clickCountRef = useRef(0)
+  const switchCountRef = useRef(0)
+  const combinationsTriedRef = useRef(0)
+  const pendingReplacementRef = useRef(0)
   const microbes = builtPool.slice(0, GRID_SLOTS)
 
   const keyTraits = useMemo(() => {
@@ -62,23 +70,49 @@ export function GamePhase4TreatmentPanel({
   const trayReserveClass = "h-[160px] w-[160px] shrink-0 opacity-0 pointer-events-none"
 
   const togglePick = (m: Microbe) => {
+    clickCountRef.current += 1
     setSelected((prev) => {
-      if (prev.some((x) => x.id === m.id)) return prev.filter((x) => x.id !== m.id)
+      if (prev.some((x) => x.id === m.id)) {
+        pendingReplacementRef.current += 1
+        return prev.filter((x) => x.id !== m.id)
+      }
       if (prev.length >= 3) return prev
+      if (pendingReplacementRef.current > 0) {
+        switchCountRef.current += 1
+        pendingReplacementRef.current -= 1
+      }
       return [...prev, m]
     })
   }
 
   const removeMicrobeId = (id: string) => {
+    clickCountRef.current += 1
+    pendingReplacementRef.current += 1
     setSelected((prev) => prev.filter((x) => x.id !== id))
   }
 
   const submit = () => {
+    clickCountRef.current += 1
     if (selected.length !== 3) return
+    combinationsTriedRef.current += 1
+    const trapMicrobesSelected = selected.filter((m) => {
+      const undesired = m.trait === scenario.undesired_trait
+      const inviable = getInviableAttributes(m, scenario).length > 0
+      return undesired || inviable
+    }).length
     const s = scorePhase4({
       selectedMicrobes: selected as Phase4MicrobeInput[],
       allMicrobes: microbes as Phase4MicrobeInput[],
       req: scenarioToSiteReq(scenario),
+    })
+    onBehaviourData({
+      phase: "phase4",
+      siteNumber: displaySiteNum as 1 | 2 | 3,
+      clickCount: clickCountRef.current,
+      minClicks: 4,
+      answerSwitches: switchCountRef.current,
+      combinationsTried: combinationsTriedRef.current,
+      trapMicrobesSelected,
     })
     onComplete(s)
   }
@@ -306,15 +340,31 @@ export function GamePhase4TreatmentPanel({
         <button
           type="button"
           className={DEV_SKIP_BTN_CLASS}
-          onClick={() =>
-            onComplete(
-              scorePhase4({
-                selectedMicrobes: microbes.slice(0, 3) as Phase4MicrobeInput[],
-                allMicrobes: microbes as Phase4MicrobeInput[],
-                req: scenarioToSiteReq(scenario),
-              }),
-            )
-          }
+          onClick={() => {
+            clickCountRef.current += 1
+            combinationsTriedRef.current += 1
+            const devSelected = microbes.slice(0, 3)
+            const trapMicrobesSelected = devSelected.filter((m) => {
+              const undesired = m.trait === scenario.undesired_trait
+              const inviable = getInviableAttributes(m, scenario).length > 0
+              return undesired || inviable
+            }).length
+            const score = scorePhase4({
+              selectedMicrobes: devSelected as Phase4MicrobeInput[],
+              allMicrobes: microbes as Phase4MicrobeInput[],
+              req: scenarioToSiteReq(scenario),
+            })
+            onBehaviourData({
+              phase: "phase4",
+              siteNumber: displaySiteNum as 1 | 2 | 3,
+              clickCount: clickCountRef.current,
+              minClicks: 4,
+              answerSwitches: switchCountRef.current,
+              combinationsTried: combinationsTriedRef.current,
+              trapMicrobesSelected,
+            })
+            onComplete(score)
+          }}
         >
           Skip →
         </button>

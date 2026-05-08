@@ -12,6 +12,7 @@ import { GamePhase2Panel } from "@/components/game/GamePhase2Panel"
 import { GamePhase3PoolPanel } from "@/components/game/GamePhase3PoolPanel"
 import { GamePhase4TreatmentPanel } from "@/components/game/GamePhase4TreatmentPanel"
 import { GameResultsFull } from "@/components/game/GameResultsFull"
+import { computeBehaviouralScore, type PhaseBehaviourData } from "@/lib/behavioural-scoring"
 
 /**
  * Full-session Seawolf simulator: /game
@@ -36,6 +37,7 @@ export default function FullGamePage() {
   const [p1SelectionsBySite, setP1SelectionsBySite] = useState<GSelectionItem[][]>([])
   const [taggedForSite2, setTaggedForSite2] = useState<Microbe[]>([])
   const [taggedForSite3, setTaggedForSite3] = useState<Microbe[]>([])
+  const [behaviourDataLog, setBehaviourDataLog] = useState<PhaseBehaviourData[]>([])
 
   const remainRef = useRef(timeRemaining)
   useEffect(() => {
@@ -105,6 +107,7 @@ export default function FullGamePage() {
       setFinishedSites([])
       setTreatmentPoolsBySite([])
       setP1SelectionsBySite([])
+      setBehaviourDataLog([])
       setGameCfg(chain)
       setWip(newSiteWip(1, chain))
       setStep("s1_phase1")
@@ -115,6 +118,10 @@ export default function FullGamePage() {
       setPickingChains(false)
     }
   }, [scenariosMeta])
+
+  const logPhaseBehaviour = useCallback((d: PhaseBehaviourData) => {
+    setBehaviourDataLog((prev) => [...prev, d])
+  }, [])
 
   const handleSkipToResults = useCallback(async () => {
     if (pickingChains) return
@@ -145,6 +152,7 @@ export default function FullGamePage() {
       const { finished, pools, p1Picks } = buildDevFinishedThreeSites(chain)
       setTaggedForSite2([])
       setTaggedForSite3([])
+      setBehaviourDataLog([])
       setGameCfg(chain)
       setFinishedSites(finished)
       setTreatmentPoolsBySite(pools)
@@ -211,9 +219,14 @@ export default function FullGamePage() {
   if (step === "results" && finishedSites.length === 3 && cfg) {
     const totalElapsed = TIMER_START - timeRemaining
     const gameScore: GameScore = computeGameScore(finishedSites, totalElapsed)
+    const behaviouralScore = computeBehaviouralScore(
+      { phases: behaviourDataLog, totalTimeSeconds: totalElapsed },
+      totalElapsed,
+    )
     return (
       <GameResultsFull
         gameScore={gameScore}
+        behaviouralScore={behaviouralScore}
         totalSeconds={totalElapsed}
         siteDetail={finishedSites.map((siteRow, ix) => ({
           site: siteRow,
@@ -283,6 +296,7 @@ export default function FullGamePage() {
               scenario={cfg.scenarios[0]!}
               attributesListForKey={attrListForKey}
               scenariosFileTraits={traitsList}
+              onBehaviourData={logPhaseBehaviour}
               onComplete={(score: Phase1Score, picks: GSelectionItem[]) => {
                 setWip((cur) => (cur ? { ...cur, phase1Result: score, phase1Selections: picks } : cur))
                 setStep("s1_phase2")
@@ -299,6 +313,7 @@ export default function FullGamePage() {
               attributesListForKey={attrListForKey}
               traitListFull={traitsList}
               isLastSite={false}
+              onBehaviourData={logPhaseBehaviour}
               onComplete={(score, tagged, _rows) => {
                 void _rows
                 setTaggedForSite2(tagged)
@@ -316,6 +331,7 @@ export default function FullGamePage() {
               displaySiteNum={w.siteNumber}
               attributesListForKey={attrListForKey}
               scenariosFileTraits={traitsList}
+              onBehaviourData={logPhaseBehaviour}
               onComplete={(score, pool, svgMap) => {
                 setWip((cur) =>
                   cur ? { ...cur, phase3Result: score, phase3Pool: pool, phase3SvgMap: svgMap } : cur,
@@ -334,6 +350,7 @@ export default function FullGamePage() {
               displaySiteNum={w.siteNumber}
               attributesListForKey={attrListForKey}
               scenariosFileTraits={traitsList}
+              onBehaviourData={logPhaseBehaviour}
               onComplete={resolvePhase4Complete}
             />
           ) : null}
@@ -347,6 +364,7 @@ export default function FullGamePage() {
               blobPalettePool={cfg.catPool12.microbes}
               attributesListForKey={attrListForKey}
               traitListFull={traitsList}
+              onBehaviourData={logPhaseBehaviour}
               onComplete={(p0) => {
                 setWip((cur) => (cur ? { ...cur, phase0Result: p0 } : cur))
                 setStep("s2_phase1")
@@ -362,6 +380,7 @@ export default function FullGamePage() {
               scenario={cfg.scenarios[1]!}
               attributesListForKey={attrListForKey}
               scenariosFileTraits={traitsList}
+              onBehaviourData={logPhaseBehaviour}
               onComplete={(score: Phase1Score, picks: GSelectionItem[]) => {
                 setWip((cur) => (cur ? { ...cur, phase1Result: score, phase1Selections: picks } : cur))
                 setStep("s2_phase2")
@@ -378,6 +397,7 @@ export default function FullGamePage() {
               attributesListForKey={attrListForKey}
               traitListFull={traitsList}
               isLastSite={false}
+              onBehaviourData={logPhaseBehaviour}
               onComplete={(score, tagged, _rows) => {
                 void _rows
                 setTaggedForSite3(tagged)
@@ -395,6 +415,7 @@ export default function FullGamePage() {
               displaySiteNum={w.siteNumber}
               attributesListForKey={attrListForKey}
               scenariosFileTraits={traitsList}
+              onBehaviourData={logPhaseBehaviour}
               onComplete={(score, pool, svgMap) => {
                 setWip((cur) =>
                   cur ? { ...cur, phase3Result: score, phase3Pool: pool, phase3SvgMap: svgMap } : cur,
@@ -413,6 +434,7 @@ export default function FullGamePage() {
               displaySiteNum={w.siteNumber}
               attributesListForKey={attrListForKey}
               scenariosFileTraits={traitsList}
+              onBehaviourData={logPhaseBehaviour}
               onComplete={resolvePhase4Complete}
             />
           ) : null}
@@ -426,6 +448,7 @@ export default function FullGamePage() {
               blobPalettePool={cfg.catPool23.microbes}
               attributesListForKey={attrListForKey}
               traitListFull={traitsList}
+              onBehaviourData={logPhaseBehaviour}
               onComplete={(p0) => {
                 setWip((cur) => (cur ? { ...cur, phase0Result: p0 } : cur))
                 setStep("s3_phase1")
@@ -441,6 +464,7 @@ export default function FullGamePage() {
               scenario={cfg.scenarios[2]!}
               attributesListForKey={attrListForKey}
               scenariosFileTraits={traitsList}
+              onBehaviourData={logPhaseBehaviour}
               onComplete={(score: Phase1Score, picks: GSelectionItem[]) => {
                 setWip((cur) => (cur ? { ...cur, phase1Result: score, phase1Selections: picks } : cur))
                 setStep("s3_phase2")
@@ -457,6 +481,7 @@ export default function FullGamePage() {
               attributesListForKey={attrListForKey}
               traitListFull={traitsList}
               isLastSite
+              onBehaviourData={logPhaseBehaviour}
               onComplete={(score, _tagged, _rows) => {
                 void _tagged
                 void _rows
@@ -474,6 +499,7 @@ export default function FullGamePage() {
               displaySiteNum={w.siteNumber}
               attributesListForKey={attrListForKey}
               scenariosFileTraits={traitsList}
+              onBehaviourData={logPhaseBehaviour}
               onComplete={(score, pool, svgMap) => {
                 setWip((cur) =>
                   cur ? { ...cur, phase3Result: score, phase3Pool: pool, phase3SvgMap: svgMap } : cur,
@@ -492,6 +518,7 @@ export default function FullGamePage() {
               displaySiteNum={w.siteNumber}
               attributesListForKey={attrListForKey}
               scenariosFileTraits={traitsList}
+              onBehaviourData={logPhaseBehaviour}
               onComplete={resolvePhase4Complete}
             />
           ) : null}
