@@ -31,6 +31,15 @@ import {
 } from "@/lib/game-visuals"
 import { GameHelpModal } from "@/components/game/GameHelpModal"
 import type { PhaseBehaviourData } from "@/lib/behavioural-scoring"
+import {
+  GAME_HELPER_CARD_CLASS,
+  GAME_KEY_PANEL_OUTER_CLASS,
+  GAME_KEY_TOGGLE_BTN_CLASS,
+  GAME_MAIN_PANEL_P3_CLASS,
+  GAME_PHASE_ROOT_CLASS,
+  GAME_SITE_INFO_CARD_CLASS,
+  gameKeyPanelInnerClass,
+} from "@/lib/game-phase-layout"
 
 export function GamePhase3PoolPanel({
   prospect,
@@ -131,7 +140,7 @@ export function GamePhase3PoolPanel({
   const req = scenario
 
   return (
-    <div className="relative min-h-[calc(100vh-6rem)] w-full overflow-y-auto pb-10">
+    <div className={GAME_PHASE_ROOT_CLASS}>
       <div className="pointer-events-none absolute inset-0 z-[1] opacity-20">
         <div className="absolute top-20 left-20 h-48 w-32 rounded-lg bg-orange-500/30" />
         <div className="absolute top-32 left-60 h-32 w-20 rounded-lg bg-blue-400/30" />
@@ -139,7 +148,7 @@ export function GamePhase3PoolPanel({
         <div className="absolute bottom-20 left-40 h-16 w-24 rounded bg-yellow-500/30" />
       </div>
 
-      <div className="absolute top-20 left-6 z-10 w-64 rounded-xl bg-[rgba(20,20,40,0.92)] p-4 backdrop-blur-sm">
+      <div className={GAME_HELPER_CARD_CLASS}>
         <div className="mb-3 flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-600 font-bold text-white">S</div>
           <h2 className="font-bold text-white">Prospect Selection</h2>
@@ -166,8 +175,8 @@ export function GamePhase3PoolPanel({
         </button>
       </div>
 
-      <div className="absolute top-20 right-6 z-10 w-56 rounded-lg bg-[#FFF9C4] p-4 shadow-lg">
-        <h3 className="mb-3 text-sm font-bold text-gray-800 uppercase">Site {displaySiteNum} Information</h3>
+      <div className={GAME_SITE_INFO_CARD_CLASS}>
+        <h3 className="mb-2 text-sm font-bold text-gray-800 uppercase">Site {displaySiteNum} Information</h3>
         <p className="mb-3 text-xs font-medium text-gray-700">{req.name}</p>
         <div className="mb-3">
           <div className="mb-1 flex items-center gap-1">
@@ -210,10 +219,10 @@ export function GamePhase3PoolPanel({
         </div>
       </div>
 
-      <div className="relative z-[5] mx-auto mt-4 mb-4 w-[min(900px,calc(100%-18rem))] rounded-2xl border border-white/40 bg-[rgba(235,247,245,0.88)] p-4 shadow-xl backdrop-blur-sm">
+      <div className={GAME_MAIN_PANEL_P3_CLASS}>
         <div className="relative z-10 flex flex-col items-center">
-          <div className="flex gap-4">
-            {candidates.map((candidate, idx) => {
+          <div className="flex gap-3">
+            {candidates.map((candidate) => {
               const m = candidate.microbe
               const isSelected = pickId === m.id
               const anotherSelected = pickId !== null && !isSelected
@@ -232,17 +241,17 @@ export function GamePhase3PoolPanel({
                       return next
                     })
                   }
-                  className={`flex h-[220px] w-[160px] flex-col rounded-xl border-2 bg-white p-2 text-left shadow-lg transition-all ${
+                  className={`flex h-[152px] w-[126px] shrink-0 flex-col rounded-xl border-2 bg-white p-1.5 text-left shadow-md transition-all ${
                     isSelected ? "border-[#4ECDC4] bg-[#ecfdfb]" : "border-[#d1d5db]"
                   } ${anotherSelected ? "opacity-60" : "opacity-100"}`}
                 >
-                  <div className="mb-1 w-full text-center text-sm font-bold text-gray-800 line-clamp-1">{m.name}</div>
-                  <div className="mb-1 flex shrink-0 justify-center">
+                  <div className="mb-0.5 w-full text-center text-[11px] font-bold leading-tight text-gray-800 line-clamp-2">{m.name}</div>
+                  <div className="flex max-h-[52px] min-h-[52px] shrink-0 items-center justify-center [&>svg]:max-h-[52px] [&>svg]:max-w-[52px] [&>svg]:overflow-visible">
                     <Svg color={blobColor} />
                   </div>
-                  <div className="mt-auto flex w-full flex-col items-center gap-2 px-1">
+                  <div className="mt-auto flex w-full flex-col items-center gap-1 px-0.5">
                     <SlotAttributeRow Mobility={m.Mobility} Agility={m.Agility} Size={m.Size} />
-                    <TraitBadgeChip trait={m.trait} chipClassName="h-8 w-8" />
+                    <TraitBadgeChip trait={m.trait} chipClassName="h-6 w-6" />
                   </div>
                 </button>
               )
@@ -252,7 +261,7 @@ export function GamePhase3PoolPanel({
             type="button"
             disabled={!pickId}
             onClick={confirmRound}
-            className={`mt-5 rounded-lg px-6 py-2 font-medium ${
+            className={`mt-3 rounded-lg px-5 py-1.5 text-sm font-medium ${
               pickId ? "cursor-pointer bg-[rgba(20,30,50,0.9)] text-white hover:bg-[rgba(30,40,60,0.95)]" : "cursor-not-allowed bg-gray-500/50 text-gray-300"
             }`}
           >
@@ -260,15 +269,15 @@ export function GamePhase3PoolPanel({
           </button>
         </div>
 
-        <div className="relative z-10 mt-6 flex justify-center overflow-x-auto">
-          <div className="grid w-[864px] gap-4 [grid-template-columns:repeat(5,160px)]">
+        <div className="relative z-10 mt-4 flex justify-center overflow-x-auto pb-1">
+          <div className="grid gap-3 [grid-template-columns:repeat(5,124px)]">
             {Array.from({ length: GRID_SLOTS }, (_, idx) => {
               const m = pool[idx]
               if (!m) {
                 return (
                   <div
                     key={`pool-empty-${idx}`}
-                    className="h-[160px] w-[160px] rounded-xl border-2 border-dashed border-gray-300 bg-white/40"
+                    className="h-[124px] w-[124px] rounded-lg border-2 border-dashed border-gray-300 bg-white/40"
                   />
                 )
               }
@@ -278,15 +287,15 @@ export function GamePhase3PoolPanel({
               return (
                 <div
                   key={m.id}
-                  className="flex h-[160px] w-[160px] cursor-default flex-col rounded-xl border-2 border-[#d1d5db] bg-white p-2 text-left shadow-lg"
+                  className="flex h-[124px] w-[124px] cursor-default flex-col rounded-lg border-2 border-[#d1d5db] bg-white p-1.5 text-left shadow-md"
                 >
-                  <div className="mb-1 w-full text-center text-sm font-bold text-gray-800 line-clamp-1">{m.name}</div>
-                  <div className="mb-1 flex shrink-0 justify-center">
+                  <div className="mb-0.5 w-full text-center text-[11px] font-bold leading-tight text-gray-800 line-clamp-2">{m.name}</div>
+                  <div className="flex max-h-[44px] min-h-[44px] shrink-0 items-center justify-center [&>svg]:max-h-[44px] [&>svg]:max-w-[44px]">
                     <Svg color={blobColor} />
                   </div>
-                  <div className="mt-auto flex w-full items-center justify-between gap-1 px-1">
+                  <div className="mt-auto flex w-full items-center justify-between gap-0.5 px-0.5">
                     <MicrobeAttributeRow Mobility={m.Mobility} Agility={m.Agility} Size={m.Size} />
-                    <TraitBadgeChip trait={m.trait} />
+                    <TraitBadgeChip trait={m.trait} chipClassName="h-6 w-6" />
                   </div>
                 </div>
               )
@@ -295,9 +304,9 @@ export function GamePhase3PoolPanel({
         </div>
       </div>
 
-      <div className="absolute right-6 bottom-8 z-20">
-        <div className={`overflow-hidden rounded-xl bg-[rgba(20,30,50,0.92)] backdrop-blur-sm ${keyExpanded ? "w-48" : "w-20"}`}>
-          <button type="button" onClick={() => setKeyExpanded((v) => !v)} className="flex w-full items-center justify-between px-4 py-2 text-white">
+      <div className={GAME_KEY_PANEL_OUTER_CLASS}>
+        <div className={gameKeyPanelInnerClass(keyExpanded)}>
+          <button type="button" onClick={() => setKeyExpanded((v) => !v)} className={GAME_KEY_TOGGLE_BTN_CLASS}>
             <span>Key</span>
             {keyExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
           </button>

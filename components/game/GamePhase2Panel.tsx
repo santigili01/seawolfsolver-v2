@@ -27,6 +27,15 @@ import {
 import { traitColor } from "@/lib/game-helpers"
 import { GameHelpModal } from "@/components/game/GameHelpModal"
 import type { PhaseBehaviourData } from "@/lib/behavioural-scoring"
+import {
+  GAME_HELPER_CARD_CLASS,
+  GAME_KEY_PANEL_OUTER_CLASS,
+  GAME_KEY_TOGGLE_BTN_CLASS,
+  GAME_MAIN_PANEL_SPLIT_CLASS,
+  GAME_PHASE_ROOT_CLASS,
+  GAME_SITE_INFO_CARD_CLASS,
+  gameKeyPanelInnerClass,
+} from "@/lib/game-phase-layout"
 
 export type P2Pick = "site1" | "site2" | "return"
 
@@ -189,7 +198,7 @@ export function GamePhase2Panel({
   }
 
   return (
-    <div className="relative h-[calc(100vh-8rem)] w-full overflow-hidden">
+    <div className={GAME_PHASE_ROOT_CLASS}>
       <div className="pointer-events-none absolute inset-0 z-[1] opacity-20">
         <div className="absolute top-20 left-20 h-48 w-32 rounded-lg bg-orange-500/30" />
         <div className="absolute top-32 left-60 h-32 w-20 rounded-lg bg-blue-400/30" />
@@ -197,7 +206,7 @@ export function GamePhase2Panel({
         <div className="absolute bottom-20 left-40 h-16 w-24 rounded bg-yellow-500/30" />
       </div>
 
-      <div className="absolute top-20 left-6 z-10 w-64 rounded-xl bg-[rgba(20,20,40,0.92)] p-4 backdrop-blur-sm">
+      <div className={GAME_HELPER_CARD_CLASS}>
         <div className="mb-3 flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-500 font-bold text-white">P</div>
           <h2 className="font-bold text-white">Microbe Profile</h2>
@@ -222,7 +231,7 @@ export function GamePhase2Panel({
         </button>
       </div>
 
-      <div className="absolute top-20 right-6 z-10 w-[15rem] max-h-[calc(100vh-6rem)] overflow-y-auto rounded-lg bg-[#FFF9C4] p-4 shadow-lg">
+      <div className={GAME_SITE_INFO_CARD_CLASS}>
         <h3 className="mb-2 text-sm font-bold text-gray-800 uppercase">Site {displaySiteNum} Information</h3>
         <p className="mb-3 text-xs font-medium text-gray-700">{scenario.name}</p>
         <div className="mb-3">
@@ -278,7 +287,7 @@ export function GamePhase2Panel({
         ) : null}
       </div>
 
-      <div className="relative z-[5] mx-auto mt-[4.5rem] mb-4 flex h-[calc(100%-6rem)] min-h-0 w-[min(900px,calc(100%-18rem))] gap-6 overflow-hidden rounded-2xl border border-white/30 bg-white/95 p-5 shadow-xl backdrop-blur-sm">
+      <div className={GAME_MAIN_PANEL_SPLIT_CLASS}>
         <div className="flex w-[200px] shrink-0 flex-col overflow-y-auto pr-1">
           {reviewMode ? (
             <div className="flex flex-col gap-3">
@@ -463,16 +472,12 @@ export function GamePhase2Panel({
         </div>
       </div>
 
-      <div className="absolute right-6 bottom-8 z-20">
-        <div
-          className={`overflow-hidden rounded-xl bg-[rgba(20,30,50,0.92)] backdrop-blur-sm transition-all ${
-            keyExpanded ? "w-48" : "w-20"
-          }`}
-        >
+      <div className={GAME_KEY_PANEL_OUTER_CLASS}>
+        <div className={gameKeyPanelInnerClass(keyExpanded)}>
           <button
             type="button"
             onClick={() => setKeyExpanded(!keyExpanded)}
-            className="flex w-full items-center justify-between px-4 py-2 font-medium text-white"
+            className={GAME_KEY_TOGGLE_BTN_CLASS}
           >
             <span>Key</span>
             {keyExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
