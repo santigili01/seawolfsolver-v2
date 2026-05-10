@@ -393,7 +393,7 @@ def compute_human_difficulty(
     H_raw = (
         hr  * 0.25
         + dd  * 0.20
-        + eps * 0.15
+        # + eps * 0.15
         + wm  * 0.15
         + cl  * 0.10
         + tt  * 0.10
@@ -592,6 +592,42 @@ def build_averaging_trap(scenario: dict, optimal_triple: list) -> Optional[dict]
     return None
 
 
+def build_obvious_decoy_microbe(
+    scenario: dict,
+    optimal_triple: list,
+    target_score: int,
+) -> Optional[dict]:
+    """
+    Build a microbe that when combined with 2 of the optimal triple scores
+    exactly target_score (typically max_score - 20). Has desired trait so
+    it looks like a great anchor pick but fails exactly one attribute mean.
+    """
+    for _ in range(300):
+        pair = random.sample(optimal_triple, 2)
+        fail_attr_idx = random.randint(0, 2)
+        fail_attr = ATTRIBUTES[fail_attr_idx]
+        lo = scenario["attributes"][fail_attr]["min"]
+        hi = scenario["attributes"][fail_attr]["max"]
+        pair_sum = sum(m[fail_attr] for m in pair)
+        if random.random() < 0.5:
+            target_val = max(1, 3 * lo - pair_sum - random.randint(0, 1))
+        else:
+            target_val = min(10, 3 * hi - pair_sum + random.randint(1, 2))
+        attrs = []
+        for j, attr in enumerate(ATTRIBUTES):
+            if j == fail_attr_idx:
+                attrs.append(target_val)
+            else:
+                lo_a = scenario["attributes"][attr]["min"]
+                hi_a = scenario["attributes"][attr]["max"]
+                attrs.append(in_range_value(lo_a, hi_a))
+        m = make_microbe(attrs, scenario["desired_trait"])
+        if score_combo_list(pair + [m], scenario) == target_score:
+            if not has_inviable_attribute(m, scenario):
+                return m
+    return None
+
+
 def build_filler(scenario: dict, tier: str) -> dict:
     """Generic plausible-zone filler microbe."""
     attrs = []
@@ -602,6 +638,47 @@ def build_filler(scenario: dict, tier: str) -> dict:
         attrs.append(plausible_value(lo, hi, zone=zone))
     trait = random.choice(TRAITS)
     return make_microbe(attrs, trait)
+
+
+def enforce_trait_guarantees(pool: list, scenario: dict) -> list:
+    """
+    Ensure the pool always contains:
+    1. At least 1 plausible desired-trait microbe (not inviable)
+    2. At least 1 undesired-trait microbe
+    If either is missing, replace the last neutral microbe with the required one.
+    """
+    d_trait = scenario["desired_trait"]
+    u_trait = scenario["undesired_trait"]
+
+    has_viable_desired = any(
+        m["trait"] == d_trait and not has_inviable_attribute(m, scenario)
+        for m in pool
+    )
+    has_undesired = any(m["trait"] == u_trait for m in pool)
+
+    replacements_needed = []
+    if not has_viable_desired:
+        attrs = [plausible_value(
+                     scenario["attributes"][a]["min"],
+                     scenario["attributes"][a]["max"],
+                     zone=2,
+                 ) for a in ATTRIBUTES]
+        replacements_needed.append(make_microbe(attrs, d_trait))
+    if not has_undesired:
+        replacements_needed.append(build_trait_trap(scenario, intensity="strong"))
+
+    if not replacements_needed:
+        return pool
+
+    new_pool = list(pool)
+    for replacement in replacements_needed:
+        for i in range(len(new_pool) - 1, -1, -1):
+            if new_pool[i]["trait"] != d_trait and new_pool[i]["trait"] != u_trait:
+                new_pool[i] = replacement
+                break
+        else:
+            new_pool[-1] = replacement
+    return new_pool
 
 
 def assemble_pool(
@@ -616,6 +693,7 @@ def assemble_pool(
     """
     pool = optimal_triple + distractors
     random.shuffle(pool)
+    pool = enforce_trait_guarantees(pool, scenario)
     pool = assign_ids(pool)
 
     combo_scores = score_all_combos_list(pool, scenario)
@@ -706,23 +784,29 @@ def generate_one_pool(scenario: dict, tier: str) -> Optional[dict]:
             for _ in range(2):
                 fa = build_flawed_desired_anchor(scenario)
                 distractors.append(fa if fa else build_filler(scenario, tier))
-            # 2 averaging traps
-            for _ in range(2):
-                at = build_averaging_trap(scenario, optimal)
-                distractors.append(at if at else build_filler(scenario, tier))
+            # 1 averaging trap
+            at = build_averaging_trap(scenario, optimal)
+            distractors.append(at if at else build_filler(scenario, tier))
+            # 1 obvious decoy: desired trait + forms max-20 combo with 2 optimal
+            od = build_obvious_decoy_microbe(scenario, optimal, target_max - 20)
+            distractors.append(od if od else build_filler(scenario, tier))
             # 1 filler
             distractors.append(build_filler(scenario, tier))
 
         elif tier == "expert":
-            # Like hard but accept lower cog — fill with plausible zone
+            # Like hard but accept lower cog
             for _ in range(2):
                 distractors.append(build_trait_trap(scenario, intensity="strong"))
             fa = build_flawed_desired_anchor(scenario)
             distractors.append(fa if fa else build_filler(scenario, tier))
             at = build_averaging_trap(scenario, optimal)
             distractors.append(at if at else build_filler(scenario, tier))
-            for _ in range(3):
-                distractors.append(build_filler(scenario, tier))
+            # 2 obvious decoys for expert (more misleading combos)
+            for _ in range(2):
+                od = build_obvious_decoy_microbe(scenario, optimal, target_max - 20)
+                distractors.append(od if od else build_filler(scenario, tier))
+            # 1 filler
+            distractors.append(build_filler(scenario, tier))
 
 # hadal pools are generated via promotion/upgrade in generate_pools_for_scenario
 # not directly via generate_one_pool
@@ -841,21 +925,21 @@ def generate_pools_for_scenario(scenario: dict) -> dict:
     # ── Hadal generation ───────────────────────────────────────────────────────
     hadal_target  = HADAL_ABYSS_TARGET if is_hadal else 2
     hadal_criteria = [
-        # Each entry: (hr_min, dd_min, eps_min, tt_min, H_min)
+        # Each entry: (hr_min, dd_min, tt_min, H_min)
         # Start strict, progressively relax if needed
-        (6, 6, 5, 5, 75),
-        (5, 5, 4, 4, 70),
-        (4, 4, 3, 3, 65),
-        (3, 3, 2, 2, 55),
+        (6, 6, 5, 65),
+        (5, 5, 4, 60),
+        (4, 4, 3, 55),
+        (3, 3, 2, 50),
     ]
 
     def meets_hadal(hd: dict, max_score: int, count: int, criteria: tuple) -> bool:
-        hr_min, dd_min, eps_min, tt_min, H_min = criteria
+        hr_min, dd_min, tt_min, H_min = criteria
         if max_score not in (80, 60):               return False
         if count > 2:                               return False
         if hd["heuristic_resistance"] < hr_min:    return False
         if hd["decoy_density"] < dd_min:           return False
-        if hd["effective_pool_size"] < eps_min:    return False
+        # if hd["effective_pool_size"] < eps_min:    return False
         if hd["trait_trap_intensity"] < tt_min:    return False
         if hd["H"] < H_min:                        return False
         return True
@@ -897,11 +981,10 @@ def generate_pools_for_scenario(scenario: dict) -> dict:
             if len(found["hadal"]) >= hadal_target:
                 break
 
-            hr_min, dd_min, eps_min, tt_min, H_min = criteria
+            hr_min, dd_min, tt_min, H_min = criteria
             if criteria_idx > 0:
                 print(
                     f"  [{name}] hadal: relaxing criteria to "
-                    f"hr>={hr_min} dd>={dd_min} eps>={eps_min} "
                     f"tt>={tt_min} H>={H_min}"
                 )
 
@@ -922,6 +1005,18 @@ def generate_pools_for_scenario(scenario: dict) -> dict:
                 count    = int(
                     (result["combo_scores"] == max_s).sum()
                 )
+                
+                # Diagnostic: print every candidate's scores
+                if attempts <= 20:
+                    print(
+                        f"    [hadal candidate] "
+                        f"max={max_s} count={count} "
+                        f"H={hd['H']:.1f} "
+                        f"hr={hd['heuristic_resistance']:.1f} "
+                        f"dd={hd['decoy_density']:.1f} "
+                        f"eps={hd['effective_pool_size']:.1f} "
+                        f"tt={hd['trait_trap_intensity']:.1f}"
+                    )
 
                 if not meets_hadal(hd, max_s, count, criteria):
                     continue

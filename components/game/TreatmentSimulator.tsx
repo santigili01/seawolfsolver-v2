@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { Loader2 } from "lucide-react"
 import type { Phase4Score } from "@/lib/game-scoring"
 import type { Microbe, ScenarioRequirements, ScenariosFile } from "@/lib/game-types"
-import { GRID_SLOTS } from "@/lib/game-types"
+import { ATTR_NAMES, GRID_SLOTS } from "@/lib/game-types"
 import { formatMmSs, randomPick } from "@/lib/game-helpers"
 import { categorizeMicrobeForResults, getInviableAttributes } from "@/lib/game-helpers"
 import {
@@ -67,8 +67,12 @@ const DIFFICULTY_OPTIONS: {
   },
 ]
 
-const gradientBg =
-  "relative min-h-screen w-full bg-gradient-to-br from-[#4ECDC4] via-[#3EBDB5] to-[#2BA8A0]"
+/** Same outer shell as `/practice/sea-wolf` during an active session */
+const SEA_WOLF_SESSION_BG =
+  "relative min-h-screen bg-gradient-to-br from-[#4ECDC4] via-[#3EBDB5] to-[#2BA8A0]"
+
+/** Standalone treatment session: one site, 10 minutes (full game is 3 sites, 30 min). */
+const TREATMENT_SESSION_SECONDS = 10 * 60
 
 const accentHeading = "border-l-4 border-[#4ECDC4] pl-3 text-lg font-bold text-[#1a202c]"
 
@@ -102,8 +106,10 @@ export function TreatmentSimulator() {
   const [scenarioRequirements, setScenarioRequirements] = useState<ScenarioRequirements | null>(null)
   const [svgMap, setSvgMap] = useState<Map<string, number> | null>(null)
   const [traitsFile, setTraitsFile] = useState<string[]>([])
+  const [attrListForKey, setAttrListForKey] = useState<string[]>(() => [...ATTR_NAMES])
   const [phase4Result, setPhase4Result] = useState<Phase4Score | null>(null)
   const [treatmentElapsedSeconds, setTreatmentElapsedSeconds] = useState(0)
+  const [timeRemaining, setTimeRemaining] = useState(TREATMENT_SESSION_SECONDS)
 
   const gameStartedAtRef = useRef<number | null>(null)
 
@@ -111,6 +117,14 @@ export function TreatmentSimulator() {
     if (screen === "game") {
       gameStartedAtRef.current = Date.now()
     }
+  }, [screen])
+
+  useEffect(() => {
+    if (screen !== "game") return
+    const id = window.setInterval(() => {
+      setTimeRemaining((t) => (t <= 0 ? 0 : t - 1))
+    }, 1000)
+    return () => window.clearInterval(id)
   }, [screen])
 
   const resetAll = useCallback(() => {
@@ -123,8 +137,10 @@ export function TreatmentSimulator() {
     setScenarioRequirements(null)
     setSvgMap(null)
     setTraitsFile([])
+    setAttrListForKey([...ATTR_NAMES])
     setPhase4Result(null)
     setTreatmentElapsedSeconds(0)
+    setTimeRemaining(TREATMENT_SESSION_SECONDS)
     gameStartedAtRef.current = null
   }, [])
 
@@ -173,6 +189,8 @@ export function TreatmentSimulator() {
       setScenarioRequirements(scenario)
       setSvgMap(map)
       setTraitsFile(scenariosFile.traits)
+      setAttrListForKey(scenariosFile.attributes?.length ? [...scenariosFile.attributes] : ATTR_NAMES.slice())
+      setTimeRemaining(TREATMENT_SESSION_SECONDS)
       setScreen("game")
       setLoadState("idle")
     } catch (e) {
@@ -183,9 +201,10 @@ export function TreatmentSimulator() {
 
   if (screen === "difficulty") {
     return (
-      <div className={`${gradientBg} flex min-h-screen flex-col items-center justify-center px-6 py-12 text-center text-white`}>
-        <h1 className="mb-3 text-4xl font-bold tracking-tight md:text-5xl">Treatment Simulator</h1>
-        <p className="mb-10 max-w-lg text-lg text-white/95">
+      <div className={SEA_WOLF_SESSION_BG}>
+        <div className="flex min-h-screen flex-col items-center justify-center px-6 text-center text-white">
+        <h1 className="mb-4 text-4xl font-bold tracking-tight md:text-5xl">Treatment Practice</h1>
+        <p className="mb-10 max-w-md text-lg text-white/95">
           Select a difficulty to begin. You will have one Phase 4 round to find the optimal treatment combination.
         </p>
 
@@ -228,18 +247,21 @@ export function TreatmentSimulator() {
             ))}
           </div>
         ) : null}
+        </div>
       </div>
     )
   }
 
   if (screen === "game" && selectedPool && scenarioRequirements && svgMap && difficultyTier !== null) {
+    const progressPct = Math.min(100, Math.max(0, (timeRemaining / TREATMENT_SESSION_SECONDS) * 100))
     return (
-      <div className={gradientBg}>
+      <div className={SEA_WOLF_SESSION_BG}>
         <SharedTopBar
-          timeRemaining={0}
+          timeRemaining={timeRemaining}
           currentSiteHighlight={1}
-          phaseLabel="Phase 4 · Treatment"
-          progressPercent={100}
+          phaseLabel="Phase 4: Treatment"
+          progressPercent={progressPct}
+          sitesShown={1}
         />
         <GamePhase4TreatmentPanel
           key={selectedPool.pool_id}
@@ -247,7 +269,7 @@ export function TreatmentSimulator() {
           svgMap={svgMap}
           scenario={scenarioRequirements}
           displaySiteNum={1}
-          attributesListForKey={["Mobility", "Agility", "Size"]}
+          attributesListForKey={attrListForKey}
           scenariosFileTraits={traitsFile.length >= 4 ? traitsFile : [...DEFAULT_TRAITS]}
           onBehaviourData={() => {}}
           onComplete={(p4) => {
@@ -541,7 +563,7 @@ export function TreatmentSimulator() {
   }
 
   return (
-    <div className={`${gradientBg} flex min-h-screen items-center justify-center`}>
+    <div className={`${SEA_WOLF_SESSION_BG} flex min-h-screen items-center justify-center`}>
       <Loader2 className="h-10 w-10 animate-spin text-white" aria-label="Loading" />
     </div>
   )

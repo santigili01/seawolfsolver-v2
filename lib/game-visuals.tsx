@@ -585,12 +585,15 @@ export function MicrobeAttributeRow({
   Size,
   inviableAttributes = [],
   highlightInviable = false,
+  layout = "wrap",
 }: {
   Mobility: number
   Agility: number
   Size: number
   inviableAttributes?: string[]
   highlightInviable?: boolean
+  /** Use `nowrap` on narrow pool/tray cards when the row should stay on one line. */
+  layout?: "wrap" | "nowrap"
 }) {
   const inv = inviableAttributes
   const statWithTooltip = (
@@ -619,7 +622,9 @@ export function MicrobeAttributeRow({
   }
 
   return (
-    <div className="flex min-w-0 flex-wrap items-center gap-2 text-[12px] leading-none">
+    <div
+      className={`flex min-w-0 items-center gap-1.5 text-[12px] leading-none sm:gap-2 ${layout === "nowrap" ? "flex-nowrap" : "flex-wrap"}`}
+    >
       {statWithTooltip(
         "Mobility",
         Mobility,
@@ -801,30 +806,40 @@ export function SharedTopBar({
   currentSiteHighlight,
   phaseLabel,
   progressPercent,
+  sitesShown = 3,
 }: {
   timeRemaining: number
   currentSiteHighlight: 1 | 2 | 3
   phaseLabel: string
   progressPercent: number
+  /** Standalone Phase 4 treatment: one site only. Full game: three sites. */
+  sitesShown?: 1 | 3
 }) {
   return (
     <div className="sticky top-0 z-40 flex shrink-0 flex-col bg-[rgba(20,30,50,0.95)] backdrop-blur">
       <div className="flex h-14 items-center justify-between px-4">
         <div className="flex items-center gap-1">
-          {([1, 2, 3] as const).map((n, idx) => {
-            const active = currentSiteHighlight === n
-            const dotClass = active ? "bg-blue-500" : "border-2 border-gray-500 bg-transparent"
-            const labelClass = active ? "text-white" : "text-gray-400"
-            return (
-              <div key={n} className="flex items-center">
-                {idx > 0 ? <div className="mx-1 h-0.5 w-4 bg-gray-600 md:w-6" aria-hidden /> : null}
-                <div className="flex items-center gap-2">
-                  <div className={`h-3 w-3 shrink-0 rounded-full ${dotClass}`} />
-                  <span className={`text-xs md:text-sm ${labelClass}`}>Site {n}</span>
+          {sitesShown === 1 ? (
+            <div className="flex items-center gap-2">
+              <div className="h-3 w-3 shrink-0 rounded-full bg-blue-500" />
+              <span className="text-xs text-white md:text-sm">Site 1</span>
+            </div>
+          ) : (
+            ([1, 2, 3] as const).map((n, idx) => {
+              const active = currentSiteHighlight === n
+              const dotClass = active ? "bg-blue-500" : "border-2 border-gray-500 bg-transparent"
+              const labelClass = active ? "text-white" : "text-gray-400"
+              return (
+                <div key={n} className="flex items-center">
+                  {idx > 0 ? <div className="mx-1 h-0.5 w-4 bg-gray-600 md:w-6" aria-hidden /> : null}
+                  <div className="flex items-center gap-2">
+                    <div className={`h-3 w-3 shrink-0 rounded-full ${dotClass}`} />
+                    <span className={`text-xs md:text-sm ${labelClass}`}>Site {n}</span>
+                  </div>
                 </div>
-              </div>
-            )
-          })}
+              )
+            })
+          )}
         </div>
 
         <div className="hidden flex-col items-center sm:flex">

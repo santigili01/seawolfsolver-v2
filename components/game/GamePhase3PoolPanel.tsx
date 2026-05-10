@@ -220,8 +220,9 @@ export function GamePhase3PoolPanel({
       </div>
 
       <div className={GAME_MAIN_PANEL_P3_CLASS}>
-        <div className="relative z-10 flex flex-col items-center">
-          <div className="flex gap-3">
+        <div className="relative z-10 flex w-full flex-col items-stretch">
+          {/* Same width as one bottom-grid column; compact SlotAttributeRow layout (not tray-style row). */}
+          <div className="flex w-full justify-center gap-3">
             {candidates.map((candidate) => {
               const m = candidate.microbe
               const isSelected = pickId === m.id
@@ -241,12 +242,14 @@ export function GamePhase3PoolPanel({
                       return next
                     })
                   }
-                  className={`flex h-[152px] w-[126px] shrink-0 flex-col rounded-xl border-2 bg-white p-1.5 text-left shadow-md transition-all ${
+                  className={`flex min-h-[178px] h-auto w-[calc((100%-3rem)/5)] shrink-0 flex-col rounded-xl border-2 bg-white p-1.5 text-left shadow-md transition-all ${
                     isSelected ? "border-[#4ECDC4] bg-[#ecfdfb]" : "border-[#d1d5db]"
                   } ${anotherSelected ? "opacity-60" : "opacity-100"}`}
                 >
-                  <div className="mb-0.5 w-full text-center text-[11px] font-bold leading-tight text-gray-800 line-clamp-2">{m.name}</div>
-                  <div className="flex max-h-[52px] min-h-[52px] shrink-0 items-center justify-center [&>svg]:max-h-[52px] [&>svg]:max-w-[52px] [&>svg]:overflow-visible">
+                  <div className="mb-0.5 w-full shrink-0 px-0.5 pt-0.5 text-center text-[11px] font-bold leading-snug text-gray-800 line-clamp-2">
+                    {m.name}
+                  </div>
+                  <div className="flex max-h-[48px] min-h-[48px] shrink-0 items-center justify-center [&>svg]:max-h-[48px] [&>svg]:max-w-[48px] [&>svg]:overflow-visible">
                     <Svg color={blobColor} />
                   </div>
                   <div className="mt-auto flex w-full flex-col items-center gap-1 px-0.5">
@@ -261,7 +264,7 @@ export function GamePhase3PoolPanel({
             type="button"
             disabled={!pickId}
             onClick={confirmRound}
-            className={`mt-3 rounded-lg px-5 py-1.5 text-sm font-medium ${
+            className={`mt-3 self-center rounded-lg px-5 py-1.5 text-sm font-medium ${
               pickId ? "cursor-pointer bg-[rgba(20,30,50,0.9)] text-white hover:bg-[rgba(30,40,60,0.95)]" : "cursor-not-allowed bg-gray-500/50 text-gray-300"
             }`}
           >
@@ -269,15 +272,15 @@ export function GamePhase3PoolPanel({
           </button>
         </div>
 
-        <div className="relative z-10 mt-4 flex justify-center overflow-x-auto pb-1">
-          <div className="grid gap-3 [grid-template-columns:repeat(5,124px)]">
+        <div className="relative z-10 mt-4 w-full pb-1">
+          <div className="grid w-full grid-cols-5 gap-3">
             {Array.from({ length: GRID_SLOTS }, (_, idx) => {
               const m = pool[idx]
               if (!m) {
                 return (
                   <div
                     key={`pool-empty-${idx}`}
-                    className="h-[124px] w-[124px] rounded-lg border-2 border-dashed border-gray-300 bg-white/40"
+                    className="min-h-[168px] w-full min-w-0 rounded-lg border-2 border-dashed border-gray-300 bg-white/40"
                   />
                 )
               }
@@ -287,15 +290,17 @@ export function GamePhase3PoolPanel({
               return (
                 <div
                   key={m.id}
-                  className="flex h-[124px] w-[124px] cursor-default flex-col rounded-lg border-2 border-[#d1d5db] bg-white p-1.5 text-left shadow-md"
+                  className="flex min-h-[168px] h-auto w-full min-w-0 cursor-default flex-col rounded-lg border-2 border-[#d1d5db] bg-white p-2 text-left shadow-md"
                 >
-                  <div className="mb-0.5 w-full text-center text-[11px] font-bold leading-tight text-gray-800 line-clamp-2">{m.name}</div>
-                  <div className="flex max-h-[44px] min-h-[44px] shrink-0 items-center justify-center [&>svg]:max-h-[44px] [&>svg]:max-w-[44px]">
+                  <div className="mb-0.5 w-full text-center text-[11px] font-bold leading-tight text-gray-800 line-clamp-2">
+                    {m.name}
+                  </div>
+                  <div className="flex max-h-[52px] min-h-[52px] shrink-0 items-center justify-center [&>svg]:max-h-[52px] [&>svg]:max-w-[52px]">
                     <Svg color={blobColor} />
                   </div>
-                  <div className="mt-auto flex w-full items-center justify-between gap-0.5 px-0.5">
-                    <MicrobeAttributeRow Mobility={m.Mobility} Agility={m.Agility} Size={m.Size} />
-                    <TraitBadgeChip trait={m.trait} chipClassName="h-6 w-6" />
+                  <div className="mt-auto flex w-full min-w-0 items-center justify-between gap-1">
+                    <MicrobeAttributeRow layout="nowrap" Mobility={m.Mobility} Agility={m.Agility} Size={m.Size} />
+                    <TraitBadgeChip trait={m.trait} chipClassName="h-6 w-6 shrink-0" />
                   </div>
                 </div>
               )
