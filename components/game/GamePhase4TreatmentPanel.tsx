@@ -267,7 +267,7 @@ export function GamePhase4TreatmentPanel({
           </button>
         </div>
 
-        <div className="relative z-10 mx-auto mt-6 grid max-w-[900px] grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-3 px-2">
+        <div className="relative z-10 mx-auto mt-6 grid max-w-[1200px] grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-3 px-2">
           {Array.from({ length: GRID_SLOTS }, (_, idx) => {
             const microbe = microbes[idx]
             if (!microbe) {

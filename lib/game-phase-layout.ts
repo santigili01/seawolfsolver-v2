@@ -27,16 +27,16 @@ export const GAME_KEY_TOGGLE_BTN_CLASS =
 
 /** Main panel: Phase 0 / 2 split (left rail + columns), fixed height within root */
 export const GAME_MAIN_PANEL_SPLIT_CLASS =
-  "relative z-[5] mx-auto mt-3 mb-4 flex h-[calc(100%-4rem)] min-h-0 w-[min(900px,calc(100%-18rem))] gap-6 overflow-hidden rounded-2xl border border-white/30 bg-white/95 p-5 shadow-xl backdrop-blur-sm"
+  "relative z-[5] mx-auto mt-3 mb-4 flex h-[calc(100%-4rem)] min-h-0 w-[min(1200px,calc(100%-12rem))] gap-6 overflow-hidden rounded-2xl border border-white/30 bg-white/95 p-5 shadow-xl backdrop-blur-sm"
 
 /** Main panel: Phase 1 — single column, scrolls inside panel when tall */
 export const GAME_MAIN_PANEL_FLOW_WHITE_CLASS =
-  "relative z-[5] mx-auto mt-3 mb-4 max-h-[calc(100%-2rem)] min-h-0 w-[min(900px,calc(100%-18rem))] overflow-y-auto rounded-2xl border border-white/30 bg-white/95 p-5 shadow-xl backdrop-blur-sm"
+  "relative z-[5] mx-auto mt-3 mb-4 max-h-[calc(100%-2rem)] min-h-0 w-[min(1200px,calc(100%-12rem))] overflow-y-auto rounded-2xl border border-white/30 bg-white/95 p-5 shadow-xl backdrop-blur-sm"
 
 /** Main panel: Phase 3 / 4 — teal tint, same geometry as flow white */
 export const GAME_MAIN_PANEL_FLOW_TEAL_CLASS =
-  "relative z-[5] mx-auto mt-3 mb-4 max-h-[calc(100%-2rem)] min-h-0 w-[min(900px,calc(100%-18rem))] overflow-y-auto rounded-2xl border border-white/40 bg-[rgba(235,247,245,0.88)] p-5 shadow-xl backdrop-blur-sm"
+  "relative z-[5] mx-auto mt-3 mb-4 max-h-[calc(100%-2rem)] min-h-0 w-[min(1200px,calc(100%-12rem))] overflow-y-auto rounded-2xl border border-white/40 bg-[rgba(235,247,245,0.88)] p-5 shadow-xl backdrop-blur-sm"
 
 /** Phase 3 prospect pool — tall 5×2 grid; omit inner scroll so bottom row is not clipped */
 export const GAME_MAIN_PANEL_P3_CLASS =
-  "relative z-[5] mx-auto mt-3 mb-4 w-[min(900px,calc(100%-18rem))] rounded-2xl border border-white/40 bg-[rgba(235,247,245,0.88)] px-4 py-3 shadow-xl backdrop-blur-sm"
+  "relative z-[5] mx-auto mt-3 mb-4 w-[min(1200px,calc(100%-12rem))] rounded-2xl border border-white/40 bg-[rgba(235,247,245,0.88)] px-5 py-4 shadow-xl backdrop-blur-sm"

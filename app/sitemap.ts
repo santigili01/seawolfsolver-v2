@@ -5,6 +5,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   return [
     { url: base, lastModified: new Date(), priority: 1.0 },
+    { url: `${base}/sea-wolf-demo`, lastModified: new Date(), priority: 0.85 },
     { url: `${base}/pricing`, lastModified: new Date(), priority: 0.9 },
     { url: `${base}/practice`, lastModified: new Date(), priority: 0.8 },
     { url: `${base}/practice/sea-wolf`, lastModified: new Date(), priority: 0.55 },

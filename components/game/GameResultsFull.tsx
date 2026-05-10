@@ -160,6 +160,7 @@ export function GameResultsFull({
   behaviouralScore,
   totalSeconds,
   siteDetail,
+  demoConversionUpsell = false,
 }: {
   gameScore: import("@/lib/game-scoring").GameScore
   behaviouralScore: BehaviouralScore
@@ -173,6 +174,8 @@ export function GameResultsFull({
     prospectChooseSets: ProspectRoundJson[]
     revealedChar: RevealedCharacteristic | null
   }[]
+  /** When true (free `/sea-wolf-demo` only), show conversion CTA below summary stats. */
+  demoConversionUpsell?: boolean
 }) {
   const accentHeading =
     "border-l-4 border-[#4ECDC4] pl-3 text-lg font-bold text-[#1a202c]"
@@ -253,6 +256,24 @@ export function GameResultsFull({
             </div>
           </div>
         </div>
+
+        {demoConversionUpsell ? (
+          <div className="mb-8 rounded-xl border border-[#cceeea] border-l-4 border-l-[#4ECDC4] bg-gradient-to-r from-[#eefcfb] to-white p-6 shadow-md sm:flex sm:items-center sm:justify-between sm:gap-8">
+            <div className="min-w-0">
+              <p className="text-lg font-bold text-[#1a202c]">Unlock the full Sea Wolf simulator</p>
+              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-gray-700">
+                Play all four phases across three sites, hundreds of scenarios, and the full 30-minute experience—built to mirror the real
+                assessment.
+              </p>
+            </div>
+            <Link
+              href="/pricing"
+              className="mt-4 inline-flex shrink-0 items-center justify-center rounded-lg bg-[#1a202c] px-8 py-3 text-base font-semibold text-white shadow-lg transition-opacity hover:opacity-90 sm:mt-0"
+            >
+              Buy now
+            </Link>
+          </div>
+        ) : null}
 
         <div className="mb-8 space-y-2">
           {siteDetail.map((entry, i) => {

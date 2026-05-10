@@ -3,7 +3,7 @@ import Link from "next/link"
 const topLinks = [
   { href: "#how-it-works", label: "How it Works" },
   { href: "#pricing", label: "Pricing" },
-  { href: "/practice/sea-wolf", label: "Free Demo" },
+  { href: "/sea-wolf-demo", label: "Free Demo" },
   { href: "mailto:contact@seawolfprep.com", label: "Contact" },
 ]
 
