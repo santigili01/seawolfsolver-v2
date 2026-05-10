@@ -1,4 +1,4 @@
-import { PracticeShell } from "@/components/practice/practice-shell"
+import { PracticeAreaLayout } from "@/components/practice/practice-area-layout"
 import { getDashboardSidebarPayload } from "@/lib/dashboard-sidebar-server"
 import { membershipShortLabel } from "@/lib/dashboard-access"
 import { requireSimulatorAccess } from "@/lib/require-simulator-access"
@@ -10,12 +10,12 @@ export default async function PracticeLayout({ children }: { children: React.Rea
   })
 
   return (
-    <PracticeShell
+    <PracticeAreaLayout
       displayName={displayName}
       planShortLabel={membershipShortLabel(accessTier)}
       showUpgrade={!hasPurchases}
     >
       {children}
-    </PracticeShell>
+    </PracticeAreaLayout>
   )
 }
