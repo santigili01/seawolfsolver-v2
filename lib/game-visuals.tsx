@@ -817,8 +817,8 @@ export function SharedTopBar({
 }) {
   return (
     <div className="sticky top-0 z-40 flex shrink-0 flex-col bg-[rgba(20,30,50,0.95)] backdrop-blur">
-      <div className="flex h-14 items-center justify-between px-4">
-        <div className="flex items-center gap-1">
+      <div className="relative flex h-14 items-center justify-between px-4">
+        <div className="relative z-10 flex min-w-0 flex-1 items-center gap-1">
           {sitesShown === 1 ? (
             <div className="flex items-center gap-2">
               <div className="h-3 w-3 shrink-0 rounded-full bg-blue-500" />
@@ -842,14 +842,14 @@ export function SharedTopBar({
           )}
         </div>
 
-        <div className="hidden flex-col items-center sm:flex">
+        <div className="pointer-events-none absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 flex-col items-center sm:flex">
           <span className="text-xs tabular-nums text-white md:text-sm">Time: {formatCountdown(timeRemaining)}</span>
           <div className="mt-0.5 h-1.5 w-40 overflow-hidden rounded-full bg-gray-700 md:h-2 md:w-64">
             <div className="h-full rounded-full bg-green-500 transition-all duration-700" style={{ width: `${progressPercent}%` }} />
           </div>
         </div>
 
-        <div className="flex items-center gap-2 md:gap-3">
+        <div className="relative z-10 flex min-w-0 flex-1 items-center justify-end gap-2 md:gap-3">
           <button type="button" className="text-white/70 hover:text-white" aria-label="Settings">
             <Settings className="h-5 w-5" />
           </button>

@@ -185,6 +185,7 @@ export default function SeaWolfDemoPage() {
             currentSiteHighlight={highlightSite}
             phaseLabel={phaseLbl}
             progressPercent={progressPct}
+            sitesShown={1}
           />
         </>
       ) : null}
