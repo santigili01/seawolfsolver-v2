@@ -19,12 +19,42 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet"
 import { cn } from "@/lib/utils"
+import { gameResultsScoreDisplayColorClass } from "@/components/game/GameResultsFull"
+
+/** Brand teal used across Sea Wolf / practice surfaces */
+const SEA_WOLF_TEAL = "#4ECDC4"
+const CHART_POINT_OPACITY = 0.8
 
 type ChartPoint = GameResultRow & { x: number; y: number }
 
 function pct(n: number | null | undefined, digits = 1) {
   if (n == null || Number.isNaN(n)) return "—"
   return `${n.toFixed(digits)}%`
+}
+
+function scoreTone(score: number | null | undefined) {
+  if (score == null || Number.isNaN(score)) {
+    return {
+      chip: "bg-muted/80 text-muted-foreground ring-1 ring-border/60",
+      text: "text-muted-foreground",
+    }
+  }
+  if (score >= 80) {
+    return {
+      chip: "bg-emerald-100 text-emerald-900 ring-1 ring-emerald-200/80 dark:bg-emerald-950/70 dark:text-emerald-100 dark:ring-emerald-800/60",
+      text: "text-emerald-600 dark:text-emerald-400",
+    }
+  }
+  if (score >= 60) {
+    return {
+      chip: "bg-amber-100 text-amber-950 ring-1 ring-amber-200/80 dark:bg-amber-950/50 dark:text-amber-100 dark:ring-amber-800/50",
+      text: "text-amber-600 dark:text-amber-400",
+    }
+  }
+  return {
+    chip: "bg-red-100 text-red-900 ring-1 ring-red-200/80 dark:bg-red-950/60 dark:text-red-100 dark:ring-red-900/50",
+    text: "text-red-600 dark:text-red-400",
+  }
 }
 
 function formatDuration(seconds: number) {
@@ -51,30 +81,102 @@ function RunTooltip({ active, payload }: { active?: boolean; payload?: { payload
   )
 }
 
-function BreakdownTable({ r }: { r: GameResultRow }) {
-  const rows = [
-    { label: "Overall", value: pct(r.global_score) },
-    { label: "Phase 1 avg", value: pct(r.phase1_avg) },
-    { label: "Phase 2 avg", value: pct(r.phase2_avg) },
-    { label: "Phase 0 avg", value: pct(r.phase0_avg) },
-    { label: "Phase 3 avg", value: pct(r.phase3_avg) },
-    { label: "Phase 4 avg", value: pct(r.phase4_avg) },
-    { label: "Site 1", value: r.site1_scenario ? `${pct(r.site1_score)} · ${r.site1_scenario}` : pct(r.site1_score) },
-    { label: "Site 2", value: r.site2_scenario ? `${pct(r.site2_score)} · ${r.site2_scenario}` : pct(r.site2_score) },
-    { label: "Site 3", value: r.site3_scenario ? `${pct(r.site3_score)} · ${r.site3_scenario}` : pct(r.site3_score) },
-    { label: "Time", value: formatDuration(r.time_taken) },
-  ]
+function ScoreRow({
+  label,
+  score,
+  sublabel,
+  dense,
+}: {
+  label: string
+  score: number | null | undefined
+  sublabel?: string | null
+  dense?: boolean
+}) {
+  const tone = scoreTone(score)
+  const pad = dense ? "py-3.5 px-4 sm:px-5" : "py-4 px-4 sm:px-5"
   return (
-    <table className="w-full text-sm">
-      <tbody>
-        {rows.map((row) => (
-          <tr key={row.label} className="border-b border-border last:border-0">
-            <td className="py-2 pr-4 font-medium text-muted-foreground">{row.label}</td>
-            <td className="py-2 text-right text-foreground">{row.value}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <div
+      className={cn(
+        "flex flex-col gap-1 border-b border-border/70 sm:flex-row sm:items-start sm:justify-between sm:gap-4",
+        pad,
+      )}
+    >
+      <div className="min-w-0 shrink pt-0.5">
+        <p className="text-sm font-semibold tracking-tight text-foreground">{label}</p>
+        {sublabel ? <p className="mt-1 text-xs leading-snug text-muted-foreground">{sublabel}</p> : null}
+      </div>
+      <div className="flex shrink-0 items-center justify-start sm:justify-end">
+        <span
+          className={cn(
+            "inline-flex min-w-[4.25rem] items-center justify-center rounded-full px-3 py-1 text-sm font-bold tabular-nums tracking-tight",
+            tone.chip,
+          )}
+        >
+          {pct(score)}
+        </span>
+      </div>
+    </div>
+  )
+}
+
+function BreakdownPanel({ r }: { r: GameResultRow }) {
+  const overall = Number(r.global_score)
+
+  return (
+    <div className="space-y-8">
+      <section
+        className={cn(
+          "rounded-2xl border bg-gradient-to-br p-6 shadow-sm",
+          "from-muted/40 via-background to-muted/20",
+          "border-border/80 ring-1 ring-border/40",
+        )}
+      >
+        <p className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">Overall</p>
+        <p
+          className={cn(
+            "mt-2 text-4xl font-bold tabular-nums tracking-tight sm:text-5xl",
+            gameResultsScoreDisplayColorClass(overall),
+          )}
+        >
+          {pct(r.global_score)}
+        </p>
+        <p className="mt-3 max-w-prose text-sm leading-relaxed text-muted-foreground">
+          Combined average across all phases and sites for this session.
+        </p>
+      </section>
+
+      <section>
+        <h3 className="mb-1 text-xs font-bold tracking-widest text-muted-foreground uppercase">Phase averages</h3>
+        <p className="mb-3 text-xs text-muted-foreground">Percentage score averaged across the three sites.</p>
+        <div className="overflow-hidden rounded-xl border border-border/80 bg-card/50 shadow-sm">
+          <ScoreRow label="Phase 1 — Profile" score={r.phase1_avg == null ? null : Number(r.phase1_avg)} dense />
+          <ScoreRow label="Phase 2 — Categorize" score={r.phase2_avg == null ? null : Number(r.phase2_avg)} dense />
+          <ScoreRow label="Phase 0 — Review" score={r.phase0_avg == null ? null : Number(r.phase0_avg)} dense />
+          <ScoreRow label="Phase 3 — Prospect pool" score={r.phase3_avg == null ? null : Number(r.phase3_avg)} dense />
+          <ScoreRow label="Phase 4 — Treatment" score={r.phase4_avg == null ? null : Number(r.phase4_avg)} dense />
+        </div>
+      </section>
+
+      <section>
+        <h3 className="mb-1 text-xs font-bold tracking-widest text-muted-foreground uppercase">By site</h3>
+        <p className="mb-3 text-xs text-muted-foreground">Per-site composite score and scenario name.</p>
+        <div className="overflow-hidden rounded-xl border border-border/80 bg-card/50 shadow-sm">
+          <ScoreRow label="Site 1" score={r.site1_score == null ? null : Number(r.site1_score)} sublabel={r.site1_scenario} dense />
+          <ScoreRow label="Site 2" score={r.site2_score == null ? null : Number(r.site2_score)} sublabel={r.site2_scenario} dense />
+          <ScoreRow label="Site 3" score={r.site3_score == null ? null : Number(r.site3_score)} sublabel={r.site3_scenario} dense />
+        </div>
+      </section>
+
+      <section className="rounded-xl border border-dashed border-border/80 bg-muted/20 px-5 py-4">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <p className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">Session time</p>
+            <p className="mt-1 text-xs text-muted-foreground">Wall clock for the full run</p>
+          </div>
+          <p className="text-lg font-semibold tabular-nums text-foreground">{formatDuration(r.time_taken)}</p>
+        </div>
+      </section>
+    </div>
   )
 }
 
@@ -97,14 +199,26 @@ export function RunAnalyticsClient({ initialResults }: { initialResults: GameRes
         count: 0,
         best: null as number | null,
         average: null as number | null,
+        last5Average: null as number | null,
+        last5SampleSize: 0,
         avgTime: null as number | null,
       }
     }
     const scores = initialResults.map((r) => Number(r.global_score))
     const best = Math.max(...scores)
     const average = scores.reduce((a, b) => a + b, 0) / scores.length
+    const last5 = initialResults.slice(0, 5)
+    const last5Scores = last5.map((r) => Number(r.global_score))
+    const last5Average = last5Scores.reduce((a, b) => a + b, 0) / last5Scores.length
     const avgTime = initialResults.reduce((a, r) => a + r.time_taken, 0) / initialResults.length
-    return { count: initialResults.length, best, average, avgTime }
+    return {
+      count: initialResults.length,
+      best,
+      average,
+      last5Average,
+      last5SampleSize: last5.length,
+      avgTime,
+    }
   }, [initialResults])
 
   const cardClass =
@@ -120,7 +234,7 @@ export function RunAnalyticsClient({ initialResults }: { initialResults: GameRes
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
         <div className={cardClass}>
           <p className="text-xs font-medium text-muted-foreground uppercase">Runs recorded</p>
           <p className="mt-2 text-3xl font-bold tabular-nums text-foreground">{summary.count}</p>
@@ -136,6 +250,15 @@ export function RunAnalyticsClient({ initialResults }: { initialResults: GameRes
           <p className="mt-2 text-3xl font-bold tabular-nums text-foreground">
             {summary.average != null ? `${summary.average.toFixed(1)}%` : "—"}
           </p>
+        </div>
+        <div className={cardClass}>
+          <p className="text-xs font-medium text-muted-foreground uppercase">Last 5 runs avg</p>
+          <p className="mt-2 text-3xl font-bold tabular-nums text-foreground">
+            {summary.last5Average != null ? `${summary.last5Average.toFixed(1)}%` : "—"}
+          </p>
+          {summary.last5SampleSize > 0 && summary.last5SampleSize < 5 ? (
+            <p className="mt-2 text-xs leading-snug text-muted-foreground">Based on {summary.last5SampleSize} run(s)</p>
+          ) : null}
         </div>
         <div className={cardClass}>
           <p className="text-xs font-medium text-muted-foreground uppercase">Avg. session time</p>
@@ -178,7 +301,8 @@ export function RunAnalyticsClient({ initialResults }: { initialResults: GameRes
               <Tooltip content={<RunTooltip />} cursor={{ strokeDasharray: "3 3" }} />
               <Scatter
                 data={chartData}
-                fill="hsl(var(--primary))"
+                fill={SEA_WOLF_TEAL}
+                fillOpacity={CHART_POINT_OPACITY}
                 shape={(props: unknown) => {
                   const { cx, cy, payload } = props as { cx?: number; cy?: number; payload?: ChartPoint }
                   if (cx == null || cy == null || !payload) return <g />
@@ -187,9 +311,10 @@ export function RunAnalyticsClient({ initialResults }: { initialResults: GameRes
                       cx={cx}
                       cy={cy}
                       r={7}
-                      fill="hsl(var(--primary))"
-                      stroke="hsl(var(--background))"
-                      strokeWidth={2}
+                      fill={SEA_WOLF_TEAL}
+                      fillOpacity={CHART_POINT_OPACITY}
+                      stroke="rgba(42, 168, 160, 0.55)"
+                      strokeWidth={1.5}
                       className="cursor-pointer"
                       onClick={() => setSelected(payload)}
                     />
@@ -203,17 +328,26 @@ export function RunAnalyticsClient({ initialResults }: { initialResults: GameRes
       )}
 
       <Sheet open={selected != null} onOpenChange={(open) => !open && setSelected(null)}>
-        <SheetContent className="w-full overflow-y-auto sm:max-w-md">
+        <SheetContent className="w-full gap-0 border-l border-border/60 bg-background/95 p-0 shadow-2xl backdrop-blur-md sm:max-w-md">
           {selected ? (
-            <>
-              <SheetHeader>
-                <SheetTitle>Run breakdown</SheetTitle>
-                <SheetDescription>{new Date(selected.played_at).toLocaleString()}</SheetDescription>
+            <div className="flex h-full flex-col">
+              <SheetHeader className="space-y-2 border-b border-border/60 bg-muted/30 px-6 py-6 text-left">
+                <SheetTitle className="text-xl font-bold tracking-tight text-foreground">Run breakdown</SheetTitle>
+                <SheetDescription className="text-sm leading-relaxed text-muted-foreground">
+                  {new Date(selected.played_at).toLocaleString(undefined, {
+                    weekday: "short",
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                    hour: "numeric",
+                    minute: "2-digit",
+                  })}
+                </SheetDescription>
               </SheetHeader>
-              <div className="mt-6">
-                <BreakdownTable r={selected} />
+              <div className="min-h-0 flex-1 overflow-y-auto px-6 py-8">
+                <BreakdownPanel r={selected} />
               </div>
-            </>
+            </div>
           ) : null}
         </SheetContent>
       </Sheet>

@@ -497,13 +497,13 @@ TIER_RECIPES = {
         ("any_non_undesired",  "near1"),  # tight near-optimal bait
     ],
     "hadal": [
-        ("undesired",          "in"),     # trait trap
+        ("undesired",          "in"),     # trait trap — in-range attrs, wrong trait
         ("undesired",          "in"),     # 2nd trait trap
         ("desired",            "near1"),  # tight desired anchor
         ("desired",            "near1"),  # 2nd tight desired anchor
-        ("any_non_undesired",  "in"),     # fully in-range bait
-        ("any_non_undesired",  "in"),     # fully in-range bait
-        ("any_non_undesired",  "in"),     # fully in-range bait
+        ("any_non_undesired",  "near1"),  # near-range bait (±1 — almost in-range)
+        ("any_non_undesired",  "near1"),  # near-range bait
+        ("any_non_undesired",  "near1"),  # near-range bait
     ],
 
     # max=60 dedicated recipe.
@@ -534,7 +534,7 @@ def sample_trait(trait_spec: str, sc: dict) -> str:
 
 
 def build_pool(sc: dict, target_max: int, tier: str,
-               max_outer: int = 200, max_inner: int = 150) -> Optional[dict]:
+               max_outer: int = 80, max_inner: int = 80) -> Optional[dict]:
     # max=60 requires its own recipe regardless of requested tier —
     # only undesired+far distractors can satisfy the no_new_optimal constraint.
     if target_max == 60:
