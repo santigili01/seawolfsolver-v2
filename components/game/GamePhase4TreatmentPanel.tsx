@@ -28,6 +28,7 @@ import {
   traitIcon,
 } from "@/lib/game-visuals"
 import { GameHelpModal } from "@/components/game/GameHelpModal"
+import { SimulatorScaleStage } from "@/components/game/SimulatorScaleStage"
 import type { PhaseBehaviourData } from "@/lib/behavioural-scoring"
 import {
   GAME_HELPER_CARD_CLASS,
@@ -209,6 +210,7 @@ export function GamePhase4TreatmentPanel({
       </div>
 
       <div className={GAME_MAIN_PANEL_FLOW_TEAL_CLASS}>
+        <SimulatorScaleStage designWidth={880} className="min-h-0 flex-1">
         <div className="relative z-10 flex w-full flex-col items-stretch">
           {/* Same width as one tray column; compact SlotAttributeRow layout; slightly taller than tray rows. */}
           <div className="flex w-full justify-center gap-3">
@@ -246,7 +248,7 @@ export function GamePhase4TreatmentPanel({
                     <div className="flex h-16 w-16 shrink-0 items-center justify-center [&>svg]:block [&>svg]:h-full [&>svg]:w-full [&>svg]:max-h-full [&>svg]:max-w-full">
                       <Svg color={col} />
                     </div>
-                    <p className="line-clamp-2 w-full text-center text-[14px] font-bold leading-tight text-gray-800">{sel.name}</p>
+                    <p className="line-clamp-2 w-full text-center text-sm font-bold leading-tight text-gray-800 sm:text-base">{sel.name}</p>
                     <div className="flex w-full flex-col items-center text-center">
                       <SlotAttributeRow Mobility={sel.Mobility} Agility={sel.Agility} Size={sel.Size} />
                       <SlotTraitBadge trait={sel.trait} />
@@ -260,7 +262,7 @@ export function GamePhase4TreatmentPanel({
             type="button"
             disabled={selected.length !== 3}
             onClick={submit}
-            className={`mt-3 self-center rounded-lg px-5 py-1.5 text-sm font-medium transition-all ${
+            className={`mt-3 self-center rounded-lg px-5 py-2 text-base font-medium transition-all ${
               selected.length === 3
                 ? "cursor-pointer bg-[rgba(20,30,50,0.9)] text-white hover:bg-[rgba(30,40,60,0.95)]"
                 : "cursor-not-allowed bg-gray-500/50 text-gray-300"
@@ -297,10 +299,10 @@ export function GamePhase4TreatmentPanel({
                   className="flex min-h-[168px] h-auto w-full min-w-0 cursor-pointer flex-col rounded-lg border-2 border-[#d1d5db] bg-white p-2 text-left shadow-md transition-all hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
                   onClick={() => togglePick(microbe)}
                 >
-                  <div className="mb-0.5 w-full text-center text-[11px] font-bold leading-tight text-gray-800 line-clamp-2">
+                  <div className="mb-0.5 w-full text-center text-xs font-bold leading-tight text-gray-800 sm:text-sm line-clamp-2">
                     {microbe.name}
                   </div>
-                  <div className="flex max-h-[52px] min-h-[52px] shrink-0 items-center justify-center [&>svg]:max-h-[52px] [&>svg]:max-w-[52px]">
+                  <div className="flex max-h-[56px] min-h-[56px] shrink-0 items-center justify-center [&>svg]:max-h-[56px] [&>svg]:max-w-[56px]">
                     <MicrobeSvg color={blobColor} />
                   </div>
                   <div className="mt-auto flex w-full min-w-0 items-center justify-between gap-1">
@@ -312,6 +314,7 @@ export function GamePhase4TreatmentPanel({
             })}
           </div>
         </div>
+        </SimulatorScaleStage>
       </div>
 
       <div className={GAME_KEY_PANEL_OUTER_CLASS}>

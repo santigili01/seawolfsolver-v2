@@ -623,12 +623,12 @@ export function MicrobeAttributeRow({
 
   return (
     <div
-      className={`flex min-w-0 items-center gap-1.5 text-[12px] leading-none sm:gap-2 ${layout === "nowrap" ? "flex-nowrap" : "flex-wrap"}`}
+      className={`flex min-w-0 items-center gap-1.5 text-sm leading-none sm:gap-2 ${layout === "nowrap" ? "flex-nowrap" : "flex-wrap"}`}
     >
       {statWithTooltip(
         "Mobility",
         Mobility,
-        <svg className="h-3.5 w-3.5 shrink-0 text-gray-500" viewBox="0 0 16 16" fill="currentColor">
+        <svg className="h-4 w-4 shrink-0 text-gray-500" viewBox="0 0 16 16" fill="currentColor">
           <rect x="1" y="1" width="4" height="4" />
           <rect x="6" y="1" width="4" height="4" />
           <rect x="11" y="1" width="4" height="4" />
@@ -644,7 +644,7 @@ export function MicrobeAttributeRow({
       {statWithTooltip(
         "Agility",
         Agility,
-        <svg className="h-3.5 w-3.5 shrink-0 text-yellow-500" viewBox="0 0 16 16" fill="currentColor">
+        <svg className="h-4 w-4 shrink-0 text-yellow-500" viewBox="0 0 16 16" fill="currentColor">
           <path d="M9 1L4 9h4l-1 6 5-8H8l1-6z" />
         </svg>,
         "Agility",
@@ -652,7 +652,7 @@ export function MicrobeAttributeRow({
       {statWithTooltip(
         "Size",
         Size,
-        <svg className="h-3.5 w-3.5 shrink-0 text-blue-400" viewBox="0 0 16 16" fill="currentColor">
+        <svg className="h-4 w-4 shrink-0 text-blue-400" viewBox="0 0 16 16" fill="currentColor">
           <path d="M1 15L1 1L15 15H1Z" opacity="0.6" />
           <path d="M1 1L15 15" stroke="currentColor" strokeWidth="1.5" fill="none" />
         </svg>,
@@ -688,10 +688,10 @@ export function SlotAttributeRow({
       <span className="font-bold tabular-nums text-gray-800">{value}</span>
     )
   return (
-    <div className="flex w-full flex-col gap-1 px-2 text-[12px] leading-none">
+    <div className="flex w-full flex-col gap-1 px-2 text-sm leading-none">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1">
-          <svg className="size-[13px] shrink-0 text-gray-500" viewBox="0 0 16 16" fill="currentColor">
+          <svg className="h-4 w-4 shrink-0 text-gray-500" viewBox="0 0 16 16" fill="currentColor">
             <rect x="1" y="1" width="4" height="4" />
             <rect x="6" y="1" width="4" height="4" />
             <rect x="11" y="1" width="4" height="4" />
@@ -708,7 +708,7 @@ export function SlotAttributeRow({
       </div>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1">
-          <svg className="size-[13px] shrink-0 text-yellow-500" viewBox="0 0 16 16" fill="currentColor">
+          <svg className="h-4 w-4 shrink-0 text-yellow-500" viewBox="0 0 16 16" fill="currentColor">
             <path d="M9 1L4 9h4l-1 6 5-8H8l1-6z" />
           </svg>
           <span className="text-gray-600">Agility</span>
@@ -717,7 +717,7 @@ export function SlotAttributeRow({
       </div>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1">
-          <svg className="size-[13px] shrink-0 text-blue-400" viewBox="0 0 16 16" fill="currentColor">
+          <svg className="h-4 w-4 shrink-0 text-blue-400" viewBox="0 0 16 16" fill="currentColor">
             <path d="M1 15L1 1L15 15H1Z" opacity="0.6" />
             <path d="M1 1L15 15" stroke="currentColor" strokeWidth="1.5" fill="none" />
           </svg>

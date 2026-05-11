@@ -23,6 +23,7 @@ import {
 } from "@/lib/game-visuals"
 import { traitColor } from "@/lib/game-helpers"
 import { GameHelpModal } from "@/components/game/GameHelpModal"
+import { SimulatorScaleStage } from "@/components/game/SimulatorScaleStage"
 import type { PhaseBehaviourData } from "@/lib/behavioural-scoring"
 import {
   GAME_HELPER_CARD_CLASS,
@@ -222,6 +223,7 @@ export function GamePhase1ProfilingPanel({
       </div>
 
       <div className={GAME_MAIN_PANEL_FLOW_WHITE_CLASS}>
+        <SimulatorScaleStage designWidth={720} minScale={0.72} className="min-h-0 flex-1">
         <h2 className="mb-4 text-2xl font-bold text-gray-900">Characteristics</h2>
 
         <p className="mb-2 text-sm font-bold uppercase tracking-wide text-gray-600">Attributes</p>
@@ -319,6 +321,7 @@ export function GamePhase1ProfilingPanel({
             Confirm Selection
           </button>
         </div>
+        </SimulatorScaleStage>
       </div>
 
       <div className={GAME_KEY_PANEL_OUTER_CLASS}>

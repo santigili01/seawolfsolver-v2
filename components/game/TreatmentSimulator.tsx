@@ -491,14 +491,14 @@ export function TreatmentSimulator() {
             <div className={`mx-auto overflow-visible ${sectionCard}`}>
               {/* pt reserves space for absolutely positioned badges (top-[-12px]); overflow-x-auto clips vertical overflow without padding */}
               <div className="mt-2 overflow-x-auto px-1 pt-5 pb-2">
-                <div className="grid min-w-[720px] gap-4 sm:min-w-0 sm:gap-4 [grid-template-columns:repeat(5,1fr)]">
+                <div className="grid w-full min-w-0 grid-cols-2 gap-3 sm:grid-cols-5 sm:gap-4">
                   {Array.from({ length: GRID_SLOTS }, (__, idx) => {
                     const m = pool[idx]
                     if (!m) {
                       return (
                         <div
                           key={`treatment-opt-empty-${idx}`}
-                          className="min-h-[140px] w-full min-w-[140px] rounded-xl bg-gray-50"
+                          className="min-h-[140px] w-full min-w-0 rounded-xl bg-gray-50"
                           aria-hidden
                         />
                       )
@@ -508,7 +508,7 @@ export function TreatmentSimulator() {
                     return (
                       <div
                         key={m.id}
-                        className={`relative z-0 flex min-h-[140px] w-full min-w-[140px] flex-col overflow-visible rounded-xl border-2 bg-white p-2 shadow-md ${
+                        className={`relative z-0 flex min-h-[140px] w-full min-w-0 flex-col overflow-visible rounded-xl border-2 bg-white p-2 shadow-md ${
                           isOptimalMicrobe
                             ? "border-[#16a34a] bg-[#f0fdf4]"
                             : isPlayerSelected

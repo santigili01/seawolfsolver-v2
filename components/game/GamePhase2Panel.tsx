@@ -26,6 +26,7 @@ import {
 } from "@/lib/game-visuals"
 import { traitColor } from "@/lib/game-helpers"
 import { GameHelpModal } from "@/components/game/GameHelpModal"
+import { SimulatorScaleStage } from "@/components/game/SimulatorScaleStage"
 import type { PhaseBehaviourData } from "@/lib/behavioural-scoring"
 import {
   GAME_HELPER_CARD_CLASS,
@@ -288,7 +289,9 @@ export function GamePhase2Panel({
       </div>
 
       <div className={GAME_MAIN_PANEL_SPLIT_CLASS}>
-        <div className="flex w-[200px] shrink-0 flex-col overflow-y-auto pr-1">
+        <SimulatorScaleStage designWidth={920} minScale={0.62} className="flex min-h-0 min-w-0 flex-1 shrink">
+          <div className="flex h-full min-h-0 w-full flex-col gap-4 lg:flex-row lg:gap-6">
+        <div className="flex w-full shrink-0 flex-col overflow-y-auto pr-1 lg:w-[200px]">
           {reviewMode ? (
             <div className="flex flex-col gap-3">
               <p className="text-sm font-semibold text-gray-800">All microbes categorized.</p>
@@ -403,7 +406,7 @@ export function GamePhase2Panel({
           )}
         </div>
 
-        <div className="flex min-w-0 flex-1 gap-3 overflow-hidden">
+        <div className="flex min-w-0 flex-1 flex-col gap-3 overflow-y-auto lg:flex-row lg:gap-3 lg:overflow-hidden">
           {columnsPhase2.map((colDef) => (
             <div key={colDef.title} className="flex min-w-0 flex-1 flex-col rounded-lg border border-gray-200 bg-white/60 p-3">
               <div className="mb-3 flex flex-col gap-1 border-b border-gray-200 pb-2">
@@ -470,6 +473,8 @@ export function GamePhase2Panel({
             </div>
           ))}
         </div>
+          </div>
+        </SimulatorScaleStage>
       </div>
 
       <div className={GAME_KEY_PANEL_OUTER_CLASS}>

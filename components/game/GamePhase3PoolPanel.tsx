@@ -30,6 +30,7 @@ import {
   traitIcon,
 } from "@/lib/game-visuals"
 import { GameHelpModal } from "@/components/game/GameHelpModal"
+import { SimulatorScaleStage } from "@/components/game/SimulatorScaleStage"
 import type { PhaseBehaviourData } from "@/lib/behavioural-scoring"
 import {
   GAME_HELPER_CARD_CLASS,
@@ -220,6 +221,7 @@ export function GamePhase3PoolPanel({
       </div>
 
       <div className={GAME_MAIN_PANEL_P3_CLASS}>
+        <SimulatorScaleStage designWidth={880} className="min-h-0 flex-1">
         <div className="relative z-10 flex w-full flex-col items-stretch">
           {/* Same width as one bottom-grid column; compact SlotAttributeRow layout (not tray-style row). */}
           <div className="flex w-full justify-center gap-3">
@@ -246,10 +248,10 @@ export function GamePhase3PoolPanel({
                     isSelected ? "border-[#4ECDC4] bg-[#ecfdfb]" : "border-[#d1d5db]"
                   } ${anotherSelected ? "opacity-60" : "opacity-100"}`}
                 >
-                  <div className="mb-0.5 w-full shrink-0 px-0.5 pt-0.5 text-center text-[11px] font-bold leading-snug text-gray-800 line-clamp-2">
+                  <div className="mb-0.5 w-full shrink-0 px-0.5 pt-0.5 text-center text-xs font-bold leading-snug text-gray-800 sm:text-sm line-clamp-2">
                     {m.name}
                   </div>
-                  <div className="flex max-h-[48px] min-h-[48px] shrink-0 items-center justify-center [&>svg]:max-h-[48px] [&>svg]:max-w-[48px] [&>svg]:overflow-visible">
+                  <div className="flex max-h-[56px] min-h-[56px] shrink-0 items-center justify-center [&>svg]:max-h-[56px] [&>svg]:max-w-[56px] [&>svg]:overflow-visible">
                     <Svg color={blobColor} />
                   </div>
                   <div className="mt-auto flex w-full flex-col items-center gap-1 px-0.5">
@@ -264,7 +266,7 @@ export function GamePhase3PoolPanel({
             type="button"
             disabled={!pickId}
             onClick={confirmRound}
-            className={`mt-3 self-center rounded-lg px-5 py-1.5 text-sm font-medium ${
+            className={`mt-3 self-center rounded-lg px-5 py-2 text-base font-medium ${
               pickId ? "cursor-pointer bg-[rgba(20,30,50,0.9)] text-white hover:bg-[rgba(30,40,60,0.95)]" : "cursor-not-allowed bg-gray-500/50 text-gray-300"
             }`}
           >
@@ -292,7 +294,7 @@ export function GamePhase3PoolPanel({
                   key={m.id}
                   className="flex min-h-[168px] h-auto w-full min-w-0 cursor-default flex-col rounded-lg border-2 border-[#d1d5db] bg-white p-2 text-left shadow-md"
                 >
-                  <div className="mb-0.5 w-full text-center text-[11px] font-bold leading-tight text-gray-800 line-clamp-2">
+                  <div className="mb-0.5 w-full text-center text-xs font-bold leading-tight text-gray-800 sm:text-sm line-clamp-2">
                     {m.name}
                   </div>
                   <div className="flex max-h-[52px] min-h-[52px] shrink-0 items-center justify-center [&>svg]:max-h-[52px] [&>svg]:max-w-[52px]">
@@ -307,6 +309,7 @@ export function GamePhase3PoolPanel({
             })}
           </div>
         </div>
+        </SimulatorScaleStage>
       </div>
 
       <div className={GAME_KEY_PANEL_OUTER_CLASS}>

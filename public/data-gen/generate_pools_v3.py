@@ -108,7 +108,7 @@ SCENARIOS_COUNT     = 11
 BANDS               = ["beginner", "intermediate", "advanced", "hadal"]
 MAX_SCORE_VALUES    = [100, 80, 60]
 MAX_SCORE_FRACTIONS = {100: 0.50, 80: 0.30, 60: 0.20}
-PROGRESS_INTERVAL   = 2000
+PROGRESS_INTERVAL   = 200
 
 # ── H band boundaries ──────────────────────────────────────────────────────────
 # Calibrated against actual generation output with 1-optimal pools.
@@ -518,7 +518,7 @@ def sample_trait(trait_spec: str, sc: dict) -> str:
 
 
 def build_pool(sc: dict, target_max: int, tier: str,
-               max_outer: int = 5000, max_inner: int = 800) -> Optional[dict]:
+               max_outer: int = 200, max_inner: int = 150) -> Optional[dict]:
     """
     Adversarially build a pool with exactly 1 combo scoring target_max.
 
@@ -805,9 +805,13 @@ def generate_for_scenario(sc: dict, n_pools: int) -> dict:
             last_print = attempts
             missing = [b for b in BANDS if bf[b] < bq[b]]
             if missing:
-                print(f"  [{name}] *** still need: "
-                      + ", ".join(f"{b}({bq[b]-bf[b]})" for b in missing)
-                      + f"  attempts:{attempts}")
+                # Show which band is being targeted, which recipe/tier is being tried,
+                # and how many attempts have been spent on each band
+                band_now = choose_band_to_fill(bq, bf)
+                recipes_now = BAND_RECIPES[band_now]
+                print(f"  [{name}] --- {attempts} attempts | targeting: {band_now} "
+                      f"(recipes: {recipes_now}) | "
+                      + " | ".join(f"{b}:{bf[b]}/{bq[b]}" for b in BANDS))
 
     print(f"  [{name}] Done — {sum(bf.values())} pools in {attempts} attempts.")
     return found
