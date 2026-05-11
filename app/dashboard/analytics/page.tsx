@@ -1,18 +1,33 @@
 import type { Metadata } from "next"
+import { auth } from "@clerk/nextjs/server"
+import { redirect } from "next/navigation"
+import { RunAnalyticsClient } from "@/components/dashboard/run-analytics-client"
+import type { GameResultRow } from "@/lib/game-result-types"
+import { supabaseAdmin } from "@/utils/supabase/admin"
 
 export const metadata: Metadata = {
   title: "Analytics | SeaWolfPrep",
-  description: "Practice analytics coming soon.",
+  description: "Track your Sea Wolf full-session scores over time.",
 }
 
-export default function DashboardAnalyticsPage() {
-  return (
-    <main className="p-8">
-      <p className="text-xs tracking-widest text-gray-500 uppercase dark:text-gray-400">Analytics</p>
-      <h1 className="mt-2 text-3xl font-bold text-gray-900 dark:text-gray-100">Coming soon</h1>
-      <p className="mt-3 max-w-xl text-gray-600 dark:text-gray-300">
-        Run history, trends, and session analytics will appear here once persistence is enabled.
-      </p>
-    </main>
-  )
+export default async function DashboardAnalyticsPage() {
+  const { userId } = await auth()
+  if (!userId) {
+    redirect(`/sign-in?redirect_url=${encodeURIComponent("/dashboard/analytics")}`)
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from("game_results")
+    .select("*")
+    .eq("user_id", userId)
+    .order("played_at", { ascending: false })
+    .limit(200)
+
+  if (error) {
+    console.error("[dashboard/analytics]", error)
+  }
+
+  const initialResults = (data ?? []) as GameResultRow[]
+
+  return <RunAnalyticsClient initialResults={initialResults} />
 }

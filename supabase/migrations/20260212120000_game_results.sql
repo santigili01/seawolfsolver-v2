@@ -1,29 +1,6 @@
-create table if not exists public.users (
-  id text primary key,
-  email text not null,
-  created_at timestamptz default now()
-);
+-- Run this in Supabase SQL editor or via supabase db push.
+-- Persists full-session simulator scores (Clerk user id = public.users.id).
 
-create table if not exists public.purchases (
-  id uuid primary key default gen_random_uuid(),
-  user_id text not null references public.users(id),
-  variant_id text not null,
-  order_id text not null unique,
-  created_at timestamptz default now()
-);
-
-alter table public.users enable row level security;
-alter table public.purchases enable row level security;
-
-create policy "Service role full access to users"
-  on public.users for all
-  using (true);
-
-create policy "Service role full access to purchases"
-  on public.purchases for all
-  using (true);
-
--- See migrations/20260212120000_game_results.sql for full DDL; mirrored here for local reference.
 create table if not exists public.game_results (
   id uuid primary key default gen_random_uuid(),
   user_id text not null references public.users (id) on delete cascade,
@@ -47,6 +24,7 @@ create index if not exists game_results_user_played_idx on public.game_results (
 
 alter table public.game_results enable row level security;
 
+-- Matches existing pattern: service role bypasses RLS; app uses supabaseAdmin after Clerk auth.
 create policy "Service role full access to game_results"
   on public.game_results for all
   using (true)

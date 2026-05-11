@@ -12,6 +12,7 @@ import { GamePhase2Panel } from "@/components/game/GamePhase2Panel"
 import { GamePhase3PoolPanel } from "@/components/game/GamePhase3PoolPanel"
 import { GamePhase4TreatmentPanel } from "@/components/game/GamePhase4TreatmentPanel"
 import { GameResultsFull } from "@/components/game/GameResultsFull"
+import { PersistGameResultPost } from "@/components/game/PersistGameResultPost"
 import { computeBehaviouralScore, type PhaseBehaviourData } from "@/lib/behavioural-scoring"
 
 /** Full-session Sea Wolf flow: `/game` (all phases in one run). */
@@ -221,20 +222,23 @@ export default function FullGamePage() {
       totalElapsed,
     )
     return (
-      <GameResultsFull
-        gameScore={gameScore}
-        behaviouralScore={behaviouralScore}
-        totalSeconds={totalElapsed}
-        siteDetail={finishedSites.map((siteRow, ix) => ({
-          site: siteRow,
-          phase1Picks: p1SelectionsBySite[ix],
-          scenarios: cfg.scenarios[siteRow.siteNumber - 1]!,
-          treatmentPool: treatmentPoolsBySite[ix] ?? [],
-          catPoolMicrobes: ix === 0 ? cfg.catPool12.microbes : ix === 1 ? cfg.catPool23.microbes : cfg.catPoolSite3.microbes,
-          prospectChooseSets: ix === 0 ? cfg.prospectA.choose_sets : ix === 1 ? cfg.prospectB.choose_sets : cfg.prospectC.choose_sets,
-          revealedChar: ix === 0 ? cfg.catPool12.revealed_characteristic : ix === 1 ? cfg.catPool23.revealed_characteristic : null,
-        }))}
-      />
+      <>
+        <PersistGameResultPost gameScore={gameScore} />
+        <GameResultsFull
+          gameScore={gameScore}
+          behaviouralScore={behaviouralScore}
+          totalSeconds={totalElapsed}
+          siteDetail={finishedSites.map((siteRow, ix) => ({
+            site: siteRow,
+            phase1Picks: p1SelectionsBySite[ix],
+            scenarios: cfg.scenarios[siteRow.siteNumber - 1]!,
+            treatmentPool: treatmentPoolsBySite[ix] ?? [],
+            catPoolMicrobes: ix === 0 ? cfg.catPool12.microbes : ix === 1 ? cfg.catPool23.microbes : cfg.catPoolSite3.microbes,
+            prospectChooseSets: ix === 0 ? cfg.prospectA.choose_sets : ix === 1 ? cfg.prospectB.choose_sets : cfg.prospectC.choose_sets,
+            revealedChar: ix === 0 ? cfg.catPool12.revealed_characteristic : ix === 1 ? cfg.catPool23.revealed_characteristic : null,
+          }))}
+        />
+      </>
     )
   }
 

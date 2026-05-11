@@ -505,6 +505,22 @@ TIER_RECIPES = {
         ("any_non_undesired",  "in"),     # fully in-range bait
         ("any_non_undesired",  "in"),     # fully in-range bait
     ],
+
+    # max=60 dedicated recipe.
+    # For max=60 pools, the only valid distractor is undesired+far: any pair from the
+    # optimal triple (which scores 60 itself) + a plausible distractor would score ≥60,
+    # creating a second optimal. The only way to guarantee score < 60 with every pair
+    # is undesired trait (−20) + one attribute far out of range (−20 on that attr mean).
+    # The desired-trait invariant is satisfied by the optimal triple itself.
+    "max60": [
+        ("undesired",  "far"),   # undesired + 1 bad attr
+        ("undesired",  "far"),
+        ("undesired",  "far"),
+        ("undesired",  "far"),
+        ("undesired",  "far"),
+        ("undesired",  "far"),
+        ("undesired",  "far"),
+    ],
 }
 
 
@@ -519,6 +535,10 @@ def sample_trait(trait_spec: str, sc: dict) -> str:
 
 def build_pool(sc: dict, target_max: int, tier: str,
                max_outer: int = 200, max_inner: int = 150) -> Optional[dict]:
+    # max=60 requires its own recipe regardless of requested tier —
+    # only undesired+far distractors can satisfy the no_new_optimal constraint.
+    if target_max == 60:
+        tier = "max60"
     """
     Adversarially build a pool with exactly 1 combo scoring target_max.
 
@@ -547,11 +567,36 @@ def build_pool(sc: dict, target_max: int, tier: str,
             continue
 
         # ── Step 2: Adversarial distractor placement ──────────────────────────
-        placed = optimal.copy()
-        slot_ok = True
+        placed   = optimal.copy()
+        slot_ok  = True
 
         for trait_spec, style in recipe:
+            # Trait diversity enforcement:
+            # Count how many of each trait are already placed.
+            # If the requested trait would exceed the cap (4), swap to a missing trait
+            # where the recipe allows flexibility (any_non_undesired / neutral).
+            # Hard slots (desired, undesired) are kept as-is to preserve recipe intent.
+            trait_counts_now = {}
+            for m in placed:
+                trait_counts_now[m["trait"]] = trait_counts_now.get(m["trait"], 0) + 1
+
+            missing_traits = [t for t in TRAITS
+                              if trait_counts_now.get(t, 0) == 0]
             trait = sample_trait(trait_spec, sc)
+
+            # If this trait would hit the cap and there are missing traits to fill,
+            # and the slot is flexible (not a hard desired/undesired slot), substitute.
+            if (trait_counts_now.get(trait, 0) >= 4
+                    and missing_traits
+                    and trait_spec not in ("desired", "undesired")):
+                trait = random.choice(missing_traits)
+            # Also: if the slot is flexible and a trait is still missing after 8+ placed,
+            # force it in to guarantee all 4 traits appear.
+            elif (len(placed) >= 8
+                    and missing_traits
+                    and trait_spec not in ("desired", "undesired")):
+                trait = missing_traits[0]
+
             placed_distractor = False
 
             for inner in range(max_inner):
@@ -614,6 +659,18 @@ def build_pool(sc: dict, target_max: int, tier: str,
 
         if not has_undesired:
             continue  # Recipe guarantees undesired — if missing, something went wrong
+
+        # ── Step 4b: Trait diversity invariants ───────────────────────────────
+        # All 4 traits must appear at least once.
+        # No trait may appear more than 4 times (out of 10 microbes).
+        trait_counts = {}
+        for m in placed:
+            trait_counts[m["trait"]] = trait_counts.get(m["trait"], 0) + 1
+
+        if len(trait_counts) < 4:
+            continue  # At least one trait is missing entirely
+        if max(trait_counts.values()) > 4:
+            continue  # One trait dominates too much
 
         # ── Step 5: H score ───────────────────────────────────────────────────
         h_data     = compute_h(placed, cs, amax, sc)
@@ -762,11 +819,20 @@ def generate_for_scenario(sc: dict, n_pools: int) -> dict:
     while not quota_met():
         attempts += 1
 
+        # If max=60 quota is significantly behind, force it every other attempt
+        # to prevent the soft-quota weighting from deprioritising it entirely.
+        max60_deficit = max(0, mq.get(60, 0) - mf.get(60, 0))
+        total_deficit = sum(max(0, mq.get(ms,0)-mf.get(ms,0)) for ms in MAX_SCORE_VALUES)
+        force_max60   = max60_deficit > 0 and (
+            max60_deficit / max(1, total_deficit) > 0.4   # max60 is >40% of remaining quota
+            or attempts % 3 == 0                           # or every 3rd attempt as a pulse
+        )
+
         # Pick the band most behind, then sample from its candidate recipes
         band    = choose_band_to_fill(bq, bf)
         recipes = BAND_RECIPES[band]
         tier    = random.choice(recipes)
-        tmax    = choose_target_max(mq, mf)
+        tmax    = 60 if force_max60 else choose_target_max(mq, mf)
 
         result = build_pool(sc, tmax, tier)
         if result is None:
