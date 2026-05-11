@@ -25,7 +25,7 @@ import {
   microbeResultKey,
 } from "@/components/game/GameResultsFull"
 
-type DifficultyTier = "easy" | "medium" | "hard" | "hadal"
+type DifficultyTier = "easy" | "medium" | "hard" | "expert" | "hadal"
 
 type TreatmentPoolEntry = {
   pool_id: string
@@ -61,8 +61,13 @@ const DIFFICULTY_OPTIONS: {
     description: "Maximum score is 60. Multiple near-misses.",
   },
   {
+    tier: "expert",
+    label: "Expert",
+    description: "High difficulty pools; finding the best trio takes sharp tradeoffs.",
+  },
+  {
     tier: "hadal",
-    label: "Very Hard",
+    label: "Hadal",
     description: "Extreme difficulty. Near-perfect execution required.",
   },
 ]
@@ -84,6 +89,8 @@ function difficultyBadgeClasses(tier: DifficultyTier): string {
       return "bg-amber-100 text-amber-800"
     case "hard":
       return "bg-orange-100 text-orange-800"
+    case "expert":
+      return "bg-violet-100 text-violet-900"
     case "hadal":
       return "bg-red-100 text-red-800"
     default:
