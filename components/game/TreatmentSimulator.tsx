@@ -25,7 +25,7 @@ import {
   microbeResultKey,
 } from "@/components/game/GameResultsFull"
 
-type DifficultyTier = "easy" | "medium" | "hard" | "expert" | "hadal"
+type DifficultyTier = "beginner" | "intermediate" | "advanced" | "hadal"
 
 type TreatmentPoolEntry = {
   pool_id: string
@@ -46,29 +46,24 @@ const DIFFICULTY_OPTIONS: {
   description: string
 }[] = [
   {
-    tier: "easy",
-    label: "Easy",
-    description: "A clear optimal combination exists.",
+    tier: "beginner",
+    label: "Beginner",
+    description: "Lower difficulty score; the best trio is usually easier to spot.",
   },
   {
-    tier: "medium",
-    label: "Medium",
-    description: "Maximum score is 80. One near-miss guaranteed.",
+    tier: "intermediate",
+    label: "Intermediate",
+    description: "Balanced pools with more plausible wrong paths.",
   },
   {
-    tier: "hard",
-    label: "Hard",
-    description: "Maximum score is 60. Multiple near-misses.",
-  },
-  {
-    tier: "expert",
-    label: "Expert",
-    description: "High difficulty pools; finding the best trio takes sharp tradeoffs.",
+    tier: "advanced",
+    label: "Advanced",
+    description: "Tighter tradeoffs and trickier attribute and trait traps.",
   },
   {
     tier: "hadal",
     label: "Hadal",
-    description: "Extreme difficulty. Near-perfect execution required.",
+    description: "Hardest band — near-perfect reasoning under pressure.",
   },
 ]
 
@@ -83,14 +78,12 @@ const accentHeading = "border-l-4 border-[#4ECDC4] pl-3 text-lg font-bold text-[
 
 function difficultyBadgeClasses(tier: DifficultyTier): string {
   switch (tier) {
-    case "easy":
+    case "beginner":
       return "bg-emerald-100 text-emerald-800"
-    case "medium":
+    case "intermediate":
       return "bg-amber-100 text-amber-800"
-    case "hard":
+    case "advanced":
       return "bg-orange-100 text-orange-800"
-    case "expert":
-      return "bg-violet-100 text-violet-900"
     case "hadal":
       return "bg-red-100 text-red-800"
     default:
