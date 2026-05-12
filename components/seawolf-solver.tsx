@@ -1693,6 +1693,7 @@ export function SeawolfSolver() {
                         <span className="truncate text-[10px] font-semibold text-[#374151]">Desired</span>
                         <div className="flex h-6 w-14 items-center justify-center rounded-md border bg-white">
                           <Checkbox
+                            tabIndex={-1}
                             checked={microbeData.desirable[idx]}
                             onCheckedChange={(v) => handleCheckboxChange("desirable", idx, v === true)}
                           />
@@ -1702,6 +1703,7 @@ export function SeawolfSolver() {
                         <span className="truncate text-[10px] font-semibold text-[#374151]">Undesired</span>
                         <div className="flex h-6 w-14 items-center justify-center rounded-md border bg-white">
                           <Checkbox
+                            tabIndex={-1}
                             checked={microbeData.undesirable[idx]}
                             onCheckedChange={(v) => handleCheckboxChange("undesirable", idx, v === true)}
                           />
