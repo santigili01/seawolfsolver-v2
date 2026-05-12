@@ -1,9 +1,15 @@
 import Link from "next/link"
+import { cn } from "@/lib/utils"
+import {
+  SiteLogoMark,
+  SITE_BRAND_LOCKUP_ROOT_CLASS,
+  SITE_BRAND_WORDMARK_CLASS,
+} from "@/components/site-logo-mark"
 
 const topLinks = [
   { href: "#how-it-works", label: "How it Works" },
   { href: "#pricing", label: "Pricing" },
-  { href: "/simulator", label: "Free Demo" },
+  { href: "/sea-wolf-demo", label: "Free Demo" },
   { href: "mailto:contact@seawolfprep.com", label: "Contact" },
 ]
 
@@ -18,9 +24,12 @@ export function Footer() {
     <footer className="border-t border-border px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <div className="flex flex-col items-start justify-between gap-4 border-b border-border pb-5 sm:flex-row sm:items-center">
-          <Link href="/" className="flex items-center gap-2">
-            <span className="text-base">🧫</span>
-            <span className="text-lg font-bold text-foreground">SeaWolfPrep</span>
+          <Link
+            href="/"
+            className={cn("flex min-w-0 items-center gap-1", SITE_BRAND_LOCKUP_ROOT_CLASS)}
+          >
+            <SiteLogoMark />
+            <span className={cn(SITE_BRAND_WORDMARK_CLASS, "text-foreground")}>SeaWolfPrep</span>
           </Link>
           <div className="flex flex-wrap items-center gap-4">
             {topLinks.map((link) => (

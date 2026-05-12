@@ -4,10 +4,25 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
-export function Pricing() {
+export type PricingCTALinks = {
+  simulator: string
+  simulatorSolver: string
+}
+
+type PricingProps = {
+  /** Defaults both CTAs to `/pricing` (home anchor section). Pass Lemon/checkout URLs from `/pricing` server page. */
+  ctaLinks?: PricingCTALinks
+  /** Set false on standalone `/pricing` so `#pricing` is only on the home page */
+  sectionId?: string | false
+}
+
+export function Pricing({ ctaLinks, sectionId = "pricing" }: PricingProps) {
+  const simHref = ctaLinks?.simulator ?? "/pricing"
+  const bundleHref = ctaLinks?.simulatorSolver ?? "/pricing"
+
   return (
     <section
-      id="pricing"
+      {...(sectionId === false ? {} : { id: sectionId })}
       className="scroll-mt-20 px-4 py-16 sm:px-6 sm:py-24 lg:px-8"
     >
       <div className="mx-auto max-w-5xl">
@@ -50,7 +65,7 @@ export function Pricing() {
                 </li>
               </ul>
               <Button asChild className="mt-2 w-full">
-                <Link href="/pricing">Get Simulator — $15</Link>
+                <Link href={simHref}>Get Simulator — $15</Link>
               </Button>
             </CardContent>
           </Card>
@@ -83,7 +98,7 @@ export function Pricing() {
                 ))}
               </ul>
               <Button asChild className="mt-2 w-full bg-primary text-primary-foreground hover:bg-primary/90">
-                <Link href="/pricing">Get Simulator + Solver — $25</Link>
+                <Link href={bundleHref}>Get Simulator + Solver — $25</Link>
               </Button>
             </CardContent>
           </Card>
@@ -102,7 +117,7 @@ export function Pricing() {
           </p>
           <p className="mt-4 text-sm text-muted-foreground">
             Not ready to buy? Play one full Sea Wolf scenario free — no signup, full insights included.{" "}
-            <Link href="/simulator" className="font-medium text-primary hover:underline">
+            <Link href="/sea-wolf-demo" className="font-medium text-primary hover:underline">
               → Try Free Demo
             </Link>
           </p>

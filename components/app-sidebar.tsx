@@ -4,12 +4,17 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { LogOut } from "lucide-react"
 import { cn } from "@/lib/utils"
+import {
+  SiteLogoMark,
+  SITE_BRAND_WORDMARK_CLASS,
+} from "@/components/site-logo-mark"
 
 const navItems = [
+  { label: "Dashboard", href: "/dashboard", emoji: "📊" },
   { label: "Back to Home", href: "/", emoji: "🏠" },
-  { label: "AI Simulator", href: "/simulator", emoji: "🤖" },
+  { label: "Sea Wolf", href: "/practice/sea-wolf", emoji: "🎮" },
   { label: "Content", href: "/content", emoji: "📄" },
-  { label: "Solver", href: "/solver", emoji: "🔧" },
+  { label: "Solver", href: "/practice/solver", emoji: "🔧" },
 ]
 
 export function AppSidebar() {
@@ -18,9 +23,9 @@ export function AppSidebar() {
   return (
     <aside className="flex flex-col w-[220px] min-h-screen bg-sidebar border-r border-sidebar-border shadow-sm">
       {/* Logo */}
-      <div className="flex items-center gap-2 px-4 py-4">
-        <span className="text-lg" aria-hidden="true">🐺</span>
-        <span className="font-bold text-sidebar-foreground">[YOUR COMPANY NAME]</span>
+      <div className="flex min-w-0 items-center gap-1 px-4 py-4 text-[1.35rem] leading-none">
+        <SiteLogoMark />
+        <span className={cn(SITE_BRAND_WORDMARK_CLASS, "text-sidebar-foreground")}>SeaWolfPrep</span>
       </div>
 
       {/* Navigation */}
@@ -61,11 +66,11 @@ export function AppSidebar() {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-sidebar-foreground truncate">
-              seawolfsolver
+              seawolfprep
               <span className="ml-1 text-xs text-blue-300">⚡ Elite</span>
             </p>
             <p className="text-xs text-slate-300 truncate">
-              seawolfsolver@solveprep.com
+              support@seawolfprep.com
             </p>
           </div>
           <button className="p-1 text-slate-300 hover:text-white transition-colors">

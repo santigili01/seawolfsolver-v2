@@ -1,8 +1,18 @@
-import Link from 'next/link'
-import { currentUser } from '@clerk/nextjs/server'
-import { getCheckoutUrl } from '@/lib/checkout'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import type { Metadata } from "next"
+import { currentUser } from "@clerk/nextjs/server"
+import { AnnouncementBanner } from "@/components/landing/announcement-banner"
+import { Footer } from "@/components/landing/footer"
+import { Navbar } from "@/components/landing/navbar"
+import { Pricing } from "@/components/landing/pricing"
+import { getCheckoutUrl } from "@/lib/checkout"
+
+export const metadata: Metadata = {
+  title: "Pricing | SeaWolfPrep",
+  description:
+    "One-time payment, lifetime access. Practice the McKinsey Solve Sea Wolf assessment.",
+}
+
+const SIGN_IN_WITH_RETURN = "/sign-in?redirect_url=/pricing"
 
 export default async function PricingPage() {
   const user = await currentUser()
@@ -12,49 +22,19 @@ export default async function PricingPage() {
   const simulatorVariant = process.env.NEXT_PUBLIC_LMS_VARIANT_SIMULATOR!
   const simulatorSolverVariant = process.env.NEXT_PUBLIC_LMS_VARIANT_SIMULATOR_SOLVER!
 
-  const simulatorUrl =
-    userId && email ? getCheckoutUrl(simulatorVariant, userId, email) : '/sign-in'
-  const simulatorSolverUrl =
-    userId && email ? getCheckoutUrl(simulatorSolverVariant, userId, email) : '/sign-in'
+  const ctaLinks = {
+    simulator: userId && email ? getCheckoutUrl(simulatorVariant, userId, email) : SIGN_IN_WITH_RETURN,
+    simulatorSolver: userId && email ? getCheckoutUrl(simulatorSolverVariant, userId, email) : SIGN_IN_WITH_RETURN,
+  }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-[#4ECDC4] to-[#2BA8A0] px-4 py-16 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-5xl">
-        <div className="text-center text-white">
-          <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">Choose your access</h1>
-          <p className="mt-3 text-lg text-white/90">One-time payment. Lifetime access.</p>
-        </div>
-
-        <div className="mt-10 grid gap-6 md:grid-cols-2">
-          <Card className="rounded-xl border-white/50 bg-white shadow-lg">
-            <CardHeader className="space-y-2">
-              <CardTitle className="text-2xl">Simulator</CardTitle>
-              <p className="text-sm text-muted-foreground">Full Sea Wolf simulator access.</p>
-              <p className="text-4xl font-bold">$15</p>
-            </CardHeader>
-            <CardContent>
-              <Button asChild className="w-full">
-                <Link href={simulatorUrl}>Buy Now</Link>
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-xl border-white/50 bg-white shadow-lg">
-            <CardHeader className="space-y-2">
-              <CardTitle className="text-2xl">Simulator + Solver</CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Simulator plus advanced solver tools.
-              </p>
-              <p className="text-4xl font-bold">$25</p>
-            </CardHeader>
-            <CardContent>
-              <Button asChild className="w-full">
-                <Link href={simulatorSolverUrl}>Buy Now</Link>
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    </main>
+    <div className="min-h-screen bg-background">
+      <AnnouncementBanner />
+      <Navbar />
+      <main>
+        <Pricing ctaLinks={ctaLinks} sectionId={false} />
+      </main>
+      <Footer />
+    </div>
   )
 }

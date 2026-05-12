@@ -1,0 +1,151 @@
+# SeaWolfPrep — Cursor Rules
+
+## What This Is
+A commercial McKinsey Solve "Sea Wolf" training simulator and solver.
+Players practice all 4 game phases across 3 sites in a 30-minute session.
+
+**Live URL:** https://seawolfsolver-v2.vercel.app
+**Local path:** C:\Files\Projects\Sea Wolf Solver 2\
+**Stack:** Next.js 16 (app router), TypeScript, Tailwind CSS, pnpm
+
+---
+
+## File Structure (key files)
+
+```
+app/
+  practice/
+    layout.tsx            — practice shell + auth choke point + DashboardSidebar
+    page.tsx              — practice hub
+    sea-wolf/
+      page.tsx            — full Sea Wolf simulator (orchestrator; was app/game/page.tsx)
+    solver/
+      page.tsx            — solver shell (was app/solver/page.tsx)
+  page.tsx               — landing page (imports from components/landing/)
+  pricing/page.tsx
+  sign-in/, sign-up/
+
+components/
+  game/
+    GamePhase1ProfilingPanel.tsx
+    GamePhase2Panel.tsx
+    GamePhase0Panel.tsx
+    GamePhase3PoolPanel.tsx
+    GamePhase4TreatmentPanel.tsx
+    GameResultsFull.tsx
+  landing/               — landing page components
+  seawolf-solver.tsx     — full solver component (all 4 phases)
+
+lib/
+  game-scoring.ts        — ALL scoring logic. DO NOT MODIFY.
+  game-types.ts          — shared types and constants
+  game-helpers.ts        — pure helper functions
+  game-visuals.tsx       — shared visual components (microbe SVGs, badges, etc.)
+
+public/
+  scenarios.json
+  pools.json
+  phase2_pools.json      — Phase 3 (Prospect Pool) data. Naming is wrong, do NOT rename.
+  categorization_pools.json
+  data-gen/              — Python data generation scripts
+
+proxy.ts                 — Clerk middleware (Next.js 16 convention, not middleware.ts)
+```
+
+---
+
+## Infrastructure
+- **Auth:** Clerk — proxy.ts matches `/practice(.*)` (protect hook commented like before)
+- **Payments:** Lemon Squeezy — webhook at /api/webhooks/lemonsqueezy
+- **Database:** Supabase — users + purchases tables. Uses publishable/secret key naming (NOT anon/service_role)
+- **Hosting:** Vercel — auto-deploys from main branch
+
+---
+
+## Game Mechanics (Sea Wolf)
+
+3 sites per game, shared 30-minute timer. Each site has 4 phases + Phase 0 for sites 2 and 3:
+
+- **Phase 1 — Profiling:** Pick 2 characteristics (1 trait + 1 attribute). Scored on extremeness formula.
+- **Phase 2 — Categorization:** Assign 10 microbes to Current Site / Next Site / Return. Site 3 has no "Next Site" — those are remapped to Return via isLastSite flag.
+- **Phase 0 — Review:** Sites 2+3 only. Review previously tagged microbes with full site info. Keep or Return.
+- **Phase 3 — Prospect Pool:** 4 rounds of pick-1-of-3 candidates. Builds pool of 10 fed into Phase 4.
+- **Phase 4 — Treatment:** Pick 3 microbes from pool of 10. Score 0-100 based on 5 conditions (mean attributes in range + trait rules).
+
+**Scoring:** Each phase scores 0-100%. Global score = simple average across all phases/sites.
+
+**Phase 4 conditions (each worth 20pts):**
+1. Mean Mobility in range
+2. Mean Agility in range
+3. Mean Size in range
+4. At least 1 microbe has desired trait
+5. No microbe has undesired trait
+
+**Inviability rule:** `val+10+10 < 3*range_min` OR `val+1+1 > 3*range_max`
+
+---
+
+## Design System
+
+- Background: teal gradient `#4ECDC4` → `#2BA8A0`
+- Top bar: `#1a202c`
+- Cards: `bg-white rounded-xl border border-gray-200 shadow-sm`
+- Teal accent: `#4ECDC4`
+- Site info panel: yellow sticky note `#FFFDE7`
+- Trait colors: Thermophilic=#f97316, Metal-tolerant=#6366f1, Biofilm-forming=#10b981, Halophobic=#0ea5e9
+- Trait icons (lucide-react): Thermophilic=Flame, Metal-tolerant=Shield, Biofilm-forming=Layers, Halophobic=Droplets
+- Tooltip: uses onMouseEnter/Leave state — NOT CSS group (causes whole-card hover bug)
+
+**Landing page design:** Linear.app / Vercel / Stripe aesthetic. Primary CTA: `#2563eb`. Background: `#f0f4ff`.
+
+---
+
+## Critical Rules — Read Before Every Change
+
+1. **NEVER modify `lib/game-scoring.ts`** — all scoring logic lives here, it has 41 passing unit tests
+2. **Full Sea Wolf UI lives under `/practice/sea-wolf` + `components/game/*`** — do not resurrect duplicate phase routes under `app/simulator/`
+3. **DEV_MODE is `true` during development, must be `false` before launch** — it lives in `lib/game-helpers.ts`
+4. **`phase2_pools.json` contains Phase 3 data** — naming is a historical error, do not rename or change references
+5. **Never import from `app/practice/sea-wolf/page.tsx`** — it's a page file, not a module. Shared code lives in `lib/`
+6. **Microbe SVG uniqueness:** use `assignUniqueSvgIndices()` from `lib/game-helpers.ts` — never use position-based index
+7. **Phase 3→4 SVG consistency:** `p3SvgMap` is passed from Phase 3 to Phase 4 via `onComplete` prop
+8. **Site 3 Phase 2:** `isLastSite=true` remaps `correct_categorization.site2` → return. Do not remove this.
+9. **Supabase keys:** `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` and `SUPABASE_SECRET_KEY` (not anon/service_role)
+10. **Never name competitors** on the landing page — use implicit comparisons only
+
+---
+
+## Pricing (for landing page copy)
+- Free: 1 run, ungated, no signup
+- Simulator: $15 lifetime
+- Simulator + Solver: $25 lifetime
+- Never say "prices increase as we grow" — say "Launch pricing — limited time"
+- Both simulator AND solver cover all 4 phases
+
+---
+
+## What's Built / What's Pending
+
+**Done:**
+- Full /game with all phases, 3 sites, timer, scoring, results screen
+- Clerk auth + Lemon Squeezy payments + Supabase purchase tracking
+- /solver with all 4 phases (manual input, no scenario selection)
+- /pricing page
+- Landing page (in progress)
+- Microbe SVG uniqueness system
+- Phase 3 context-aware feedback
+- Phase 2 reassign buttons + review step
+- Phase 0 reassign + review step
+- Phase 1 confirmation modal
+- Site 3 Phase 2 isLastSite fix
+- game/page.tsx refactored into components/game/ + lib/ files
+
+**Pending:**
+- DEV_MODE = false (last thing before launch)
+- Behavioural scoring system (in design — DO NOT implement fake version)
+- Landing page polish
+- Domain purchase (seawolfprep.com)
+- Terms/Privacy + cookie banner
+- Vercel Analytics
+- Phase instruction text rewrite (copied from McKinsey, needs rewording)
+- Node.js heap limit set to 8192mb in package.json dev script
