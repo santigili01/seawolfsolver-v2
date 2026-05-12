@@ -33,8 +33,8 @@ export function DashboardSidebar({
   return (
     <aside className="flex w-64 shrink-0 flex-col border-r border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
       <div className="p-4">
-        <div className={cn("mb-8 flex flex-col gap-1", SITE_BRAND_LOCKUP_ROOT_CLASS)}>
-          <SiteLogoMark className="self-start" />
+        <div className={cn("mb-8 flex min-w-0 items-center gap-1", SITE_BRAND_LOCKUP_ROOT_CLASS)}>
+          <SiteLogoMark />
           <span className={cn(SITE_BRAND_WORDMARK_CLASS, "text-gray-900 dark:text-gray-100")}>
             SeaWolfPrep
           </span>

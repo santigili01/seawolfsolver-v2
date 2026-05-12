@@ -1,6 +1,4 @@
-import { BarChart3, Target, Trophy } from "lucide-react"
 import { GameCard } from "@/components/practice/game-card"
-import { StatCard } from "@/components/practice/stat-card"
 
 export function PracticeHub() {
   return (
@@ -11,24 +9,6 @@ export function PracticeHub() {
         Practice with realistic simulators designed to match the McKinsey Solve
         assessment. Each game targets different skills.
       </p>
-
-      <div className="mt-8 grid gap-4 sm:grid-cols-3">
-        <StatCard
-          icon={<BarChart3 className="h-5 w-5 text-amber-700" />}
-          label="Total Runs"
-          value="0"
-        />
-        <StatCard
-          icon={<Target className="h-5 w-5 text-amber-700" />}
-          label="Sea Wolf Best"
-          value="—"
-        />
-        <StatCard
-          icon={<Trophy className="h-5 w-5 text-amber-700" />}
-          label="Solver Sessions"
-          value="0"
-        />
-      </div>
 
       <p className="mt-10 text-xs tracking-widest text-gray-500 uppercase">START A RUN</p>
       <h2 className="mt-2 text-2xl font-bold text-gray-900">Games &amp; Tools</h2>

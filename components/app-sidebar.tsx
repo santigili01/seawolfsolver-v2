@@ -6,7 +6,6 @@ import { LogOut } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
   SiteLogoMark,
-  SITE_BRAND_LOCKUP_ROOT_CLASS,
   SITE_BRAND_WORDMARK_CLASS,
 } from "@/components/site-logo-mark"
 
@@ -24,8 +23,8 @@ export function AppSidebar() {
   return (
     <aside className="flex flex-col w-[220px] min-h-screen bg-sidebar border-r border-sidebar-border shadow-sm">
       {/* Logo */}
-      <div className={cn("flex flex-col gap-1 px-4 py-4", SITE_BRAND_LOCKUP_ROOT_CLASS)}>
-        <SiteLogoMark className="self-start" />
+      <div className="flex min-w-0 items-center gap-1 px-4 py-4 text-[1.35rem] leading-none">
+        <SiteLogoMark />
         <span className={cn(SITE_BRAND_WORDMARK_CLASS, "text-sidebar-foreground")}>SeaWolfPrep</span>
       </div>
 
