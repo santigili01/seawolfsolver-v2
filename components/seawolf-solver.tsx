@@ -1301,20 +1301,22 @@ export function SeawolfSolver() {
                         className="border-2 border-[#94a3b8]"
                       />
                     </div>
-                    <div className="mt-2 flex gap-3 text-xs">
+                    <div className="mt-2 flex items-center justify-between gap-2 text-xs">
                       <label className="flex items-center gap-1">
                         <Checkbox
+                          tabIndex={-1}
                           checked={m.desired}
                           onCheckedChange={(v) => updateP3Candidate("pre", 0, idx, "desired", v === true)}
                         />
-                        Desired
+                        Desired trait
                       </label>
-                      <label className="flex items-center gap-1">
+                      <label className="flex shrink-0 items-center gap-1">
                         <Checkbox
+                          tabIndex={-1}
                           checked={m.undesired}
                           onCheckedChange={(v) => updateP3Candidate("pre", 0, idx, "undesired", v === true)}
                         />
-                        Undesired
+                        Undesired trait
                       </label>
                     </div>
                   </div>
@@ -1390,24 +1392,26 @@ export function SeawolfSolver() {
                                   className="border-2 border-[#94a3b8]"
                                 />
                               </div>
-                              <div className="mt-2 flex gap-3 text-xs">
+                              <div className="mt-2 flex items-center justify-between gap-2 text-xs">
                                 <label className="flex items-center gap-1">
                                   <Checkbox
+                                    tabIndex={-1}
                                     checked={cand.desired}
                                     onCheckedChange={(v) =>
                                       updateP3Candidate("round", roundIdx, candIdx, "desired", v === true)
                                     }
                                   />
-                                  Desired
+                                  Desired trait
                                 </label>
-                                <label className="flex items-center gap-1">
+                                <label className="flex shrink-0 items-center gap-1">
                                   <Checkbox
+                                    tabIndex={-1}
                                     checked={cand.undesired}
                                     onCheckedChange={(v) =>
                                       updateP3Candidate("round", roundIdx, candIdx, "undesired", v === true)
                                     }
                                   />
-                                  Undesired
+                                  Undesired trait
                                 </label>
                               </div>
                               {solvedCard ? (
@@ -1690,7 +1694,7 @@ export function SeawolfSolver() {
                         )
                       })}
                       <div className="grid grid-cols-[1fr_auto] items-center gap-1">
-                        <span className="truncate text-[10px] font-semibold text-[#374151]">Desired</span>
+                        <span className="truncate text-[10px] font-semibold text-[#374151]">Desired trait</span>
                         <div className="flex h-6 w-14 items-center justify-center rounded-md border bg-white">
                           <Checkbox
                             tabIndex={-1}
@@ -1700,7 +1704,7 @@ export function SeawolfSolver() {
                         </div>
                       </div>
                       <div className="grid grid-cols-[1fr_auto] items-center gap-1">
-                        <span className="truncate text-[10px] font-semibold text-[#374151]">Undesired</span>
+                        <span className="truncate text-[10px] font-semibold text-[#374151]">Undesired trait</span>
                         <div className="flex h-6 w-14 items-center justify-center rounded-md border bg-white">
                           <Checkbox
                             tabIndex={-1}

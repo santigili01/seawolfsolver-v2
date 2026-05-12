@@ -15,28 +15,28 @@ export function PracticeHub() {
 
       <div className="mt-4 grid max-w-5xl gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <GameCard
-          badge={{ label: "Available", tone: "green" }}
           title="Sea Wolf"
           subtitle="30 MINUTES"
-          description="Full 4-phase simulation across 3 sites. Tests pattern recognition and decision-making under time pressure."
+          description="Full 4-phase simulation across 3 sites. Mimicks the real McKinsey assessment."
           href="/practice/sea-wolf"
-          cta="Play"
+          cta="Practice"
+          thumbnailSrc="/thumbnail-sea-wolf.png"
         />
         <GameCard
-          badge={{ label: "Phase 4", tone: "blue" }}
-          title="Treatment Practice"
-          subtitle="STANDALONE · PHASE 4"
-          description="Drill the treatment selection phase in isolation. Choose your difficulty and find the optimal microbe combination."
+          title="Sea Wolf (Treatment Practice)"
+          subtitle="10 MINUTES · STANDALONE"
+          description="Drill Phase 4 (Treatment) in isolation. Choose your difficulty."
           href="/practice/sea-wolf-treatment"
           cta="Practice"
+          thumbnailSrc="/thumbnail-treatment.png"
         />
         <GameCard
-          badge={{ label: "Tool", tone: "gray" }}
           title="Sea Wolf Solver"
           subtitle="TOOL"
-          description="Manual-input solver for all 4 phases. Use it alongside the real assessment."
+          description="Manual-input solver for all 4 phases. Always get the perfect score."
           href="/practice/solver"
           cta="Open"
+          thumbnailSrc="/thumbnail-solver.png"
         />
       </div>
     </main>
