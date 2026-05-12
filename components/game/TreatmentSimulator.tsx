@@ -24,6 +24,7 @@ import {
   gameResultsScoreDisplayColorClass,
   microbeResultKey,
 } from "@/components/game/GameResultsFull"
+import { PersistTreatmentResultPost } from "@/components/game/PersistTreatmentResultPost"
 
 type DifficultyTier = "beginner" | "intermediate" | "advanced" | "hadal"
 
@@ -318,6 +319,11 @@ export function TreatmentSimulator() {
 
     return (
       <div className="min-h-screen w-full bg-[#f8fffe] text-gray-900">
+        <PersistTreatmentResultPost
+          phase4={p4}
+          scenarioDisplayName={scenarioName ?? req.name}
+          elapsedSeconds={treatmentElapsedSeconds}
+        />
         <header className="fixed top-0 right-0 left-0 z-40 flex h-14 shrink-0 items-center justify-between gap-3 bg-[rgba(20,30,50,0.9)] px-4 sm:px-6">
           <div className="min-w-0 shrink">
             <h1 className="truncate text-lg font-bold text-white sm:text-xl">Treatment Complete!</h1>

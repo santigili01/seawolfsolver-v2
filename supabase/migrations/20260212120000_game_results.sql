@@ -5,6 +5,7 @@ create table if not exists public.game_results (
   id uuid primary key default gen_random_uuid(),
   user_id text not null references public.users (id) on delete cascade,
   played_at timestamptz not null default now(),
+  game_type text not null default 'sea_wolf',
   global_score numeric not null,
   time_taken integer not null,
   phase1_avg numeric,

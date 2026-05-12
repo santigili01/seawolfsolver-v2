@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import {
   CartesianGrid,
   ResponsiveContainer,
@@ -12,18 +12,45 @@ import {
 } from "recharts"
 import type { GameResultRow } from "@/lib/game-result-types"
 import {
+  GAME_RESULT_GAME_TYPES,
+  gameResultGameTypeLabels,
+  type GameResultGameType,
+} from "@/lib/game-result-types"
+import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 import { gameResultsScoreDisplayColorClass } from "@/components/game/GameResultsFull"
 
 /** Brand teal used across Sea Wolf / practice surfaces */
 const SEA_WOLF_TEAL = "#4ECDC4"
 const CHART_POINT_OPACITY = 0.8
+
+const VALID_GAME_TYPES = new Set<string>(GAME_RESULT_GAME_TYPES)
+
+/** Rows from older API responses may omit `game_type`; treat as full Sea Wolf. */
+function normalizeRowGameType(r: GameResultRow): GameResultGameType {
+  const t = r.game_type as string | undefined
+  if (t && VALID_GAME_TYPES.has(t)) return t as GameResultGameType
+  return "sea_wolf"
+}
+
+function gameTypeLabel(t: string): string {
+  return t in gameResultGameTypeLabels
+    ? gameResultGameTypeLabels[t as GameResultGameType]
+    : t
+}
 
 type ChartPoint = GameResultRow & { x: number; y: number }
 
@@ -69,6 +96,7 @@ function RunTooltip({ active, payload }: { active?: boolean; payload?: { payload
   return (
     <div className="rounded-lg border border-border bg-card px-3 py-2 text-xs shadow-md">
       <p className="font-semibold text-foreground">{new Date(r.played_at).toLocaleString()}</p>
+      <p className="mt-0.5 text-[11px] text-muted-foreground">{gameTypeLabel(r.game_type)}</p>
       <p className="mt-1 text-muted-foreground">
         Overall: <span className="font-medium text-foreground">{pct(r.global_score, 1)}</span>
       </p>
@@ -141,13 +169,19 @@ function BreakdownPanel({ r }: { r: GameResultRow }) {
           {pct(r.global_score)}
         </p>
         <p className="mt-3 max-w-prose text-sm leading-relaxed text-muted-foreground">
-          Combined average across all phases and sites for this session.
+          {normalizeRowGameType(r) === "treatment"
+            ? "Phase 4 treatment score for this single-site session (same % as site 1 below)."
+            : "Combined average across all phases and sites for this session."}
         </p>
       </section>
 
       <section>
         <h3 className="mb-1 text-xs font-bold tracking-widest text-muted-foreground uppercase">Phase averages</h3>
-        <p className="mb-3 text-xs text-muted-foreground">Percentage score averaged across the three sites.</p>
+        <p className="mb-3 text-xs text-muted-foreground">
+          {normalizeRowGameType(r) === "treatment"
+            ? "Treatment mode records phase 4 only; other phases are not applicable."
+            : "Percentage score averaged across the three sites."}
+        </p>
         <div className="overflow-hidden rounded-xl border border-border/80 bg-card/50 shadow-sm">
           <ScoreRow label="Phase 1 — Profile" score={r.phase1_avg == null ? null : Number(r.phase1_avg)} dense />
           <ScoreRow label="Phase 2 — Categorize" score={r.phase2_avg == null ? null : Number(r.phase2_avg)} dense />
@@ -159,7 +193,11 @@ function BreakdownPanel({ r }: { r: GameResultRow }) {
 
       <section>
         <h3 className="mb-1 text-xs font-bold tracking-widest text-muted-foreground uppercase">By site</h3>
-        <p className="mb-3 text-xs text-muted-foreground">Per-site composite score and scenario name.</p>
+        <p className="mb-3 text-xs text-muted-foreground">
+          {normalizeRowGameType(r) === "treatment"
+            ? "Single site (site 1); sites 2–3 are not part of this mode."
+            : "Per-site composite score and scenario name."}
+        </p>
         <div className="overflow-hidden rounded-xl border border-border/80 bg-card/50 shadow-sm">
           <ScoreRow label="Site 1" score={r.site1_score == null ? null : Number(r.site1_score)} sublabel={r.site1_scenario} dense />
           <ScoreRow label="Site 2" score={r.site2_score == null ? null : Number(r.site2_score)} sublabel={r.site2_scenario} dense />
@@ -171,7 +209,11 @@ function BreakdownPanel({ r }: { r: GameResultRow }) {
         <div className="flex items-center justify-between gap-4">
           <div>
             <p className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">Session time</p>
-            <p className="mt-1 text-xs text-muted-foreground">Wall clock for the full run</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {normalizeRowGameType(r) === "treatment"
+                ? "Wall clock for the treatment session"
+                : "Wall clock for the full run"}
+            </p>
           </div>
           <p className="text-lg font-semibold tabular-nums text-foreground">{formatDuration(r.time_taken)}</p>
         </div>
@@ -183,18 +225,46 @@ function BreakdownPanel({ r }: { r: GameResultRow }) {
 export function RunAnalyticsClient({ initialResults }: { initialResults: GameResultRow[] }) {
   const [selected, setSelected] = useState<GameResultRow | null>(null)
 
+  const countsByType = useMemo(() => {
+    const m: Record<GameResultGameType, number> = { sea_wolf: 0, treatment: 0, redrock: 0 }
+    for (const r of initialResults) {
+      m[normalizeRowGameType(r)] += 1
+    }
+    return m
+  }, [initialResults])
+
+  const [gameTypeFilter, setGameTypeFilter] = useState<GameResultGameType>("sea_wolf")
+  const didInitGameType = useRef(false)
+  /** On first load, open the first game tab that has runs (avoids an empty default when there are no full Sea Wolf runs). */
+  useEffect(() => {
+    if (didInitGameType.current) return
+    didInitGameType.current = true
+    const firstWithData = GAME_RESULT_GAME_TYPES.find((t) => countsByType[t] > 0)
+    if (firstWithData) setGameTypeFilter(firstWithData)
+  }, [countsByType])
+
+  const filteredResults = useMemo(
+    () => initialResults.filter((r) => normalizeRowGameType(r) === gameTypeFilter),
+    [initialResults, gameTypeFilter],
+  )
+
+  useEffect(() => {
+    if (!selected) return
+    if (normalizeRowGameType(selected) !== gameTypeFilter) setSelected(null)
+  }, [gameTypeFilter, selected])
+
   const chartData: ChartPoint[] = useMemo(
     () =>
-      initialResults.map((r) => ({
+      filteredResults.map((r) => ({
         ...r,
         x: new Date(r.played_at).getTime(),
         y: Number(r.global_score),
       })),
-    [initialResults],
+    [filteredResults],
   )
 
   const summary = useMemo(() => {
-    if (initialResults.length === 0) {
+    if (filteredResults.length === 0) {
       return {
         count: 0,
         best: null as number | null,
@@ -204,34 +274,84 @@ export function RunAnalyticsClient({ initialResults }: { initialResults: GameRes
         avgTime: null as number | null,
       }
     }
-    const scores = initialResults.map((r) => Number(r.global_score))
+    const scores = filteredResults.map((r) => Number(r.global_score))
     const best = Math.max(...scores)
     const average = scores.reduce((a, b) => a + b, 0) / scores.length
-    const last5 = initialResults.slice(0, 5)
+    const last5 = filteredResults.slice(0, 5)
     const last5Scores = last5.map((r) => Number(r.global_score))
     const last5Average = last5Scores.reduce((a, b) => a + b, 0) / last5Scores.length
-    const avgTime = initialResults.reduce((a, r) => a + r.time_taken, 0) / initialResults.length
+    const avgTime = filteredResults.reduce((a, r) => a + r.time_taken, 0) / filteredResults.length
     return {
-      count: initialResults.length,
+      count: filteredResults.length,
       best,
       average,
       last5Average,
       last5SampleSize: last5.length,
       avgTime,
     }
-  }, [initialResults])
+  }, [filteredResults])
 
   const cardClass =
     "rounded-xl border border-border bg-card p-5 shadow-sm dark:bg-card/80"
 
+  const hasAnyRuns = initialResults.length > 0
+  const filterEmpty = hasAnyRuns && filteredResults.length === 0
+
   return (
     <div className="space-y-8 p-6 md:p-8">
-      <div>
-        <p className="text-xs font-medium tracking-widest text-muted-foreground uppercase">Analytics</p>
-        <h1 className="mt-2 text-3xl font-bold text-foreground">Run history</h1>
-        <p className="mt-2 max-w-xl text-muted-foreground">
-          Full-session scores from the Sea Wolf simulator. Hover points for a quick breakdown; click for details.
-        </p>
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:gap-10">
+        <div className="min-w-0 max-w-xl shrink-0 space-y-2">
+          <p className="text-xs font-medium tracking-widest text-muted-foreground uppercase">Analytics</p>
+          <h1 className="text-3xl font-bold text-foreground">Run history</h1>
+          <p className="text-muted-foreground">
+            Choose a game to update the summary and chart. Hover points for a quick breakdown; click for details.
+          </p>
+        </div>
+        <div className="flex min-w-0 flex-1 flex-col items-center gap-3 lg:justify-end">
+          <div className="flex max-w-md flex-col items-center gap-1.5 text-center">
+            <label
+              htmlFor="analytics-simulator"
+              className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl"
+            >
+              Simulator
+            </label>
+            <p className="text-sm leading-snug text-muted-foreground sm:text-[15px]">
+              Pick one of the simulators to see your analytics.
+            </p>
+          </div>
+          <Select
+            value={gameTypeFilter}
+            onValueChange={(v) => setGameTypeFilter(v as GameResultGameType)}
+          >
+            <SelectTrigger
+              id="analytics-simulator"
+              size="default"
+              className={cn(
+                "h-11 w-full max-w-md min-w-[min(100%,17.5rem)] rounded-xl border bg-card px-3 text-sm font-medium text-foreground shadow-sm",
+                "border-blue-300/90 hover:border-blue-500 hover:bg-card",
+                "focus-visible:border-blue-600 focus-visible:ring-2 focus-visible:ring-blue-500/25",
+                "dark:border-blue-800/70 dark:hover:border-blue-600 dark:hover:bg-card/90",
+                "dark:focus-visible:border-blue-500 dark:focus-visible:ring-blue-400/30",
+                "[&_svg]:text-blue-600 dark:[&_svg]:text-blue-400",
+              )}
+            >
+              <SelectValue placeholder="Choose simulator" />
+            </SelectTrigger>
+            <SelectContent
+              position="popper"
+              className="z-[60] border border-blue-200/80 bg-popover shadow-md dark:border-blue-900/60"
+            >
+              {GAME_RESULT_GAME_TYPES.map((t) => (
+                <SelectItem key={t} value={t}>
+                  <span className="flex w-full items-center justify-between gap-4">
+                    <span>{gameResultGameTypeLabels[t]}</span>
+                    <span className="tabular-nums text-muted-foreground">({countsByType[t]})</span>
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
@@ -268,17 +388,41 @@ export function RunAnalyticsClient({ initialResults }: { initialResults: GameRes
         </div>
       </div>
 
-      {chartData.length === 0 ? (
+      {!hasAnyRuns ? (
         <div className={cn(cardClass, "py-12 text-center text-muted-foreground")}>
-          No runs yet. Complete a full session at{" "}
+          No runs yet. Complete a session at{" "}
           <a href="/practice/sea-wolf" className="font-medium text-primary underline">
             Practice → Sea Wolf
           </a>{" "}
+          or{" "}
+          <a href="/practice/sea-wolf-treatment" className="font-medium text-primary underline">
+            Treatment
+          </a>{" "}
           while signed in to see your scores here.
+        </div>
+      ) : filterEmpty ? (
+        <div className={cn(cardClass, "py-12 text-center text-muted-foreground")}>
+          <p className="font-medium text-foreground">No runs for {gameResultGameTypeLabels[gameTypeFilter]}</p>
+          <p className="mt-2 text-sm">
+            Pick another game above, or start a run for this mode from{" "}
+            {gameTypeFilter === "treatment" ? (
+              <a href="/practice/sea-wolf-treatment" className="font-medium text-primary underline">
+                Practice → Treatment
+              </a>
+            ) : gameTypeFilter === "redrock" ? (
+              <span className="text-foreground/80">the Redrock practice flow (coming soon)</span>
+            ) : (
+              <a href="/practice/sea-wolf" className="font-medium text-primary underline">
+                Practice → Sea Wolf
+              </a>
+            )}
+            .
+          </p>
         </div>
       ) : (
         <div className={cn(cardClass, "min-h-[380px]")}>
-          <h2 className="mb-4 text-lg font-semibold text-foreground">Score over time</h2>
+          <h2 className="mb-1 text-lg font-semibold text-foreground">Score over time</h2>
+          <p className="mb-4 text-xs text-muted-foreground">{gameResultGameTypeLabels[gameTypeFilter]}</p>
           <ResponsiveContainer width="100%" height={320}>
             <ScatterChart margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
               <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
@@ -333,6 +477,9 @@ export function RunAnalyticsClient({ initialResults }: { initialResults: GameRes
             <div className="flex h-full flex-col">
               <SheetHeader className="space-y-2 border-b border-border/60 bg-muted/30 px-6 py-6 text-left">
                 <SheetTitle className="text-xl font-bold tracking-tight text-foreground">Run breakdown</SheetTitle>
+                <p className="text-left text-xs font-medium text-muted-foreground">
+                  {gameTypeLabel(normalizeRowGameType(selected))}
+                </p>
                 <SheetDescription className="text-sm leading-relaxed text-muted-foreground">
                   {new Date(selected.played_at).toLocaleString(undefined, {
                     weekday: "short",

@@ -2,16 +2,17 @@ import { NextResponse } from "next/server"
 import { auth, currentUser } from "@clerk/nextjs/server"
 import { z } from "zod"
 import { supabaseAdmin } from "@/utils/supabase/admin"
-import type { GameResultRow } from "@/lib/game-result-types"
+import { GAME_RESULT_GAME_TYPES, type GameResultRow } from "@/lib/game-result-types"
 
 const insertBodySchema = z.object({
+  game_type: z.enum(GAME_RESULT_GAME_TYPES),
   global_score: z.number().finite(),
   time_taken: z.number().int().nonnegative(),
-  phase1_avg: z.number().finite(),
-  phase2_avg: z.number().finite(),
-  phase0_avg: z.number().finite(),
-  phase3_avg: z.number().finite(),
-  phase4_avg: z.number().finite(),
+  phase1_avg: z.number().finite().nullable(),
+  phase2_avg: z.number().finite().nullable(),
+  phase0_avg: z.number().finite().nullable(),
+  phase3_avg: z.number().finite().nullable(),
+  phase4_avg: z.number().finite().nullable(),
   site1_score: z.number().finite().nullable(),
   site2_score: z.number().finite().nullable(),
   site3_score: z.number().finite().nullable(),
