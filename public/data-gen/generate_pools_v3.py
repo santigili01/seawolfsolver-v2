@@ -76,6 +76,7 @@ Run from public/data-gen/:
 import json
 import random
 import itertools
+import time
 from pathlib import Path
 from typing import Optional
 from statistics import mean
@@ -115,28 +116,55 @@ PROGRESS_INTERVAL   = 200
 # With the adversarial builder, most pools land in advanced/hadal zone naturally
 # because the constraint forces high near-optimal density.
 # Tune after first run using validate_pools_v3.py.
-# Calibrated against actual recipe output (measured empirically):
-#   beginner recipe:     H 49-65, mean 58
-#   intermediate recipe: H 56-71, mean 64
-#   advanced recipe:     H 65-80, mean 71
-#   hadal recipe:        H 70+
-# Overlapping boundaries ensure all bands are reachable.
+# H values cluster tightly at discrete points (measured empirically):
+#   beginner recipe:     spikes at H=55 (44%) and H=64 (14%)
+#   intermediate recipe: spikes at H=64 (56%) and H=70 (4%)
+#   advanced recipe:     spikes at H=70 (87%) and H=71 (6%)
+#
+# Bands are aligned to these clusters with non-overlapping boundaries.
+# Each band is dominated by one recipe, with a clear primary H target.
+# H values cluster at discrete spikes (measured empirically):
+#   beginner recipe:     H=55 (44%), H=64 (14%)
+#   intermediate recipe: H=64 (56%), H=70 (4%)
+#   advanced recipe:     H=70 (87%), H=71 (6%)
+#
+# 3 real clusters: ~55, ~64, ~70.
+# 4 bands are achieved by splitting the H=64 cluster between intermediate and advanced,
+# and splitting the H=70 cluster between advanced and hadal.
+# beginner:     catches H=55 spike  (beginner recipe, ~44% hit rate)
+# intermediate: catches H=64 spike  (intermediate recipe, ~56% hit rate)
+# advanced:     catches H=64-70 mix (intermediate recipe upper + advanced recipe lower)
+# hadal:        catches H=70+ spike (advanced recipe, ~87% hit rate)
+#
+# advanced uses beginner recipe which also produces H=64 at ~14% rate,
+# giving it a reliable supply without needing a special recipe.
+# Each band is pinned to specific (recipe, tmax) pairs measured to reliably produce it.
+# H ranges measured empirically (30+ pools per combination, consistent across scenarios):
+#   beginner    / max=100 → H 50-64, mean 55
+#   intermediate/ max=100 → H 50-65, mean 63
+#   advanced    / max=100 → H 64-71, mean 69
+#   intermediate/ max=80  → H 67-78, mean 71  ← used for hadal
+#   advanced    / max=80  → H 70-75, mean 74  ← also used for hadal
+#
+# Pinning eliminates tmax variability: each band uses exactly the combinations
+# that reliably hit its H range without depending on cross-band quota state.
 BAND_H_RANGES = {
-    "beginner":     (0,   58),
-    "intermediate": (55,  67),
-    "advanced":     (63,  73),
-    "hadal":        (70, 100),
+    "beginner":     (0,    60),
+    "intermediate": (57,   67),
+    "advanced":     (65,   72),
+    "hadal":        (69,   100),
 }
 
-# Which recipes to try when a band needs more pools.
-# Multiple recipes per band because H ranges overlap — any recipe that
-# happens to land in the needed band is accepted.
-BAND_RECIPES = {
-    "beginner":     ["beginner"],
-    "intermediate": ["beginner", "intermediate"],
-    "advanced":     ["intermediate", "advanced"],
-    "hadal":        ["advanced", "hadal"],
+# (recipe, tmax) pairs per band. Generation loop samples from these.
+BAND_CONFIGS = {
+    "beginner":     [("beginner",     100), ("beginner",     80)],
+    "intermediate": [("intermediate", 100)],
+    "advanced":     [("advanced",     100)],
+    "hadal":        [("intermediate", 80),  ("advanced",     80)],
 }
+
+# Derived: unique recipes per band (used in stall reporting)
+BAND_RECIPES = {band: list({r for r,_ in cfgs}) for band, cfgs in BAND_CONFIGS.items()}
 
 
 # =============================================================================
@@ -219,6 +247,18 @@ def mkm(sc: dict, trait: str, style: str = "in") -> dict:
                     attrs[a] = min(10, hi + random.randint(3, 5))
             else:
                 attrs[a] = random.randint(max(1, lo - 2), min(10, hi + 2))
+    elif style == "double_far":
+        bad_js = random.sample([0, 1, 2], 2)
+        for j, a in enumerate(ATTRIBUTES):
+            lo = sc["attributes"][a]["min"]
+            hi = sc["attributes"][a]["max"]
+            if j in bad_js:
+                if random.random() < 0.5:
+                    attrs[a] = max(1, lo - random.randint(3, 5))
+                else:
+                    attrs[a] = min(10, hi + random.randint(3, 5))
+            else:
+                attrs[a] = random.randint(lo, hi)
     else:
         zone = {"in": 0, "near1": 1, "near2": 2, "near3": 3}.get(style, 2)
         for a in ATTRIBUTES:
@@ -507,19 +547,18 @@ TIER_RECIPES = {
     ],
 
     # max=60 dedicated recipe.
-    # For max=60 pools, the only valid distractor is undesired+far: any pair from the
-    # optimal triple (which scores 60 itself) + a plausible distractor would score ≥60,
-    # creating a second optimal. The only way to guarantee score < 60 with every pair
-    # is undesired trait (−20) + one attribute far out of range (−20 on that attr mean).
+    # Capped at 4 undesired (trait diversity: no trait >4 in pool).
+    # Remaining 3 slots use "double_far" neutral traits (two attrs far out of range).
+    # Only these two distractor types pass no_new_optimal for max=60.
     # The desired-trait invariant is satisfied by the optimal triple itself.
     "max60": [
-        ("undesired",  "far"),   # undesired + 1 bad attr
+        ("undesired",  "far"),        # undesired + 1 bad attr
         ("undesired",  "far"),
         ("undesired",  "far"),
-        ("undesired",  "far"),
-        ("undesired",  "far"),
-        ("undesired",  "far"),
-        ("undesired",  "far"),
+        ("undesired",  "far"),        # max 4 undesired (trait diversity cap)
+        ("neutral",    "double_far"), # neutral + 2 bad attrs
+        ("neutral",    "double_far"),
+        ("neutral",    "double_far"),
     ],
 }
 
@@ -559,7 +598,12 @@ def build_pool(sc: dict, target_max: int, tier: str,
     undesired = sc["undesired_trait"]
     recipe    = TIER_RECIPES[tier]
 
+    deadline = time.time() + 2.0  # hard 2-second wall-clock limit per build_pool call
+
     for outer in range(max_outer):
+
+        if time.time() > deadline:
+            return None  # give up fast, let the generation loop retry
 
         # ── Step 1: Build optimal triple ─────────────────────────────────────
         optimal = _build_optimal_triple(sc, target_max)
@@ -586,12 +630,10 @@ def build_pool(sc: dict, target_max: int, tier: str,
 
             # If this trait would hit the cap and there are missing traits to fill,
             # and the slot is flexible (not a hard desired/undesired slot), substitute.
-            if (trait_counts_now.get(trait, 0) >= 4
-                    and missing_traits
-                    and trait_spec not in ("desired", "undesired")):
-                trait = random.choice(missing_traits)
-            # Also: if the slot is flexible and a trait is still missing after 8+ placed,
-            # force it in to guarantee all 4 traits appear.
+            if trait_counts_now.get(trait, 0) >= 4:
+                if missing_traits and trait_spec not in ("desired",):
+                    # Redirect to a missing trait — works for undesired too when capped
+                    trait = random.choice(missing_traits)
             elif (len(placed) >= 8
                     and missing_traits
                     and trait_spec not in ("desired", "undesired")):
@@ -600,6 +642,8 @@ def build_pool(sc: dict, target_max: int, tier: str,
             placed_distractor = False
 
             for inner in range(max_inner):
+                if time.time() > deadline:
+                    break  # slot timed out — abandon this outer attempt
                 candidate = mkm(sc, trait, style)
 
                 if no_new_optimal(candidate, placed, target_max, sc):
@@ -740,6 +784,7 @@ def _build_optimal_triple(sc: dict, target_max: int) -> list:
 # =============================================================================
 
 def compute_quotas(n: int) -> tuple:
+    # Band quotas: 25% each
     bq    = {}
     alloc = 0
     for band in BANDS[:-1]:
@@ -747,13 +792,25 @@ def compute_quotas(n: int) -> tuple:
         alloc   += bq[band]
     bq[BANDS[-1]] = n - alloc
 
+    # Max score quotas: 50/30/20 overall
     mq    = {}
     alloc = 0
     for ms, frac in [(100, 0.50), (80, 0.30)]:
         mq[ms] = max(1, round(n * frac))
         alloc += mq[ms]
     mq[60] = n - alloc
-    return bq, mq
+
+    # max=60 pools are structurally easy (low ceiling = obvious search space).
+    # They should only be assigned to beginner and intermediate bands.
+    # Track this as a per-band max_score constraint used by the generation loop.
+    band_max_score = {
+        "beginner":     [100, 80, 60],
+        "intermediate": [100, 80],      # max=60 → max60 recipe → always beginner H
+        "advanced":     [100, 80],      # max=60 → max60 recipe → always beginner H
+        "hadal":        [100, 80],      # max=60 → max60 recipe → always beginner H
+    }
+
+    return bq, mq, band_max_score
 
 
 def choose_target_max(mq: dict, mf: dict) -> int:
@@ -805,7 +862,7 @@ def generate_for_scenario(sc: dict, n_pools: int) -> dict:
     name = sc["name"]
     key  = name.lower().replace(" ", "_")
 
-    bq, mq = compute_quotas(n_pools)
+    bq, mq, band_max_score = compute_quotas(n_pools)
     bf: dict = {b: 0 for b in BANDS}
     mf: dict = {ms: 0 for ms in MAX_SCORE_VALUES}
     found: dict = {b: [] for b in BANDS}
@@ -816,32 +873,106 @@ def generate_for_scenario(sc: dict, n_pools: int) -> dict:
     attempts   = 0
     last_print = 0
 
+    # Per-band attempt tracking for debugging
+    band_attempts:  dict = {b: 0  for b in BANDS}
+    band_built:     dict = {b: 0  for b in BANDS}  # pools built (before band filter)
+    band_rejected:  dict = {b: 0  for b in BANDS}  # built but rejected (band full)
+    h_sample:       list = []                        # last 20 H values seen
+
     while not quota_met():
         attempts += 1
 
-        # If max=60 quota is significantly behind, force it every other attempt
-        # to prevent the soft-quota weighting from deprioritising it entirely.
+        band    = choose_band_to_fill(bq, bf)
+        configs = BAND_CONFIGS[band]
+
+        # Inject max=60 attempts for beginner when its quota is behind.
+        # Only beginner can use max=60 (other bands' max60 recipe produces beginner H).
         max60_deficit = max(0, mq.get(60, 0) - mf.get(60, 0))
         total_deficit = sum(max(0, mq.get(ms,0)-mf.get(ms,0)) for ms in MAX_SCORE_VALUES)
-        force_max60   = max60_deficit > 0 and (
-            max60_deficit / max(1, total_deficit) > 0.4   # max60 is >40% of remaining quota
-            or attempts % 3 == 0                           # or every 3rd attempt as a pulse
-        )
+        force_max60   = (max60_deficit > 0
+                         and band == "beginner"
+                         and (max60_deficit / max(1, total_deficit) > 0.4
+                              or attempts % 3 == 0))
 
-        # Pick the band most behind, then sample from its candidate recipes
-        band    = choose_band_to_fill(bq, bf)
-        recipes = BAND_RECIPES[band]
-        tier    = random.choice(recipes)
-        tmax    = 60 if force_max60 else choose_target_max(mq, mf)
+        if force_max60:
+            tier, tmax = "beginner", 60
+        else:
+            # Sample a (recipe, tmax) config for this band, weighted toward
+            # configs whose max_score is most behind quota.
+            def config_weight(cfg):
+                _, ms = cfg
+                deficit = max(0, mq.get(ms, 0) - mf.get(ms, 0))
+                return max(0.1, MAX_SCORE_FRACTIONS.get(ms, 0.3) + deficit * 0.5)
+            weights = [config_weight(c) for c in configs]
+            tier, tmax = random.choices(configs, weights=weights, k=1)[0]
+
+        band_attempts[band] += 1
 
         result = build_pool(sc, tmax, tier)
+
+        # Record outcome regardless of success/failure
+        if result is None:
+            outcome = ("NONE", None, None)
+        else:
+            h_band = result["h_data"]["band"]
+            h_val  = result["h_data"]["H"]
+            band_built[h_band] += 1
+            reason = "ACCEPTED" if bf[h_band] < bq[h_band] else "REJECTED_FULL"
+            outcome = (reason, h_band, h_val)
+
+        h_sample.append((band, tier, tmax, outcome))
+        if len(h_sample) > 100:
+            h_sample.pop(0)
+
+        # Heartbeat every PROGRESS_INTERVAL attempts regardless of outcome
+        if attempts % PROGRESS_INTERVAL == 0 and attempts != last_print:
+            last_print = attempts
+            status = " | ".join(f"{b[0].upper()}:{bf[b]}/{bq[b]}" for b in BANDS)
+            missing = [b for b in BANDS if bf[b] < bq[b]]
+
+            print(f"  [{name}] === {attempts} attempts ===", flush=True)
+            print(f"    [{status}]  missing: {missing}")
+            print(f"    max_score: found={dict(mf)} target={dict(mq)}")
+            print(f"    band attempt/built/rejected counts:")
+            for b in BANDS:
+                print(f"      {b:15}: {band_attempts[b]:>5} attempted  "
+                      f"{band_built.get(b,0):>4} built  "
+                      f"{band_rejected.get(b,0):>4} rejected_full")
+
+            # For each missing band: show what happened on recent attempts targeting it
+            for b in missing:
+                recent = [(tier2, tmax2, out)
+                          for (req, tier2, tmax2, out) in h_sample if req == b]
+                if not recent:
+                    print(f"    '{b}': no recent attempts recorded")
+                    continue
+                none_count = sum(1 for _,_,out in recent if out[0]=="NONE")
+                accepted   = [(h, hb) for _,_,out in recent
+                              if out[0]=="ACCEPTED" for h,hb in [(out[2],out[1])]]
+                rejected   = [(h, hb) for _,_,out in recent
+                              if out[0]=="REJECTED_FULL" for h,hb in [(out[2],out[1])]]
+                tiers_used = list({t for t,_,_ in recent})
+                print(f"    '{b}' ({len(recent)} recent attempts):")
+                print(f"      recipes: {tiers_used}")
+                print(f"      build failures (None): {none_count}")
+                if rejected:
+                    rh = [h for h,_ in rejected]
+                    rb = [b2 for _,b2 in rejected]
+                    print(f"      built but rejected ({len(rejected)}): "
+                          f"H {min(rh):.1f}-{max(rh):.1f}  "
+                          f"landed in: {dict((bb, rb.count(bb)) for bb in set(rb))}")
+                if accepted:
+                    ah = [h for h,_ in accepted]
+                    print(f"      accepted ({len(accepted)}): H {min(ah):.1f}-{max(ah):.1f}")
+                print(f"      BAND_H_RANGES['{b}']: {BAND_H_RANGES[b]}")
+            print(flush=True)
+
         if result is None:
             continue
 
         h_band = result["h_data"]["band"]
-
-        # Accept into the band it actually landed in, if that band still needs pools
         if bf[h_band] >= bq[h_band]:
+            band_rejected[h_band] = band_rejected.get(h_band, 0) + 1
             continue
 
         bf[h_band]  += 1
@@ -870,14 +1001,40 @@ def generate_for_scenario(sc: dict, n_pools: int) -> dict:
         if attempts - last_print >= PROGRESS_INTERVAL:
             last_print = attempts
             missing = [b for b in BANDS if bf[b] < bq[b]]
-            if missing:
-                # Show which band is being targeted, which recipe/tier is being tried,
-                # and how many attempts have been spent on each band
-                band_now = choose_band_to_fill(bq, bf)
-                recipes_now = BAND_RECIPES[band_now]
-                print(f"  [{name}] --- {attempts} attempts | targeting: {band_now} "
-                      f"(recipes: {recipes_now}) | "
-                      + " | ".join(f"{b}:{bf[b]}/{bq[b]}" for b in BANDS))
+            if not missing:
+                continue
+
+            # ── Detailed stall report ─────────────────────────────────────────
+            print(f"  [{name}] === STALL REPORT @ {attempts} attempts ===")
+            print(f"    Quotas:   { {b: f'{bf[b]}/{bq[b]}' for b in BANDS} }")
+            print(f"    Missing:  {missing}")
+            print(f"    Max score: found={dict(mf)}  target={dict(mq)}")
+            print()
+            print(f"    Attempts targeting each band:")
+            for b in BANDS:
+                print(f"      {b:15}: {band_attempts[b]:>6} attempts  "
+                      f"{band_built[b]:>4} pools built  "
+                      f"{band_rejected[b]:>4} rejected (band full)")
+            print()
+            # Show what H values recently came out when targeting each missing band
+            for b in missing:
+                recent = [(tier, tmax, h, hband)
+                          for (reqband, tier, tmax, h, hband) in h_sample
+                          if reqband == b]
+                if recent:
+                    h_vals   = [h for _,_,h,_ in recent]
+                    h_bands  = [hband for _,_,_,hband in recent]
+                    tiers    = list({t for t,_,_,_ in recent})
+                    print(f"    Recent attempts for '{b}' (last {len(recent)}):")
+                    print(f"      recipes tried: {tiers}")
+                    print(f"      H values: min={min(h_vals):.0f} "
+                          f"mean={sum(h_vals)/len(h_vals):.0f} "
+                          f"max={max(h_vals):.0f}")
+                    print(f"      landed in bands: { {bb: h_bands.count(bb) for bb in set(h_bands)} }")
+                    print(f"      BAND_H_RANGES['{b}']: {BAND_H_RANGES[b]}")
+                else:
+                    print(f"    No recent attempts recorded for '{b}'")
+            print()
 
     print(f"  [{name}] Done — {sum(bf.values())} pools in {attempts} attempts.")
     return found

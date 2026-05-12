@@ -210,7 +210,7 @@ export function GameResultsFull({
             Play Again
           </button>
           <Link
-            href="/"
+            href="/practice"
             className="inline-flex h-10 items-center justify-center rounded-lg border-2 border-white bg-transparent px-5 text-sm font-semibold text-white transition-colors hover:bg-white/10"
           >
             Quit
