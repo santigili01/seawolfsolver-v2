@@ -2,16 +2,16 @@ import { GameCard } from "@/components/practice/game-card"
 
 export function PracticeHub() {
   return (
-    <main className="flex-1 bg-gray-50 p-8">
-      <p className="text-xs tracking-widest text-gray-500 uppercase">PRACTICE HUB</p>
-      <h1 className="mt-2 text-3xl font-bold text-gray-900">Pick a game to practice.</h1>
-      <p className="mt-3 max-w-2xl text-base text-gray-600">
+    <main className="flex-1 bg-gray-50 p-8 dark:bg-transparent">
+      <p className="text-xs tracking-widest text-gray-500 uppercase dark:text-gray-400">PRACTICE HUB</p>
+      <h1 className="mt-2 text-3xl font-bold text-gray-900 dark:text-gray-100">Pick a game to practice.</h1>
+      <p className="mt-3 max-w-2xl text-base text-gray-600 dark:text-gray-300">
         Practice with realistic simulators designed to match the McKinsey Solve
         assessment. Each game targets different skills.
       </p>
 
-      <p className="mt-10 text-xs tracking-widest text-gray-500 uppercase">START A RUN</p>
-      <h2 className="mt-2 text-2xl font-bold text-gray-900">Games &amp; Tools</h2>
+      <p className="mt-10 text-xs tracking-widest text-gray-500 uppercase dark:text-gray-400">START A RUN</p>
+      <h2 className="mt-2 text-2xl font-bold text-gray-900 dark:text-gray-100">Games &amp; Tools</h2>
 
       <div className="mt-4 grid max-w-5xl gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <GameCard

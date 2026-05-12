@@ -1459,7 +1459,6 @@ export function SeawolfSolver() {
 
         {activePhase === "phase4" ? (
           <section className="space-y-2">
-            <div className={phaseChip}>Phase 4 · Treatment</div>
             <div className="grid grid-cols-1 gap-2 lg:grid-cols-[1.25fr_0.55fr_0.95fr]">
               <div className="rounded-xl border border-[#e2e8f0] bg-white p-3 shadow-sm">
                 <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">

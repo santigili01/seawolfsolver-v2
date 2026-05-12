@@ -17,8 +17,8 @@ export const metadata: Metadata = {
 export default function SolverPage() {
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-b from-[#4ECDC4] to-[#2BA8A0]">
-      <header className="w-full shrink-0 bg-[#1a202c] px-6 py-4">
-        <div className="mx-auto flex w-full max-w-7xl items-center justify-between">
+      <header className="w-full shrink-0 bg-[#1a202c] px-4 py-4 md:px-6">
+        <div className="mx-auto flex w-full max-w-[1500px] items-center justify-between">
           <div
             className={cn(
               "flex min-w-0 items-center gap-1",

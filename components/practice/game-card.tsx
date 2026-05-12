@@ -17,11 +17,11 @@ export function GameCard({
   thumbnailSrc?: string
 }) {
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+    <div className="flex h-full flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
       <Link
         href={href}
         aria-label={`${title}: ${cta}`}
-        className={`group relative flex aspect-[4/3] shrink-0 items-center justify-center overflow-hidden no-underline outline-none focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-[#1a202c] focus-visible:ring-offset-2 focus-visible:ring-offset-white ${thumbnailSrc ? "bg-gray-900" : "bg-gradient-to-br from-[#4ECDC4] to-[#2BA8A0]"}`}
+        className={`group relative flex aspect-[4/3] shrink-0 items-center justify-center overflow-hidden no-underline outline-none focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-[#1a202c] focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-gray-300 dark:focus-visible:ring-offset-gray-900 ${thumbnailSrc ? "bg-gray-900" : "bg-gradient-to-br from-[#4ECDC4] to-[#2BA8A0]"}`}
       >
         {thumbnailSrc ? (
           <>
@@ -47,12 +47,12 @@ export function GameCard({
         )}
       </Link>
       <div className="flex flex-1 flex-col gap-2 p-4">
-        <p className="text-xs tracking-wide text-gray-500 uppercase">{subtitle}</p>
-        <p className="text-xl font-bold text-gray-900">{title}</p>
-        <p className="line-clamp-3 text-sm text-gray-600">{description}</p>
+        <p className="text-xs tracking-wide text-gray-500 uppercase dark:text-gray-400">{subtitle}</p>
+        <p className="text-xl font-bold text-gray-900 dark:text-gray-100">{title}</p>
+        <p className="line-clamp-3 text-sm text-gray-600 dark:text-gray-300">{description}</p>
         <Link
           href={href}
-          className="mt-auto inline-flex items-center justify-center gap-2 rounded-lg bg-[#1a202c] px-4 py-2 text-sm font-semibold text-white hover:bg-[#2a3040]"
+          className="mt-auto inline-flex items-center justify-center gap-2 rounded-lg bg-[#1a202c] px-4 py-2 text-sm font-semibold text-white hover:bg-[#2a3040] dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white"
         >
           {cta}
         </Link>

@@ -83,7 +83,12 @@ export function DashboardSidebar({
             {initial}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-gray-900 dark:text-gray-100">{displayName}</p>
+            <Link
+              href="/dashboard/settings"
+              className="block truncate text-sm font-semibold text-gray-900 underline-offset-2 hover:underline focus-visible:rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1a202c] focus-visible:ring-offset-2 focus-visible:ring-offset-gray-50 dark:text-gray-100 dark:focus-visible:ring-gray-300 dark:focus-visible:ring-offset-gray-800/80"
+            >
+              {displayName}
+            </Link>
             <p className="truncate text-xs text-gray-500 dark:text-gray-400">{planShortLabel}</p>
           </div>
         </div>
