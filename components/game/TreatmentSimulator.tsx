@@ -69,8 +69,8 @@ const DIFFICULTY_OPTIONS: {
 ]
 
 /** Same outer shell as `/practice/sea-wolf` during an active session */
-const SEA_WOLF_SESSION_BG =
-  "relative min-h-screen bg-gradient-to-br from-[#4ECDC4] via-[#3EBDB5] to-[#2BA8A0]"
+/** Teal gradient lives in `SeaWolfBiolumScreen`; keep shell transparent so biolum shows through. */
+const SEA_WOLF_SESSION_BG = "relative min-h-screen bg-transparent"
 
 /** Standalone treatment session: one site, 10 minutes (full game is 3 sites, 30 min). */
 const TREATMENT_SESSION_SECONDS = 10 * 60

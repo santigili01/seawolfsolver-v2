@@ -13,8 +13,8 @@ export const metadata: Metadata = {
   description: 'McKinsey Seawolf assessment solver - Find the optimal 3 microbes',
   generator: 'v0.app',
   icons: {
-    icon: '/icon.svg',
-    apple: '/apple-icon.png',
+    icon: "/wolf%20svg.svg",
+    apple: "/apple-icon.png",
   },
 }
 

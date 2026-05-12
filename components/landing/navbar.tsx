@@ -2,7 +2,13 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
+import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import {
+  SiteLogoMark,
+  SITE_BRAND_LOCKUP_ROOT_CLASS,
+  SITE_BRAND_WORDMARK_CLASS,
+} from "@/components/site-logo-mark"
 
 const navLinks = [
   { href: "#how-it-works", label: "How It Works" },
@@ -26,9 +32,15 @@ export function Navbar() {
       }`}
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-        <Link href="/" className="flex items-center gap-2">
-          <span className="text-lg">🧫</span>
-          <span className="text-lg font-bold tracking-tight text-foreground">SeaWolfPrep</span>
+        <Link
+          href="/"
+          className={cn(
+            "flex min-w-0 items-center gap-1",
+            SITE_BRAND_LOCKUP_ROOT_CLASS
+          )}
+        >
+          <SiteLogoMark />
+          <span className={cn(SITE_BRAND_WORDMARK_CLASS, "text-foreground")}>SeaWolfPrep</span>
         </Link>
 
         <div className="flex items-center gap-4 sm:gap-6">

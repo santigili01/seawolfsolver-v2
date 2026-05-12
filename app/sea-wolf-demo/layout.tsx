@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { SeaWolfBiolumScreen } from "@/components/game/SeaWolfBiolumScreen"
 
 export const metadata: Metadata = {
   title: "Sea Wolf Free Demo | SeaWolfPrep",
@@ -6,5 +7,5 @@ export const metadata: Metadata = {
 }
 
 export default function SeaWolfDemoLayout({ children }: { children: React.ReactNode }) {
-  return children
+  return <SeaWolfBiolumScreen>{children}</SeaWolfBiolumScreen>
 }

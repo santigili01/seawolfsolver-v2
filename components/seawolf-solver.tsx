@@ -1,6 +1,6 @@
 "use client"
 
-import { KeyboardEvent, ReactNode, useEffect, useMemo, useState } from "react"
+import { KeyboardEvent, type FocusEvent, type MouseEvent, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -106,6 +106,57 @@ const blankCandidate = (): CandidateInput => ({
   undesired: false,
 })
 
+const emptyPhase4MicrobeData = (): Phase4MicrobeData => ({
+  mobility: Array(PHASE4_MICROBE_COUNT).fill(""),
+  agility: Array(PHASE4_MICROBE_COUNT).fill(""),
+  size: Array(PHASE4_MICROBE_COUNT).fill(""),
+  desirable: Array(PHASE4_MICROBE_COUNT).fill(false),
+  undesirable: Array(PHASE4_MICROBE_COUNT).fill(false),
+})
+
+/** Maps Phase 3 preload + four optimal picks into Phase 4's 10 microbe slots. */
+function buildPhase4MicrobeDataFromPhase3(
+  preloaded: CandidateInput[],
+  solved: { candidates: CandidateSolved[]; recommendedIndex: number }[]
+): Phase4MicrobeData | null {
+  if (solved.length !== PHASE3_ROUNDS || preloaded.length !== PHASE3_PRELOAD_COUNT) return null
+  const mobility: NumericInputValue[] = []
+  const agility: NumericInputValue[] = []
+  const size: NumericInputValue[] = []
+  const desirable: boolean[] = []
+  const undesirable: boolean[] = []
+
+  const pushRow = (c: CandidateInput) => {
+    mobility.push(c.mobility)
+    agility.push(c.agility)
+    size.push(c.size)
+    desirable.push(c.desired)
+    undesirable.push(c.undesired)
+  }
+
+  for (const c of preloaded) pushRow(c)
+
+  for (const round of solved) {
+    const idx = round.recommendedIndex
+    if (idx < 0 || idx >= PHASE3_CANDIDATES) return null
+    const cand = round.candidates[idx]?.input
+    if (!cand) return null
+    pushRow(cand)
+  }
+
+  if (mobility.length !== PHASE4_MICROBE_COUNT) return null
+  return { mobility, agility, size, desirable, undesirable }
+}
+
+/** Phase 2 number fields: select entire value on focus/click so the next keystroke replaces it (avoids "12" when editing "1"). */
+function selectAllOnFocusNumberInput(e: FocusEvent<HTMLInputElement>) {
+  requestAnimationFrame(() => e.currentTarget.select())
+}
+
+function selectAllOnClickNumberInput(e: MouseEvent<HTMLInputElement>) {
+  e.currentTarget.select()
+}
+
 function traitColor(trait: string, index?: number): string {
   const t = trait.toLowerCase()
   if (t.includes("biofilm")) return "#10b981"
@@ -135,12 +186,16 @@ function SiteConfigCard({
   attrNames,
   traitNames,
   title,
+  onClearSiteInformation,
+  onClearPhaseInputs,
 }: {
   config: SiteConfig
   onChange: (c: SiteConfig) => void
   attrNames: string[]
   traitNames: string[]
   title: string
+  onClearSiteInformation?: () => void
+  onClearPhaseInputs?: () => void
 }) {
   const randomInt = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min
   const randomFill = () => {
@@ -161,11 +216,23 @@ function SiteConfigCard({
 
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-      <div className="mb-3 flex items-center justify-between">
+      <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <h3 className="text-base font-bold text-[#1a202c]">{title}</h3>
-        <Button variant="outline" size="sm" onClick={randomFill}>
-          Random fill
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          {onClearSiteInformation ? (
+            <Button type="button" variant="outline" size="sm" className="text-xs" onClick={onClearSiteInformation}>
+              Clear site information
+            </Button>
+          ) : null}
+          {onClearPhaseInputs ? (
+            <Button type="button" variant="outline" size="sm" className="text-xs" onClick={onClearPhaseInputs}>
+              Clear phase inputs
+            </Button>
+          ) : null}
+          <Button variant="outline" size="sm" onClick={randomFill}>
+            Random fill
+          </Button>
+        </div>
       </div>
       <div className="space-y-2">
         {[0, 1, 2].map((idx) => (
@@ -460,13 +527,9 @@ export function SeawolfSolver() {
     agility: { min: "", max: "" },
     size: { min: "", max: "" },
   })
-  const [microbeData, setMicrobeData] = useState<Phase4MicrobeData>({
-    mobility: Array(PHASE4_MICROBE_COUNT).fill(""),
-    agility: Array(PHASE4_MICROBE_COUNT).fill(""),
-    size: Array(PHASE4_MICROBE_COUNT).fill(""),
-    desirable: Array(PHASE4_MICROBE_COUNT).fill(false),
-    undesirable: Array(PHASE4_MICROBE_COUNT).fill(false),
-  })
+  const [microbeData, setMicrobeData] = useState<Phase4MicrobeData>(() => emptyPhase4MicrobeData())
+
+  const prevPhase3CompleteRef = useRef(false)
 
   useEffect(() => {
     const [r1, r2, r3] = siteInfoConfig.attrRanges
@@ -476,6 +539,23 @@ export function SeawolfSolver() {
       size: { min: r3.min, max: r3.max },
     })
   }, [siteInfoConfig])
+
+  /** When Phase 3 is fully solved, push 6 preload + 4 optimal picks into Phase 4. When a completed run is cleared, blank Phase 4 microbes only if we were previously complete. */
+  useEffect(() => {
+    const complete = p3Solved.length === PHASE3_ROUNDS
+    if (complete) {
+      const built = buildPhase4MicrobeDataFromPhase3(p3Preloaded, p3Solved)
+      if (built) {
+        setMicrobeData(built)
+        prevPhase3CompleteRef.current = true
+      }
+      return
+    }
+    if (prevPhase3CompleteRef.current) {
+      setMicrobeData(emptyPhase4MicrobeData())
+      prevPhase3CompleteRef.current = false
+    }
+  }, [p3Solved, p3Preloaded])
 
   const handleRangeChange = (attribute: keyof TargetRanges, field: "min" | "max", value: string) => {
     const numValue = parseNumericInput(value)
@@ -539,33 +619,98 @@ export function SeawolfSolver() {
     nextInput?.select()
   }
 
-  const clearAllInputs = () => {
-    setTargetRanges({
-      mobility: { min: "", max: "" },
-      agility: { min: "", max: "" },
-      size: { min: "", max: "" },
-    })
+  const clearPhase4MicrobesOnly = useCallback(() => {
+    setMicrobeData(emptyPhase4MicrobeData())
+  }, [])
+
+  const clearSiteInformationOnly = useCallback(() => {
     setSiteInfoConfig((prev) => ({
-      ...prev,
       attrRanges: [
         { min: "", max: "" },
         { min: "", max: "" },
         { min: "", max: "" },
       ],
+      desiredTrait: traitNames[0] ?? "",
+      undesiredTrait: traitNames[1] ?? traitNames[0] ?? "",
     }))
-    setMicrobeData({
-      mobility: Array(PHASE4_MICROBE_COUNT).fill(""),
-      agility: Array(PHASE4_MICROBE_COUNT).fill(""),
-      size: Array(PHASE4_MICROBE_COUNT).fill(""),
-      desirable: Array(PHASE4_MICROBE_COUNT).fill(false),
-      undesirable: Array(PHASE4_MICROBE_COUNT).fill(false),
+  }, [traitNames])
+
+  const clearSiteInformationAndNaming = useCallback(() => {
+    const nextTraits = ["Trait 1", "Trait 2", "Trait 3", "Trait 4"] as [string, string, string, string]
+    const nextAttrs = ["Attribute 1", "Attribute 2", "Attribute 3"] as [string, string, string]
+    setTraitNames(nextTraits)
+    setAttrNames(nextAttrs)
+    setSiteInfoConfig({
+      attrRanges: [
+        { min: "", max: "" },
+        { min: "", max: "" },
+        { min: "", max: "" },
+      ],
+      desiredTrait: nextTraits[0],
+      undesiredTrait: nextTraits[1],
     })
-  }
+  }, [])
+
+  const clearPhase2Inputs = useCallback(() => {
+    setP2RevealType("trait")
+    setP2RevealTrait(traitNames[0] || "")
+    setP2RevealAttrIdx(0)
+    setP2RevealMin("")
+    setP2RevealMax("")
+    setP2Current({ mobility: 1, agility: 1, size: 1, trait: traitNames[0] || "" })
+    setP2Index(0)
+    setP2Results([])
+  }, [traitNames])
+
+  const clearPhase3Inputs = useCallback(() => {
+    setP3Preloaded(Array.from({ length: PHASE3_PRELOAD_COUNT }, blankCandidate))
+    setP3Rounds(Array.from({ length: PHASE3_ROUNDS }, () => Array.from({ length: PHASE3_CANDIDATES }, blankCandidate)))
+    setP3Solved([])
+    setMicrobeData(emptyPhase4MicrobeData())
+    prevPhase3CompleteRef.current = false
+  }, [])
+
+  /** Ctrl+Shift+R: naming, site, all phases’ local inputs, Phase 4 ranges + microbes. */
+  const fullKeyboardReset = useCallback(() => {
+    const nextTraits = ["Trait 1", "Trait 2", "Trait 3", "Trait 4"] as [string, string, string, string]
+    const nextAttrs = ["Attribute 1", "Attribute 2", "Attribute 3"] as [string, string, string]
+    setTraitNames(nextTraits)
+    setAttrNames(nextAttrs)
+    setSiteInfoConfig({
+      attrRanges: [
+        { min: "", max: "" },
+        { min: "", max: "" },
+        { min: "", max: "" },
+      ],
+      desiredTrait: nextTraits[0],
+      undesiredTrait: nextTraits[1],
+    })
+    setTargetRanges({
+      mobility: { min: "", max: "" },
+      agility: { min: "", max: "" },
+      size: { min: "", max: "" },
+    })
+    setMicrobeData(emptyPhase4MicrobeData())
+    setP2RevealType("trait")
+    setP2RevealTrait(nextTraits[0])
+    setP2RevealAttrIdx(0)
+    setP2RevealMin("")
+    setP2RevealMax("")
+    setP2Current({ mobility: 1, agility: 1, size: 1, trait: nextTraits[0] })
+    setP2Index(0)
+    setP2Results([])
+    setP3Preloaded(Array.from({ length: PHASE3_PRELOAD_COUNT }, blankCandidate))
+    setP3Rounds(Array.from({ length: PHASE3_ROUNDS }, () => Array.from({ length: PHASE3_CANDIDATES }, blankCandidate)))
+    setP3Solved([])
+    prevPhase3CompleteRef.current = false
+  }, [])
+
+  const clearAllInputs = fullKeyboardReset
 
   const randomInt = (min: number, max: number) =>
     Math.floor(Math.random() * (max - min + 1)) + min
 
-  const fillRandomInputs = () => {
+  const fillRandomInputs = useCallback(() => {
     const randomRange = () => {
       const min = randomInt(1, 7)
       const maxDelta = Math.min(4, 10 - min)
@@ -586,7 +731,7 @@ export function SeawolfSolver() {
       desirable: Array.from({ length: PHASE4_MICROBE_COUNT }, () => Math.random() < 0.25),
       undesirable: Array.from({ length: PHASE4_MICROBE_COUNT }, () => Math.random() < 0.15),
     })
-  }
+  }, [])
 
   const randomFillP4Config = () => {
     const randomRange = () => {
@@ -615,7 +760,7 @@ export function SeawolfSolver() {
     const handleGlobalShortcut = (event: globalThis.KeyboardEvent) => {
       if (event.ctrlKey && event.shiftKey && event.key.toLowerCase() === "r") {
         event.preventDefault()
-        clearAllInputs()
+        fullKeyboardReset()
         return
       }
       if (event.ctrlKey && event.shiftKey && event.key.toLowerCase() === "f") {
@@ -626,7 +771,7 @@ export function SeawolfSolver() {
 
     window.addEventListener("keydown", handleGlobalShortcut)
     return () => window.removeEventListener("keydown", handleGlobalShortcut)
-  }, [])
+  }, [fullKeyboardReset, fillRandomInputs])
 
   const areRangeInputsComplete = useMemo(
     () => Object.values(targetRanges).every((range) => range.min !== "" && range.max !== ""),
@@ -814,6 +959,7 @@ export function SeawolfSolver() {
                 attrNames={attrNames}
                 traitNames={traitNames}
                 title="Site Characteristics"
+                onClearSiteInformation={clearSiteInformationAndNaming}
               />
             </div>
           </section>
@@ -827,6 +973,7 @@ export function SeawolfSolver() {
               attrNames={attrNames}
               traitNames={traitNames}
               title="Site Characteristics"
+              onClearSiteInformation={clearSiteInformationOnly}
             />
             <div className={phaseCard}>
               <div className={phaseChip}>Phase 1 · Profiling</div>
@@ -895,6 +1042,8 @@ export function SeawolfSolver() {
               attrNames={attrNames}
               traitNames={traitNames}
               title="Site 1 Characteristics"
+              onClearSiteInformation={clearSiteInformationOnly}
+              onClearPhaseInputs={clearPhase2Inputs}
             />
             <div className={phaseCard}>
               <div className={phaseChip}>Phase 2 · Categorization</div>
@@ -950,6 +1099,8 @@ export function SeawolfSolver() {
                     max={10}
                     value={p2RevealMin}
                     onChange={(e) => setP2RevealMin(parseNumericInput(e.target.value))}
+                    onFocus={selectAllOnFocusNumberInput}
+                    onClick={selectAllOnClickNumberInput}
                     className="border-2 border-[#94a3b8]"
                     placeholder="Min"
                   />
@@ -959,6 +1110,8 @@ export function SeawolfSolver() {
                     max={10}
                     value={p2RevealMax}
                     onChange={(e) => setP2RevealMax(parseNumericInput(e.target.value))}
+                    onFocus={selectAllOnFocusNumberInput}
+                    onClick={selectAllOnClickNumberInput}
                     className="border-2 border-[#94a3b8]"
                     placeholder="Max"
                   />
@@ -984,6 +1137,8 @@ export function SeawolfSolver() {
                       onChange={(e) =>
                         setP2Current((p) => ({ ...p, mobility: Number(parseNumericInput(e.target.value) || 1) }))
                       }
+                      onFocus={selectAllOnFocusNumberInput}
+                      onClick={selectAllOnClickNumberInput}
                       className="border-2 border-[#94a3b8]"
                       placeholder={attrNames[0] || "Attribute 1"}
                       onKeyDown={(e) => e.key === "Enter" && pushP2Microbe()}
@@ -996,6 +1151,8 @@ export function SeawolfSolver() {
                       onChange={(e) =>
                         setP2Current((p) => ({ ...p, agility: Number(parseNumericInput(e.target.value) || 1) }))
                       }
+                      onFocus={selectAllOnFocusNumberInput}
+                      onClick={selectAllOnClickNumberInput}
                       className="border-2 border-[#94a3b8]"
                       placeholder={attrNames[1] || "Attribute 2"}
                       onKeyDown={(e) => e.key === "Enter" && pushP2Microbe()}
@@ -1008,6 +1165,8 @@ export function SeawolfSolver() {
                       onChange={(e) =>
                         setP2Current((p) => ({ ...p, size: Number(parseNumericInput(e.target.value) || 1) }))
                       }
+                      onFocus={selectAllOnFocusNumberInput}
+                      onClick={selectAllOnClickNumberInput}
                       className="border-2 border-[#94a3b8]"
                       placeholder={attrNames[2] || "Attribute 3"}
                       onKeyDown={(e) => e.key === "Enter" && pushP2Microbe()}
@@ -1102,6 +1261,8 @@ export function SeawolfSolver() {
               attrNames={attrNames}
               traitNames={traitNames}
               title="Site Characteristics"
+              onClearSiteInformation={clearSiteInformationOnly}
+              onClearPhaseInputs={clearPhase3Inputs}
             />
             <div className={phaseCard}>
               <div className={phaseChip}>Phase 3 · Prospect Pool</div>
@@ -1272,7 +1433,7 @@ export function SeawolfSolver() {
                       </div>
                       {roundIdx === p3UnlockedRound && !solved ? (
                         <Button className={cn("mt-3", primaryButton)} onClick={() => solveRound(roundIdx)}>
-                          Solve round
+                          Pick optimal
                         </Button>
                       ) : null}
                     </>
@@ -1297,11 +1458,22 @@ export function SeawolfSolver() {
             <div className={phaseChip}>Phase 4 · Treatment</div>
             <div className="grid grid-cols-1 gap-2 lg:grid-cols-[1.25fr_0.55fr_0.95fr]">
               <div className="rounded-xl border border-[#e2e8f0] bg-white p-3 shadow-sm">
-                <div className="mb-2 flex items-center justify-between">
+                <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
                   <h3 className={accentHeading}>Target Ranges</h3>
-                  <Button variant="outline" size="sm" className={neutralButton} onClick={randomFillP4Config}>
-                    Random fill
-                  </Button>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className={neutralButton}
+                      onClick={clearSiteInformationOnly}
+                    >
+                      Clear site information
+                    </Button>
+                    <Button variant="outline" size="sm" className={neutralButton} onClick={randomFillP4Config}>
+                      Random fill
+                    </Button>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   {[0, 1, 2].map((idx) => {
@@ -1463,14 +1635,15 @@ export function SeawolfSolver() {
                   </div>
                   <div className="text-right">
                     <Button
+                      type="button"
                       variant="outline"
                       size="sm"
-                      className={cn("h-10", dangerButton)}
-                      onClick={clearAllInputs}
+                      className={cn("h-10", neutralButton)}
+                      onClick={clearPhase4MicrobesOnly}
                     >
-                      Clear All
+                      Clear phase inputs
                     </Button>
-                    <p className="mt-1 text-[10px] text-gray-500">Ctrl+Shift+R</p>
+                    <p className="mt-1 text-[10px] text-gray-500">Ctrl+Shift+R: reset entire solver</p>
                   </div>
                 </div>
               </div>

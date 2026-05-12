@@ -4,6 +4,11 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { LogOut } from "lucide-react"
 import { cn } from "@/lib/utils"
+import {
+  SiteLogoMark,
+  SITE_BRAND_LOCKUP_ROOT_CLASS,
+  SITE_BRAND_WORDMARK_CLASS,
+} from "@/components/site-logo-mark"
 
 const navItems = [
   { label: "Dashboard", href: "/dashboard", emoji: "📊" },
@@ -19,9 +24,9 @@ export function AppSidebar() {
   return (
     <aside className="flex flex-col w-[220px] min-h-screen bg-sidebar border-r border-sidebar-border shadow-sm">
       {/* Logo */}
-      <div className="flex items-center gap-2 px-4 py-4">
-        <span className="text-lg" aria-hidden="true">🐺</span>
-        <span className="font-bold text-sidebar-foreground">SeaWolfPrep</span>
+      <div className={cn("flex flex-col gap-1 px-4 py-4", SITE_BRAND_LOCKUP_ROOT_CLASS)}>
+        <SiteLogoMark className="self-start" />
+        <span className={cn(SITE_BRAND_WORDMARK_CLASS, "text-sidebar-foreground")}>SeaWolfPrep</span>
       </div>
 
       {/* Navigation */}

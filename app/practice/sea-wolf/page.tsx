@@ -246,7 +246,7 @@ export default function FullGamePage() {
   const highlightSite = step === "start" ? 1 : siteHighlightFromStep(step)
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-[#4ECDC4] via-[#3EBDB5] to-[#2BA8A0]">
+    <div className="relative min-h-screen bg-transparent">
       {step !== "start" ? (
         <>
           <SharedTopBar

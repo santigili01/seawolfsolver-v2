@@ -3,7 +3,13 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { BarChart3, Gamepad2, Home, Inbox, Settings, Sparkles } from "lucide-react"
+import { cn } from "@/lib/utils"
 import { DashboardSidebarThemeToggle } from "@/components/dashboard/dashboard-sidebar-theme-toggle"
+import {
+  SiteLogoMark,
+  SITE_BRAND_LOCKUP_ROOT_CLASS,
+  SITE_BRAND_WORDMARK_CLASS,
+} from "@/components/site-logo-mark"
 
 function itemClasses(active: boolean) {
   return active
@@ -27,11 +33,11 @@ export function DashboardSidebar({
   return (
     <aside className="flex w-64 shrink-0 flex-col border-r border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
       <div className="p-4">
-        <div className="mb-8 flex items-center gap-2">
-          <span className="text-xl" aria-hidden>
-            🧫
+        <div className={cn("mb-8 flex flex-col gap-1", SITE_BRAND_LOCKUP_ROOT_CLASS)}>
+          <SiteLogoMark className="self-start" />
+          <span className={cn(SITE_BRAND_WORDMARK_CLASS, "text-gray-900 dark:text-gray-100")}>
+            SeaWolfPrep
           </span>
-          <span className="text-lg font-bold text-gray-900 dark:text-gray-100">SeaWolfPrep</span>
         </div>
 
         <nav className="space-y-1">
