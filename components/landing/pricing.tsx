@@ -23,7 +23,7 @@ export function Pricing({ ctaLinks, sectionId = "pricing" }: PricingProps) {
   return (
     <section
       {...(sectionId === false ? {} : { id: sectionId })}
-      className="scroll-mt-20 bg-[linear-gradient(to_bottom,#ffffff_0%,#f0f4ff_14%,#d8e2ff_52%,#c9d5f8_100%)] px-4 py-16 sm:px-6 sm:py-24 lg:px-8 dark:bg-[linear-gradient(to_bottom,#020617_0%,#0f172a_22%,#1e293b_55%,#1e293b_100%)]"
+      className="relative z-0 scroll-mt-20 bg-[linear-gradient(to_bottom,rgba(255,255,255,0)_0px,rgba(255,255,255,0)_100px,#f8fafc_120px,#e8ecfc_48%,#c9d5f8_100%)] px-4 py-16 sm:px-6 sm:py-24 lg:px-8 dark:bg-[linear-gradient(to_bottom,transparent_0px,transparent_100px,#0f172a_120px,#1e293b_50%,#1e293b_100%)]"
     >
       <div className="mx-auto max-w-5xl">
         <div className="text-center">
@@ -35,7 +35,7 @@ export function Pricing({ ctaLinks, sectionId = "pricing" }: PricingProps) {
           </p>
         </div>
 
-        <div className="mx-auto grid max-w-3xl grid-cols-1 items-stretch gap-4 md:grid-cols-2">
+        <div className="mx-auto grid max-w-4xl grid-cols-1 items-stretch gap-4 md:grid-cols-2">
           <Card className="flex h-full min-h-[28rem] flex-col border-border shadow-sm sm:min-h-[30rem] md:min-h-[31rem]">
             <CardHeader className="flex flex-col gap-2 space-y-0 text-center">
               <div className="mx-auto flex w-full max-w-sm flex-col items-center gap-2 text-center">
@@ -44,7 +44,7 @@ export function Pricing({ ctaLinks, sectionId = "pricing" }: PricingProps) {
                     Guarantee your best score
                   </p>
                 </div>
-                <CardTitle className="w-full text-center text-xl">Simulator</CardTitle>
+                <CardTitle className="w-full text-center text-xl">Sea Wolf Simulator</CardTitle>
                 <div className="w-full text-center text-4xl font-bold text-foreground">$15</div>
                 <p className="text-sm text-muted-foreground">One-time · Lifetime access</p>
               </div>
@@ -69,7 +69,7 @@ export function Pricing({ ctaLinks, sectionId = "pricing" }: PricingProps) {
                 </li>
               </ul>
               <Button asChild className="w-full shrink-0">
-                <Link href={simHref}>Get Simulator — $15</Link>
+                <Link href={simHref}>Get Sea Wolf Simulator — $15</Link>
               </Button>
             </CardContent>
           </Card>
@@ -87,7 +87,7 @@ export function Pricing({ ctaLinks, sectionId = "pricing" }: PricingProps) {
                     We charge $25.
                   </p>
                 </div>
-                <CardTitle className="w-full text-center text-xl">Simulator + Solver</CardTitle>
+                <CardTitle className="w-full text-center text-xl">Sea Wolf Simulator + Solver</CardTitle>
                 <div className="w-full text-center text-4xl font-bold text-foreground">$25</div>
                 <p className="text-sm text-muted-foreground">One-time · Lifetime access</p>
               </div>
@@ -108,24 +108,24 @@ export function Pricing({ ctaLinks, sectionId = "pricing" }: PricingProps) {
                 ))}
               </ul>
               <Button asChild className="w-full shrink-0 bg-primary text-primary-foreground hover:bg-primary/90">
-                <Link href={bundleHref}>Get Simulator + Solver — $25</Link>
+                <Link href={bundleHref}>Get Sea Wolf Simulator + Solver — $25</Link>
               </Button>
             </CardContent>
           </Card>
         </div>
 
         <div className="mt-12 text-center">
-          <div className="flex flex-wrap items-center justify-center gap-2 text-xs text-muted-foreground">
+          <div className="flex flex-wrap items-center justify-center gap-2 text-sm text-muted-foreground">
             {["Visa", "Mastercard", "PayPal", "Amex", "Apple Pay", "Google Pay"].map((m) => (
               <span key={m} className="rounded-full border border-border bg-card px-2.5 py-1">
                 {m}
               </span>
             ))}
           </div>
-          <p className="mt-3 text-xs text-muted-foreground">
+          <p className="mt-3 text-sm text-foreground/70">
             🔒 Secure checkout · 14-day refund* · Not affiliated with McKinsey & Company
           </p>
-          <p className="mt-2 text-center text-[6px] leading-tight text-muted-foreground">*Conditions apply.</p>
+          <p className="mt-2 text-center text-sm text-muted-foreground">*Conditions apply.</p>
         </div>
       </div>
     </section>

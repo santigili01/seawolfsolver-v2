@@ -1,4 +1,5 @@
 import { Monitor, LayoutGrid, Lightbulb } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 const badges = [
   {
@@ -23,19 +24,24 @@ const badges = [
 
 export function TrustBadges() {
   return (
-    <section className="scroll-mt-20 bg-white px-4 py-16 sm:px-6 sm:py-24 lg:px-8 dark:bg-slate-950">
+    <section className="relative z-0 scroll-mt-20 bg-[#f8fafc] px-4 py-16 sm:px-6 sm:py-24 lg:px-8 dark:bg-slate-950/80">
       <div className="mx-auto max-w-6xl">
-        <div className="grid gap-8 md:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-3 md:items-stretch">
           {badges.map((badge) => (
-            <div key={badge.title} className="flex items-start gap-3">
-              <div className="mt-0.5 rounded-md bg-primary/10 p-2 text-primary">
-                <badge.icon className="size-4" />
-              </div>
-              <div>
-                <h3 className="text-base font-semibold text-foreground">{badge.title}</h3>
-                <p className="mt-1 text-sm text-muted-foreground">{badge.description}</p>
-              </div>
-            </div>
+            <Card
+              key={badge.title}
+              className="flex h-full flex-col rounded-xl border border-border bg-card p-6 shadow-sm"
+            >
+              <CardHeader className="pb-3">
+                <div className="mb-2 inline-flex w-fit rounded-md bg-primary/10 p-2 text-primary">
+                  <badge.icon className="size-7" />
+                </div>
+                <CardTitle className="text-base font-semibold">{badge.title}</CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <p className="text-sm text-muted-foreground">{badge.description}</p>
+              </CardContent>
+            </Card>
           ))}
         </div>
       </div>

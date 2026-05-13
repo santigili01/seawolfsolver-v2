@@ -5,14 +5,14 @@ import { HeroDemoShowcase } from "@/components/landing/hero-demo-showcase"
 
 export function Hero() {
   return (
-    <section className="relative overflow-hidden bg-background px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
+    <section className="relative z-0 overflow-hidden bg-background px-4 py-20 sm:px-6 sm:py-32 lg:px-8">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute left-1/2 top-0 h-[520px] w-[820px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/5 blur-3xl" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,hsl(var(--muted-foreground)/0.12)_1px,transparent_0)] bg-[size:22px_22px] opacity-30" />
       </div>
 
       <div className="relative mx-auto max-w-6xl text-center">
-        <p className="text-sm font-medium tracking-wide text-muted-foreground">McKinsey Solve · Sea Wolf · 2026 Format</p>
+        <p className="text-sm font-medium tracking-wide text-foreground/60">McKinsey Solve · Sea Wolf · 2026 Format</p>
 
         <h1 className="mt-3 text-balance text-[2.025rem] font-bold leading-tight tracking-tight text-foreground sm:mt-4 sm:text-[2.7rem] lg:text-[3.375rem]">
           Ace the McKinsey Solve.
@@ -46,7 +46,7 @@ export function Hero() {
           </Badge>
         </div>
 
-        <div id="how-it-works" className="scroll-mt-24 mt-12">
+        <div id="how-it-works" className="scroll-mt-20 mt-12 pb-8">
           <HeroDemoShowcase />
         </div>
       </div>

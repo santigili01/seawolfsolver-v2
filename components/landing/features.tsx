@@ -44,18 +44,18 @@ export function Features() {
   return (
     <section
       id="features"
-      className="scroll-mt-20 bg-background px-4 pb-0 pt-16 sm:px-6 sm:pt-24 lg:px-8"
+      className="relative isolate z-0 scroll-mt-20 bg-white px-4 pt-16 after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:z-0 after:h-24 after:bg-gradient-to-b after:from-transparent after:to-white/50 after:content-[''] sm:px-6 sm:pt-24 lg:px-8 dark:bg-slate-950 dark:after:to-slate-950/50"
     >
-      <div className="mx-auto max-w-6xl">
+      <div className="relative z-10 mx-auto max-w-6xl">
         <div className="text-center">
           <h2 className="mt-0 mb-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
             Everything you need to walk in prepared
           </h2>
           <p className="mb-12 text-lg text-muted-foreground">Every feature you need. Nothing you don&apos;t.</p>
         </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 pb-4 md:grid-cols-2 md:items-stretch lg:grid-cols-3 lg:items-stretch">
           {features.map((feature) => (
-            <Card key={feature.title} className="border-border bg-card shadow-sm">
+            <Card key={feature.title} className="flex h-full flex-col border-border bg-card shadow-sm">
               <CardHeader className="pb-3">
                 <div className="mb-2 inline-flex w-fit rounded-md bg-primary/10 p-2 text-primary">
                   <feature.icon className="size-4" />
@@ -69,7 +69,10 @@ export function Features() {
           ))}
         </div>
       </div>
-      <FounderNote />
+      <div className="relative z-10 mt-8 sm:mt-10">
+        <FounderNote />
+      </div>
+      <div className="pb-16 sm:pb-24" aria-hidden />
     </section>
   )
 }

@@ -23,7 +23,7 @@ const bottomLinks = [
 
 export function Footer() {
   return (
-    <footer className="border-t border-gray-200 bg-[#1a202c] px-4 py-16 text-slate-300 sm:px-6 sm:py-24 lg:px-8 dark:border-gray-800">
+    <footer className="relative z-0 border-t border-gray-200 bg-[#1a202c] px-4 py-16 text-slate-300 sm:px-6 sm:py-24 lg:px-8 dark:border-gray-800">
       <div className="mx-auto max-w-7xl">
         <div className="flex flex-col items-start justify-between gap-6 pb-6 sm:flex-row sm:items-center">
           <Link

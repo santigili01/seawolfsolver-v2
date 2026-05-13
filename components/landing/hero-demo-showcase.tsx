@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils"
 type TabId = "solver" | "simulator" | "insights"
 
 const TABS: { id: TabId; label: string }[] = [
-  { id: "solver", label: "Sea Wolf Solver" },
+  { id: "solver", label: "Solver" },
   { id: "simulator", label: "Sea Wolf Simulator" },
   { id: "insights", label: "Insights" },
 ]
@@ -107,49 +107,51 @@ export function HeroDemoShowcase() {
   const [tab, setTab] = useState<TabId>("solver")
 
   return (
-    <div className="mx-auto w-full max-w-4xl">
-      <h2 className="mt-0 mb-12 text-center text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+    <div className="mx-auto w-full max-w-6xl">
+      <h2 className="mt-0 mb-5 text-center text-2xl font-bold tracking-tight text-foreground sm:mb-6 sm:text-3xl">
         See it in action
       </h2>
 
-      <div className="rounded-xl border border-border bg-white p-4 shadow-sm sm:p-5 dark:bg-card">
-        <div
-          className="flex gap-1 rounded-lg bg-muted/60 p-1 sm:gap-2"
-          role="tablist"
-          aria-label="Demo type"
-        >
-          {TABS.map(({ id, label }) => {
-            const active = tab === id
-            return (
-              <button
-                key={id}
-                type="button"
-                role="tab"
-                aria-selected={active}
-                onClick={() => setTab(id)}
-                className={cn(
-                  "min-h-10 flex-1 rounded-md px-2 py-2 text-center text-xs font-semibold transition-colors sm:px-3 sm:text-sm",
-                  active
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "text-muted-foreground hover:bg-background/80 hover:text-foreground",
-                )}
-              >
-                {label}
-              </button>
-            )
-          })}
-        </div>
+      <div className="mx-auto w-[min(100%,79.475%)] max-w-full">
+        <div className="rounded-xl border border-border bg-white p-3 shadow-sm sm:p-4 dark:bg-card">
+          <div
+            className="flex gap-1 rounded-lg bg-muted/60 p-1 sm:gap-2"
+            role="tablist"
+            aria-label="Demo type"
+          >
+            {TABS.map(({ id, label }) => {
+              const active = tab === id
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => setTab(id)}
+                  className={cn(
+                    "min-h-9 flex-1 rounded-md px-2 py-1.5 text-center text-xs font-semibold transition-colors sm:min-h-10 sm:px-3 sm:py-2 sm:text-sm",
+                    active
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:bg-background/80 hover:text-foreground",
+                  )}
+                >
+                  {label}
+                </button>
+              )
+            })}
+          </div>
 
-        <div className="relative mt-4 aspect-video w-full overflow-hidden rounded-lg bg-gray-100">
-          {tab === "solver" ? <DemoVideo key="solver" src={MEDIA.solver.video} /> : null}
-          {tab === "simulator" ? (
-            <DemoVideo key="simulator" src={MEDIA.simulator.video} />
-          ) : null}
-          {tab === "insights" ? <InsightsSlideshow /> : null}
+          <div className="relative mt-3 aspect-video w-full overflow-hidden rounded-lg bg-gray-100">
+            {tab === "solver" ? <DemoVideo key="solver" src={MEDIA.solver.video} /> : null}
+            {tab === "simulator" ? (
+              <DemoVideo key="simulator" src={MEDIA.simulator.video} />
+            ) : null}
+            {tab === "insights" ? <InsightsSlideshow /> : null}
+          </div>
         </div>
       </div>
 
-      <p className="mx-auto mt-4 max-w-3xl text-pretty text-center text-sm leading-relaxed text-muted-foreground sm:text-[0.9375rem]">
+      <p className="mx-auto mt-2 max-w-3xl text-pretty text-center text-sm leading-relaxed text-muted-foreground sm:mt-3 sm:text-[0.9375rem]">
         {CAPTIONS[tab]}
       </p>
     </div>

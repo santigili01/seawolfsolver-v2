@@ -1,9 +1,9 @@
 "use client"
 
+import { useAuth, UserButton } from "@clerk/nextjs"
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
 import {
   SiteLogoMark,
   SITE_BRAND_LOCKUP_ROOT_CLASS,
@@ -18,6 +18,7 @@ const navLinks = [
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false)
+  const { userId, isLoaded } = useAuth()
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8)
@@ -29,7 +30,7 @@ export function Navbar() {
   return (
     <nav
       className={cn(
-        "sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85",
+        "sticky top-0 z-50 isolate border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85",
         scrolled ? "border-border/80" : "border-transparent",
       )}
     >
@@ -55,15 +56,24 @@ export function Navbar() {
               {link.label}
             </Link>
           ))}
-          <Link
-            href="/sign-in"
-            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Log In
-          </Link>
-          <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90">
-            <Link href="/sea-wolf-demo">Free Demo</Link>
-          </Button>
+          {isLoaded && !userId ? (
+            <>
+              <a href="/sign-in" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
+                Log In
+              </a>
+              <a href="/pricing" className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
+                Free Demo
+              </a>
+            </>
+          ) : null}
+          {isLoaded && userId ? (
+            <>
+              <a href="/dashboard" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
+                Dashboard
+              </a>
+              <UserButton />
+            </>
+          ) : null}
         </div>
       </div>
     </nav>
