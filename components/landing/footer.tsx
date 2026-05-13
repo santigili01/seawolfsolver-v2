@@ -7,8 +7,10 @@ import {
 } from "@/components/site-logo-mark"
 
 const topLinks = [
-  { href: "#how-it-works", label: "How it Works" },
+  { href: "#how-it-works", label: "How It Works" },
   { href: "#pricing", label: "Pricing" },
+  { href: "/practice", label: "Practice" },
+  { href: "/sign-in", label: "Log In" },
   { href: "/sea-wolf-demo", label: "Free Demo" },
   { href: "mailto:contact@seawolfprep.com", label: "Contact" },
 ]
@@ -21,7 +23,7 @@ const bottomLinks = [
 
 export function Footer() {
   return (
-    <footer className="border-t border-border px-4 py-8 sm:px-6 lg:px-8">
+    <footer className="border-t border-border py-8 pl-4 pr-4 sm:pl-6 sm:pr-6 lg:pl-4 lg:pr-8">
       <div className="mx-auto max-w-7xl">
         <div className="flex flex-col items-start justify-between gap-4 border-b border-border pb-5 sm:flex-row sm:items-center">
           <Link
@@ -53,6 +55,12 @@ export function Footer() {
             ))}
           </div>
         </div>
+        <p className="mt-4 text-center text-sm text-muted-foreground sm:text-left">
+          Not ready to buy? Try the free demo →{" "}
+          <Link href="/sea-wolf-demo" className="font-medium text-primary hover:underline">
+            /sea-wolf-demo
+          </Link>
+        </p>
       </div>
     </footer>
   )

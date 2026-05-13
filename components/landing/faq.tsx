@@ -1,9 +1,12 @@
+"use client"
+
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion"
+import { BottomCTA } from "@/components/landing/bottom-cta"
 
 const faqs = [
   {
@@ -29,7 +32,7 @@ const faqs = [
   {
     question: "Can I get a refund?",
     answer:
-      "Yes — 14-day refund if you haven't used more than one simulator run. Email us at contact@seawolfprep.com.",
+      "Yes — within 14 days, provided you haven't used the solver and have completed fewer than 2 simulator runs. That's why we offer a full free demo — try before you buy.",
   },
   {
     question: "Does the free demo count toward my paid access?",
@@ -39,36 +42,39 @@ const faqs = [
   {
     question: "Will you add Redrock and Sustainable Futures Lab?",
     answer:
-      "Yes. Redrock is next on the roadmap. Current buyers get free access when it launches.",
+      "Yes. Redrock is next. Current Simulator + Solver buyers get free access when it launches — this is a limited-time offer that won't last forever.",
   },
 ]
 
 export function FAQ() {
   return (
-    <section
-      id="faq"
-      className="scroll-mt-20 bg-card px-4 py-16 sm:px-6 sm:py-24 lg:px-8"
-    >
-      <div className="mx-auto max-w-3xl">
-        <div className="text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-            Questions
-          </h2>
-        </div>
+    <>
+      <BottomCTA />
+      <section
+        id="faq"
+        className="scroll-mt-20 bg-card px-4 py-16 sm:px-6 sm:py-24 lg:px-8"
+      >
+        <div className="mx-auto max-w-3xl">
+          <div className="text-center">
+            <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+              Questions
+            </h2>
+          </div>
 
-        <Accordion type="single" collapsible className="mt-12">
-          {faqs.map((faq, index) => (
-            <AccordionItem key={index} value={`item-${index}`}>
-              <AccordionTrigger className="text-left text-base font-medium">
-                {faq.question}
-              </AccordionTrigger>
-              <AccordionContent className="text-muted-foreground">
-                {faq.answer}
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
-      </div>
-    </section>
+          <Accordion type="single" collapsible className="mt-12">
+            {faqs.map((faq, index) => (
+              <AccordionItem key={index} value={`item-${index}`}>
+                <AccordionTrigger className="text-left text-base font-medium">
+                  {faq.question}
+                </AccordionTrigger>
+                <AccordionContent className="text-muted-foreground">
+                  {faq.answer}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
+      </section>
+    </>
   )
 }

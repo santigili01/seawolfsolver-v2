@@ -13,6 +13,7 @@ import {
 const navLinks = [
   { href: "#how-it-works", label: "How It Works" },
   { href: "#pricing", label: "Pricing" },
+  { href: "/practice", label: "Practice" },
 ]
 
 export function Navbar() {
@@ -27,11 +28,12 @@ export function Navbar() {
 
   return (
     <nav
-      className={`sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85 ${
-        scrolled ? "border-b border-border" : "border-b border-transparent"
-      }`}
+      className={cn(
+        "sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85",
+        scrolled ? "border-border/80" : "border-transparent",
+      )}
     >
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-x-4 gap-y-3 py-4 pl-4 pr-4 sm:pl-6 sm:pr-6 lg:pl-4 lg:pr-8">
         <Link
           href="/"
           className={cn(
@@ -43,7 +45,7 @@ export function Navbar() {
           <span className={cn(SITE_BRAND_WORDMARK_CLASS, "text-foreground")}>SeaWolfPrep</span>
         </Link>
 
-        <div className="flex items-center gap-4 sm:gap-6">
+        <div className="flex flex-wrap items-center justify-end gap-x-4 gap-y-2 sm:gap-x-6">
           {navLinks.map((link) => (
             <Link
               key={link.href}
@@ -53,6 +55,12 @@ export function Navbar() {
               {link.label}
             </Link>
           ))}
+          <Link
+            href="/sign-in"
+            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Log In
+          </Link>
           <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90">
             <Link href="/sea-wolf-demo">Free Demo</Link>
           </Button>

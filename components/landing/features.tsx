@@ -1,36 +1,42 @@
-import { LayoutGrid, Search, Calculator, Lightbulb, RefreshCw, Infinity } from "lucide-react"
+import { LayoutGrid, Sparkles, Activity, Lightbulb, RefreshCw, Infinity } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { FounderNote } from "@/components/landing/founder-note"
 
 const features = [
   {
     icon: LayoutGrid,
     title: "Full 4-Phase Simulator",
-    description: "Practice all 4 phases of the real Sea Wolf assessment: Profiling, Categorization, Prospect Pool, and Treatment. 300+ unique scenarios.",
+    description:
+      "Practice all 4 phases of the real Sea Wolf assessment. 300+ unique scenarios, virtually unlimited practice.",
   },
   {
-    icon: Search,
-    title: "Phase 3 Prospect Pool Solver",
-    description: "The hardest phase. The solver shows you the optimal candidate pick in every round — the move that maximises your final pool score.",
+    icon: Sparkles,
+    title: "The Only 4-Phase Solver",
+    description:
+      "Every other solver stops at Prospect Pool or Treatment. Ours covers all 4 phases. Input your conditions, get the optimal move for every single step.",
   },
   {
-    icon: Calculator,
-    title: "Phase 4 Treatment Solver",
-    description: "Input your 10 microbes. Get the optimal trio with full scoring breakdown across all 5 conditions.",
+    icon: Activity,
+    title: "Behavioural Tracking",
+    description:
+      "McKinsey doesn't just score your answers — it tracks how you make decisions. Our simulator does too. See your decision patterns after every run.",
   },
   {
     icon: Lightbulb,
     title: "Deepest Insights on the Market",
-    description: "Every run ends with a full decision-level breakdown. Know exactly which choice cost you points and what the optimal move was.",
+    description:
+      "Decision-level feedback on every run. Not just your score — exactly why you lost points and what the optimal move was.",
   },
   {
     icon: RefreshCw,
     title: "Built for 2026",
-    description: "Covers the current McKinsey Solve format. Updated as the assessment changes. Check the changelog for the latest.",
+    description: "Covers the current McKinsey Solve format. Updated as the assessment changes.",
   },
   {
     icon: Infinity,
     title: "Lifetime Access",
-    description: "Pay once. Practice as many times as you need. No subscription, no expiry. Future phases (Redrock, SFL) included free when released.",
+    description:
+      "Pay once. Practice forever. Future tools (Redrock, SFL) included free for current buyers — limited time.",
   },
 ]
 
@@ -45,7 +51,7 @@ export function Features() {
           <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
             Everything you need to walk in prepared
           </h2>
-          <p className="mt-4 text-lg text-muted-foreground">Simulator and solver. Both cover all 4 phases.</p>
+          <p className="mt-4 text-lg text-muted-foreground">Every feature you need. Nothing you don&apos;t.</p>
         </div>
         <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {features.map((feature) => (
@@ -63,6 +69,7 @@ export function Features() {
           ))}
         </div>
       </div>
+      <FounderNote />
     </section>
   )
 }

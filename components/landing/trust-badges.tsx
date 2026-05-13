@@ -4,17 +4,20 @@ const badges = [
   {
     icon: Monitor,
     title: "Browser-Native",
-    description: "No Excel. No macros. No malware risk. Open a tab and practice.",
+    description:
+      "No Excel. No macros. No malware risk. Open a tab and start practicing.",
   },
   {
     icon: LayoutGrid,
-    title: "All 4 Phases. Simulator + Solver.",
-    description: "Practice all 4 phases and get the optimal solution for each. Most tools only cover the final phase.",
+    title: "All 4 Phases. Every Tool.",
+    description:
+      "Simulator and solver both cover all 4 phases. We're the only prep tool on the market that does.",
   },
   {
     icon: Lightbulb,
     title: "Deepest Insights on the Market",
-    description: "Full per-phase score breakdown with specific feedback on every decision. Know exactly what to fix.",
+    description:
+      "Full decision-level feedback after every run. See exactly which move cost you points and what the optimal play was.",
   },
 ]
 
