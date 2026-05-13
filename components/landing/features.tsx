@@ -44,16 +44,16 @@ export function Features() {
   return (
     <section
       id="features"
-      className="scroll-mt-20 bg-card px-4 py-16 sm:px-6 sm:py-24 lg:px-8"
+      className="scroll-mt-20 bg-background px-4 pb-0 pt-16 sm:px-6 sm:pt-24 lg:px-8"
     >
       <div className="mx-auto max-w-6xl">
         <div className="text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+          <h2 className="mt-0 mb-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
             Everything you need to walk in prepared
           </h2>
-          <p className="mt-4 text-lg text-muted-foreground">Every feature you need. Nothing you don&apos;t.</p>
+          <p className="mb-12 text-lg text-muted-foreground">Every feature you need. Nothing you don&apos;t.</p>
         </div>
-        <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {features.map((feature) => (
             <Card key={feature.title} className="border-border bg-card shadow-sm">
               <CardHeader className="pb-3">

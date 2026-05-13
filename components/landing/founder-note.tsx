@@ -1,7 +1,7 @@
 export function FounderNote() {
   return (
     <section
-      className="mt-16 w-full bg-[#f8fafc] py-16"
+      className="w-full bg-white py-16 sm:py-24 dark:bg-slate-950"
       aria-label="Founder note"
     >
       <div className="mx-auto max-w-2xl text-center sm:text-left">

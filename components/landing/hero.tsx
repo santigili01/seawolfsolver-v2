@@ -5,7 +5,7 @@ import { HeroDemoShowcase } from "@/components/landing/hero-demo-showcase"
 
 export function Hero() {
   return (
-    <section className="relative overflow-hidden pb-16 pl-4 pr-4 pt-0 sm:pb-24 sm:pl-6 sm:pr-6 sm:pt-0 lg:pb-28 lg:pl-4 lg:pr-8 lg:pt-0">
+    <section className="relative overflow-hidden bg-background px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute left-1/2 top-0 h-[520px] w-[820px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/5 blur-3xl" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,hsl(var(--muted-foreground)/0.12)_1px,transparent_0)] bg-[size:22px_22px] opacity-30" />
@@ -24,10 +24,6 @@ export function Hero() {
           The only prep tool covering all 4 phases — simulator and solver included. Built for candidates, by candidates. Pass for the
           price of a textbook, not a coach.
         </p>
-
-        <div id="how-it-works" className="scroll-mt-24 border-t border-border pt-10 mt-10">
-          <HeroDemoShowcase />
-        </div>
 
         <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Button size="lg" asChild className="bg-primary text-primary-foreground hover:bg-primary/90">
@@ -48,6 +44,10 @@ export function Hero() {
           <Badge variant="secondary" className="rounded-full bg-card px-3 py-1 text-xs font-medium text-foreground ring-1 ring-border">
             ✓ Lifetime access
           </Badge>
+        </div>
+
+        <div id="how-it-works" className="scroll-mt-24 mt-12">
+          <HeroDemoShowcase />
         </div>
       </div>
     </section>

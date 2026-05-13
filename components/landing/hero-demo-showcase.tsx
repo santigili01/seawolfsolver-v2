@@ -108,11 +108,11 @@ export function HeroDemoShowcase() {
 
   return (
     <div className="mx-auto w-full max-w-4xl">
-      <h2 className="text-center text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+      <h2 className="mt-0 mb-12 text-center text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
         See it in action
       </h2>
 
-      <div className="mt-6 rounded-xl border border-border bg-white p-4 shadow-sm sm:p-5 dark:bg-card">
+      <div className="rounded-xl border border-border bg-white p-4 shadow-sm sm:p-5 dark:bg-card">
         <div
           className="flex gap-1 rounded-lg bg-muted/60 p-1 sm:gap-2"
           role="tablist"

@@ -52,16 +52,16 @@ export function FAQ() {
       <BottomCTA />
       <section
         id="faq"
-        className="scroll-mt-20 bg-card px-4 py-16 sm:px-6 sm:py-24 lg:px-8"
+        className="scroll-mt-20 bg-white px-4 py-16 sm:px-6 sm:py-24 lg:px-8 dark:bg-slate-950"
       >
         <div className="mx-auto max-w-3xl">
           <div className="text-center">
-            <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+            <h2 className="mt-0 mb-12 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
               Questions
             </h2>
           </div>
 
-          <Accordion type="single" collapsible className="mt-12">
+          <Accordion type="single" collapsible className="mt-0">
             {faqs.map((faq, index) => (
               <AccordionItem key={index} value={`item-${index}`}>
                 <AccordionTrigger className="text-left text-base font-medium">
