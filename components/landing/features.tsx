@@ -45,6 +45,10 @@ export function Features() {
     <section
       id="features"
       className="relative isolate z-0 scroll-mt-20 bg-white px-4 pt-16 after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:z-0 after:h-24 after:bg-gradient-to-b after:from-transparent after:to-white/50 after:content-[''] sm:px-6 sm:pt-24 lg:px-8 dark:bg-slate-950 dark:after:to-slate-950/50"
+      style={{
+        backgroundImage: "radial-gradient(circle, #d1d5db 1px, transparent 1px)",
+        backgroundSize: "24px 24px",
+      }}
     >
       <div className="relative z-10 mx-auto max-w-6xl">
         <div className="text-center">

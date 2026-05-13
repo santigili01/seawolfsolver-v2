@@ -30,13 +30,11 @@ export function Pricing({ ctaLinks, sectionId = "pricing" }: PricingProps) {
           <h2 className="mt-0 mb-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
             Pass for the price of a textbook, not a coach.
           </h2>
-          <p className="mb-12 text-lg text-muted-foreground">
-            Transparent product. Transparent prices. First 50 buyers lock in launch pricing.
-          </p>
+          <p className="mb-12 text-lg text-muted-foreground">Transparent product. Transparent prices.</p>
         </div>
 
         <div className="mx-auto grid max-w-4xl grid-cols-1 items-stretch gap-4 md:grid-cols-2">
-          <Card className="flex h-full min-h-[28rem] flex-col border-border shadow-sm sm:min-h-[30rem] md:min-h-[31rem]">
+          <Card className="flex h-full flex-col border-border shadow-sm">
             <CardHeader className="flex flex-col gap-2 space-y-0 text-center">
               <div className="mx-auto flex w-full max-w-sm flex-col items-center gap-2 text-center">
                 <div className="flex h-11 w-full flex-col justify-center sm:h-12">
@@ -45,7 +43,15 @@ export function Pricing({ ctaLinks, sectionId = "pricing" }: PricingProps) {
                   </p>
                 </div>
                 <CardTitle className="w-full text-center text-xl">Sea Wolf Simulator</CardTitle>
-                <div className="w-full text-center text-4xl font-bold text-foreground">$15</div>
+                <div className="flex w-full flex-col items-center gap-1 text-center">
+                  <span className="text-lg text-muted-foreground line-through">$30</span>
+                  <div className="flex flex-wrap items-center justify-center gap-x-1">
+                    <span className="text-4xl font-bold text-foreground">$15</span>
+                    <span className="ml-2 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-600">
+                      50% off — launch pricing
+                    </span>
+                  </div>
+                </div>
                 <p className="text-sm text-muted-foreground">One-time · Lifetime access</p>
               </div>
             </CardHeader>
@@ -68,13 +74,13 @@ export function Pricing({ ctaLinks, sectionId = "pricing" }: PricingProps) {
                   <span>4-phase solver not included</span>
                 </li>
               </ul>
-              <Button asChild className="w-full shrink-0">
+              <Button asChild className="mt-auto w-full shrink-0">
                 <Link href={simHref}>Get Sea Wolf Simulator — $15</Link>
               </Button>
             </CardContent>
           </Card>
 
-          <Card className="relative flex h-full min-h-[28rem] flex-col overflow-visible border-primary/40 shadow-md ring-1 ring-primary/20 sm:min-h-[30rem] md:min-h-[31rem]">
+          <Card className="relative flex h-full flex-col overflow-visible border-primary/40 shadow-md ring-1 ring-primary/20">
             <Badge className="absolute -top-4 left-1/2 z-10 w-max max-w-[calc(100%-2rem)] -translate-x-1/2 whitespace-normal rounded-full border border-primary/30 bg-primary px-3 py-1 text-center text-xs font-semibold leading-tight text-primary-foreground shadow-sm sm:px-4 sm:py-1.5 sm:text-sm sm:leading-none">
               Most Popular · Best Value
             </Badge>
@@ -88,7 +94,15 @@ export function Pricing({ ctaLinks, sectionId = "pricing" }: PricingProps) {
                   </p>
                 </div>
                 <CardTitle className="w-full text-center text-xl">Sea Wolf Simulator + Solver</CardTitle>
-                <div className="w-full text-center text-4xl font-bold text-foreground">$25</div>
+                <div className="flex w-full flex-col items-center gap-1 text-center">
+                  <span className="text-lg text-muted-foreground line-through">$50</span>
+                  <div className="flex flex-wrap items-center justify-center gap-x-1">
+                    <span className="text-4xl font-bold text-foreground">$25</span>
+                    <span className="ml-2 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-600">
+                      50% off — launch pricing
+                    </span>
+                  </div>
+                </div>
                 <p className="text-sm text-muted-foreground">One-time · Lifetime access</p>
               </div>
             </CardHeader>
@@ -107,7 +121,7 @@ export function Pricing({ ctaLinks, sectionId = "pricing" }: PricingProps) {
                   </li>
                 ))}
               </ul>
-              <Button asChild className="w-full shrink-0 bg-primary text-primary-foreground hover:bg-primary/90">
+              <Button asChild className="mt-auto w-full shrink-0 bg-primary text-primary-foreground hover:bg-primary/90">
                 <Link href={bundleHref}>Get Sea Wolf Simulator + Solver — $25</Link>
               </Button>
             </CardContent>
