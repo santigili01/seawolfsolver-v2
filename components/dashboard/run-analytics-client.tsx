@@ -16,6 +16,7 @@ import {
   gameResultGameTypeLabels,
   type GameResultGameType,
 } from "@/lib/game-result-types"
+import { normalizeRowGameType } from "@/lib/game-results-utils"
 import {
   Sheet,
   SheetContent,
@@ -36,15 +37,6 @@ import { gameResultsScoreDisplayColorClass } from "@/components/game/GameResults
 /** Brand teal used across Sea Wolf / practice surfaces */
 const SEA_WOLF_TEAL = "#4ECDC4"
 const CHART_POINT_OPACITY = 0.8
-
-const VALID_GAME_TYPES = new Set<string>(GAME_RESULT_GAME_TYPES)
-
-/** Rows from older API responses may omit `game_type`; treat as full Sea Wolf. */
-function normalizeRowGameType(r: GameResultRow): GameResultGameType {
-  const t = r.game_type as string | undefined
-  if (t && VALID_GAME_TYPES.has(t)) return t as GameResultGameType
-  return "sea_wolf"
-}
 
 function gameTypeLabel(t: string): string {
   return t in gameResultGameTypeLabels
