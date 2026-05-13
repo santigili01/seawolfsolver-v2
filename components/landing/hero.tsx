@@ -2,7 +2,6 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { HeroDemoShowcase } from "@/components/landing/hero-demo-showcase"
-import { HeroFloatingGameUi } from "@/components/landing/hero-floating-game-ui"
 
 function HeroStatsRow() {
   return (
@@ -27,8 +26,7 @@ function HeroStatsRow() {
 
 export function Hero() {
   return (
-    <section className="relative z-0 overflow-visible bg-background px-4 pb-20 pt-10 sm:px-6 sm:pb-32 sm:pt-16 lg:px-8">
-      <HeroFloatingGameUi />
+    <section className="relative z-0 overflow-hidden bg-background px-4 pb-20 pt-10 sm:px-6 sm:pb-32 sm:pt-16 lg:px-8">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute left-1/2 top-0 h-[520px] w-[820px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/5 blur-3xl" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,hsl(var(--muted-foreground)/0.12)_1px,transparent_0)] bg-[size:22px_22px] opacity-30" />
@@ -39,10 +37,10 @@ export function Hero() {
         aria-hidden
       />
 
-      <div className="relative z-10 mx-auto max-w-6xl text-center">
+      <div className="relative z-10 mx-auto max-w-3xl text-center">
         <p className="text-sm font-medium tracking-wide text-foreground/60">McKinsey Solve · Sea Wolf · 2026 Format</p>
 
-        <h1 className="mt-3 text-balance text-[2.025rem] font-bold leading-tight tracking-tight text-foreground sm:mt-4 sm:text-[2.7rem] lg:text-[3.375rem]">
+        <h1 className="mt-3 text-balance text-5xl font-bold tracking-tight text-foreground sm:mt-4 sm:text-6xl">
           Ace the McKinsey Solve.
           <br />
           $15. Not $239.
@@ -53,11 +51,13 @@ export function Hero() {
         </p>
 
         <HeroStatsRow />
+      </div>
 
-        <div id="how-it-works" className="scroll-mt-20 mt-10 sm:mt-12">
-          <HeroDemoShowcase />
-        </div>
+      <div id="how-it-works" className="relative z-10 scroll-mt-20 mt-10 sm:mt-12">
+        <HeroDemoShowcase />
+      </div>
 
+      <div className="relative z-10 mx-auto max-w-3xl text-center">
         <p className="mx-auto mt-10 mb-8 max-w-2xl text-center text-lg font-medium text-foreground">
           No Excel. No macros. No $200 coaching sessions. Just the tool that works.
         </p>

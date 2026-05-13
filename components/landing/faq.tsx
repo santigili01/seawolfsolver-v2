@@ -7,6 +7,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion"
 import { BottomCTA } from "@/components/landing/bottom-cta"
+import { cn } from "@/lib/utils"
 
 const faqs = [
   {
@@ -62,9 +63,52 @@ export function FAQ() {
             <p className="mb-12 text-lg text-muted-foreground">Everything you need to know before buying.</p>
           </div>
 
+          <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-4 mt-0">
+            Thinking about whether to use a prep tool?
+          </p>
+
           <Accordion type="single" collapsible className="mt-0">
+            <AccordionItem value="cheating-1">
+              <AccordionTrigger className="py-5 text-left text-base font-medium">
+                Is using a prep tool considered cheating?
+              </AccordionTrigger>
+              <AccordionContent className="text-muted-foreground">
+                No. Preparing for an assessment is not cheating — it&apos;s exactly what McKinsey expects serious candidates to do.
+                McKinsey publishes sample questions, YouTube is full of walkthroughs, and prep courses have existed for decades.
+                Using a simulator to get familiar with the format, the phases, and the scoring logic is no different from
+                practicing case interviews. The assessment measures your cognitive abilities — practicing sharpens them, it
+                doesn&apos;t fake them.
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="cheating-2">
+              <AccordionTrigger className="py-5 text-left text-base font-medium">
+                Can McKinsey tell if I practiced with a simulator?
+              </AccordionTrigger>
+              <AccordionContent className="text-muted-foreground">
+                No. McKinsey has no visibility into what preparation tools you used before your assessment. What they measure
+                is your performance on the day — your decision speed, your accuracy, and your pattern recognition under time
+                pressure. Practicing with a simulator improves all three. There is nothing in the assessment that detects
+                prior practice, and no policy against using prep tools.
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="cheating-3">
+              <AccordionTrigger className="py-5 text-left text-base font-medium">
+                Why do top candidates use prep tools?
+              </AccordionTrigger>
+              <AccordionContent className="text-muted-foreground">
+                Because the format is unfamiliar and time pressure is real. Most candidates who struggle with McKinsey Solve
+                don&apos;t struggle because they lack ability — they struggle because they encounter the interface, the phase
+                structure, and the scoring logic for the first time under pressure. Practicing removes that disadvantage. The
+                candidates who score in the top deciles are almost always the ones who walked in already knowing what to
+                expect.
+              </AccordionContent>
+            </AccordionItem>
             {faqs.map((faq, index) => (
-              <AccordionItem key={index} value={`item-${index}`}>
+              <AccordionItem
+                key={index}
+                value={`item-${index}`}
+                className={cn(index === 0 && "mt-4 border-t border-border pt-8")}
+              >
                 <AccordionTrigger className="py-5 text-left text-base font-medium">
                   {faq.question}
                 </AccordionTrigger>
