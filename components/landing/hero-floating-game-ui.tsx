@@ -208,10 +208,20 @@ function HeroFloatingResultsPanel() {
   )
 }
 
-/** Decorative microbe stack (left) and results checklist (right). Hidden below `xl`. */
+/** Decorative microbe stack (left) and results checklist (right). Hidden below `xl`. Fades to invisible at hero bottom. */
 export function HeroFloatingGameUi() {
+  const fadeMask =
+    "linear-gradient(to bottom, #000 0%, #000 48%, rgba(0,0,0,0.55) 72%, rgba(0,0,0,0.12) 88%, transparent 100%)"
+
   return (
-    <div className="pointer-events-none absolute inset-0 z-[1] hidden overflow-visible xl:block" aria-hidden>
+    <div
+      className="pointer-events-none absolute inset-0 z-[1] hidden overflow-visible xl:block"
+      style={{
+        WebkitMaskImage: fadeMask,
+        maskImage: fadeMask,
+      }}
+      aria-hidden
+    >
       <div className="pointer-events-none absolute top-1/2 left-4 max-w-[160px] -translate-y-1/2 opacity-90 xl:left-8">
         <HeroFloatingMicrobeCardStack />
       </div>
