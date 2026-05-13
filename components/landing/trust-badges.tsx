@@ -26,13 +26,7 @@ const badges = [
 export function TrustBadges() {
   return (
     <>
-      <section
-        className="relative z-0 scroll-mt-20 bg-[#f8fafc] px-4 py-16 sm:px-6 sm:py-24 lg:px-8 dark:bg-slate-950/80"
-        style={{
-          backgroundImage: "radial-gradient(circle, #d1d5db 1px, transparent 1px)",
-          backgroundSize: "24px 24px",
-        }}
-      >
+      <section className="relative z-0 scroll-mt-20 bg-[#f8fafc] px-4 py-16 sm:px-6 sm:py-24 lg:px-8 dark:bg-slate-950/80">
         <div className="mx-auto max-w-6xl">
           <div className="grid gap-6 md:grid-cols-3 md:items-stretch">
             {badges.map((badge) => (

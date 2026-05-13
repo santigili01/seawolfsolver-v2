@@ -151,7 +151,7 @@ export function HeroDemoShowcase() {
         </div>
       </div>
 
-      <p className="mx-auto mt-2 max-w-3xl text-pretty text-center text-sm leading-relaxed text-muted-foreground sm:mt-3 sm:text-[0.9375rem]">
+      <p className="mx-auto mt-2 max-w-3xl text-pretty text-center text-sm leading-relaxed text-white sm:mt-3 sm:text-[0.9375rem]">
         {CAPTIONS[tab]}
       </p>
     </div>

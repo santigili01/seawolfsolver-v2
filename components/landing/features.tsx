@@ -1,6 +1,5 @@
 import { LayoutGrid, Sparkles, Activity, Lightbulb, RefreshCw, Infinity } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { FounderNote } from "@/components/landing/founder-note"
 
 const features = [
   {
@@ -72,9 +71,6 @@ export function Features() {
             </Card>
           ))}
         </div>
-      </div>
-      <div className="relative z-10 mt-8 sm:mt-10">
-        <FounderNote />
       </div>
       <div className="pb-16 sm:pb-24" aria-hidden />
     </section>
