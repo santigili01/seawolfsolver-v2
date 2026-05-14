@@ -62,9 +62,12 @@ export function Navbar() {
               <a href="/sign-in" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
                 Log In
               </a>
-              <a href="/pricing" className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
+              <Link
+                href="/sea-wolf-demo"
+                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+              >
                 Free Demo
-              </a>
+              </Link>
             </>
           ) : null}
           {isLoaded && userId ? (

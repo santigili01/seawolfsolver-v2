@@ -2,10 +2,20 @@
 
 import Link from "next/link"
 import { createElement, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
-import { BarChart2, Minus, TrendingDown, TrendingUp } from "lucide-react"
+import {
+  BarChart2,
+  Minus,
+  Play,
+  RefreshCw,
+  Target,
+  TrendingDown,
+  TrendingUp,
+  Zap,
+} from "lucide-react"
 import {
   CartesianGrid,
   ComposedChart,
+  Line,
   ReferenceLine,
   ResponsiveContainer,
   Scatter,
@@ -68,6 +78,141 @@ function chartTimeBounds(points: ChartPoint[]): { min: number; max: number; span
   return { min: min - pad, max: max + pad, span: rawSpan + pad * 2 }
 }
 
+/** Minimal point for trend math (x = ms, y = score 0–100). */
+type TrendRun = { x: number; y: number }
+
+type TrendSession = {
+  x: number
+  y: number
+  count: number
+}
+
+function clusterIntoSessions(runs: TrendRun[]): TrendSession[] {
+  if (runs.length === 0) return []
+
+  const sorted = [...runs].sort((a, b) => a.x - b.x)
+  const THREE_HOURS = 3 * 60 * 60 * 1000
+  const sessions: TrendRun[][] = []
+  let currentSession: TrendRun[] = [sorted[0]!]
+
+  for (let i = 1; i < sorted.length; i++) {
+    const timeSinceSessionStart = sorted[i]!.x - currentSession[0]!.x
+    if (timeSinceSessionStart <= THREE_HOURS) {
+      currentSession.push(sorted[i]!)
+    } else {
+      sessions.push(currentSession)
+      currentSession = [sorted[i]!]
+    }
+  }
+  sessions.push(currentSession)
+
+  return sessions.map((session) => ({
+    x: session.reduce((s, r) => s + r.x, 0) / session.length,
+    y: session.reduce((s, r) => s + r.y, 0) / session.length,
+    count: session.length,
+  }))
+}
+
+function linearRegression(points: { x: number; y: number }[]): (x: number) => number {
+  const n = points.length
+  if (n < 2) return () => points[0]?.y ?? 0
+
+  const sumX = points.reduce((s, p) => s + p.x, 0)
+  const sumY = points.reduce((s, p) => s + p.y, 0)
+  const sumXY = points.reduce((s, p) => s + p.x * p.y, 0)
+  const sumXX = points.reduce((s, p) => s + p.x * p.x, 0)
+
+  const denom = n * sumXX - sumX * sumX
+  if (Math.abs(denom) < 1e-12) return () => sumY / n
+
+  const slope = (n * sumXY - sumX * sumY) / denom
+  const intercept = (sumY - slope * sumX) / n
+
+  return (x: number) => slope * x + intercept
+}
+
+/** Quadratic on normalized x; returns y in score units (clamp at call site). */
+function polynomialRegression(points: { x: number; y: number }[]): (x: number) => number {
+  const n = points.length
+  if (n < 3) return linearRegression(points)
+
+  const minX = Math.min(...points.map((p) => p.x))
+  const maxX = Math.max(...points.map((p) => p.x))
+  const rangeX = maxX - minX || 1
+
+  const normalized = points.map((p) => ({
+    x: (p.x - minX) / rangeX,
+    y: p.y,
+  }))
+
+  let s00 = 0
+  let s01 = 0
+  let s02 = 0
+  let s11 = 0
+  let s12 = 0
+  let s22 = 0
+  let t0 = 0
+  let t1 = 0
+  let t2 = 0
+
+  for (const p of normalized) {
+    const x = p.x
+    const x2 = x * x
+    const x3 = x2 * x
+    const x4 = x2 * x2
+    s00 += 1
+    s01 += x
+    s02 += x2
+    s11 += x2
+    s12 += x3
+    s22 += x4
+    t0 += p.y
+    t1 += x * p.y
+    t2 += x2 * p.y
+  }
+
+  const det =
+    s00 * (s11 * s22 - s12 * s12) - s01 * (s01 * s22 - s12 * s02) + s02 * (s01 * s12 - s11 * s02)
+
+  if (Math.abs(det) < 1e-10) return linearRegression(points)
+
+  const det0 =
+    t0 * (s11 * s22 - s12 * s12) - s01 * (t1 * s22 - s12 * t2) + s02 * (t1 * s12 - s11 * t2)
+  const det1 =
+    s00 * (t1 * s22 - s12 * t2) - t0 * (s01 * s22 - s12 * s02) + s02 * (s01 * t2 - t1 * s02)
+  const det2 =
+    s00 * (s11 * t2 - t1 * s12) - s01 * (s01 * t2 - t1 * s02) + t0 * (s01 * s12 - s11 * s02)
+
+  const c0 = det0 / det
+  const c1 = det1 / det
+  const c2 = det2 / det
+
+  return (x: number) => {
+    const xn = (x - minX) / rangeX
+    return c0 + c1 * xn + c2 * xn * xn
+  }
+}
+
+function generateTrendPoints(runs: TrendRun[]): { x: number; y: number }[] | null {
+  if (runs.length < 2) return null
+
+  const sessions = clusterIntoSessions(runs)
+  if (sessions.length < 2) return null
+
+  const regFn =
+    sessions.length >= 10 ? polynomialRegression(sessions) : linearRegression(sessions)
+
+  const minX = Math.min(...runs.map((r) => r.x))
+  const maxX = Math.max(...runs.map((r) => r.x))
+  const span = maxX - minX || 1
+
+  return Array.from({ length: 50 }, (_, i) => {
+    const x = minX + span * (i / 49)
+    const y = Math.min(100, Math.max(0, regFn(x)))
+    return { x, y }
+  })
+}
+
 function pct(n: number | null | undefined, digits = 1) {
   if (n == null || Number.isNaN(n)) return "—"
   return `${n.toFixed(digits)}%`
@@ -104,9 +249,171 @@ function formatDuration(seconds: number) {
   return `${m}m ${s}s`
 }
 
+function localDayKey(d: Date) {
+  const y = d.getFullYear()
+  const mo = String(d.getMonth() + 1).padStart(2, "0")
+  const da = String(d.getDate()).padStart(2, "0")
+  return `${y}-${mo}-${da}`
+}
+
+/** Consecutive calendar days with ≥1 run, allowing “today” to be skipped if you ran yesterday. */
+function computeStreakFromRuns(runs: GameResultRow[]): number {
+  if (runs.length === 0) return 0
+  const keys = new Set<string>()
+  for (const r of runs) {
+    keys.add(localDayKey(new Date(r.played_at)))
+  }
+  const now = new Date()
+  let cursor = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  let k = localDayKey(cursor)
+  if (!keys.has(k)) {
+    cursor.setDate(cursor.getDate() - 1)
+    k = localDayKey(cursor)
+    if (!keys.has(k)) return 0
+  }
+  let streak = 0
+  while (keys.has(localDayKey(cursor))) {
+    streak++
+    cursor.setDate(cursor.getDate() - 1)
+  }
+  return streak
+}
+
+type DateRangeKey = "7d" | "30d" | "90d" | "all"
+
+function applyDateRange(results: GameResultRow[], range: DateRangeKey): GameResultRow[] {
+  if (range === "all") return results
+  const now = Date.now()
+  const ms = range === "7d" ? 7 * 86_400_000 : range === "30d" ? 30 * 86_400_000 : 90 * 86_400_000
+  const cutoff = now - ms
+  return results.filter((r) => new Date(r.played_at).getTime() >= cutoff)
+}
+
+function formatRunTableDate(iso: string) {
+  const d = new Date(iso)
+  const datePart = d.toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })
+  const timePart = d
+    .toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })
+    .replace(/\s/g, "")
+    .toLowerCase()
+  return `${datePart} · ${timePart}`
+}
+
+function meanPhase3Pct(runs: GameResultRow[]): number | null {
+  const vals = runs
+    .map((r) => r.phase3_avg)
+    .filter((v): v is number => v != null && !Number.isNaN(Number(v)))
+    .map(Number)
+  if (vals.length === 0) return null
+  return vals.reduce((a, b) => a + b, 0) / vals.length
+}
+
+type NextAction =
+  | { priority: 1 }
+  | { priority: 2; daysSince: number }
+  | { priority: 3; phase3Avg: number }
+  | { priority: 4; diffPct: string }
+  | { priority: 5 }
+
+const nextActionCardClass =
+  "flex items-start gap-4 rounded-xl border border-border bg-card p-5 shadow-sm dark:bg-card/80"
+
+function NextActionsCard({ action }: { action: NextAction }) {
+  if (action.priority === 1) {
+    return (
+      <div className={nextActionCardClass}>
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+          <Play className="size-5" aria-hidden />
+        </div>
+        <div className="flex min-w-0 flex-col gap-1">
+          <p className="text-sm font-semibold text-foreground">Start your first run</p>
+          <p className="text-sm text-muted-foreground">
+            Complete a Sea Wolf simulation to start tracking your progress.
+          </p>
+          <Link href="/practice" className="mt-2 text-sm font-medium text-primary hover:underline">
+            Start practicing →
+          </Link>
+        </div>
+      </div>
+    )
+  }
+  if (action.priority === 2) {
+    return (
+      <div className={nextActionCardClass}>
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-50 text-amber-500 dark:bg-amber-950/50 dark:text-amber-400">
+          <RefreshCw className="size-5" aria-hidden />
+        </div>
+        <div className="flex min-w-0 flex-col gap-1">
+          <p className="text-sm font-semibold text-foreground">Time to practice again</p>
+          <p className="text-sm text-muted-foreground">
+            Your last run was {action.daysSince} days ago. Consistent practice improves pattern recognition.
+          </p>
+          <Link href="/practice" className="mt-2 text-sm font-medium text-primary hover:underline">
+            Start a run →
+          </Link>
+        </div>
+      </div>
+    )
+  }
+  if (action.priority === 3) {
+    return (
+      <div className={nextActionCardClass}>
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-50 text-red-500 dark:bg-red-950/50 dark:text-red-400">
+          <Target className="size-5" aria-hidden />
+        </div>
+        <div className="flex min-w-0 flex-col gap-1">
+          <p className="text-sm font-semibold text-foreground">Focus on Prospect Pool</p>
+          <p className="text-sm text-muted-foreground">
+            Your Phase 3 average is {action.phase3Avg.toFixed(1)}% — the lowest of your phases. This is where most
+            candidates lose points.
+          </p>
+          <Link href="/practice" className="mt-2 text-sm font-medium text-primary hover:underline">
+            Practice Phase 3 →
+          </Link>
+        </div>
+      </div>
+    )
+  }
+  if (action.priority === 4) {
+    return (
+      <div className={nextActionCardClass}>
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-500 dark:bg-emerald-950/50 dark:text-emerald-400">
+          <TrendingUp className="size-5" aria-hidden />
+        </div>
+        <div className="flex min-w-0 flex-col gap-1">
+          <p className="text-sm font-semibold text-foreground">Keep the momentum going</p>
+          <p className="text-sm text-muted-foreground">
+            Your last 5 runs average {action.diffPct}% higher than your all-time average. You&apos;re improving.
+          </p>
+          <Link href="/practice" className="mt-2 text-sm font-medium text-primary hover:underline">
+            Start a run →
+          </Link>
+        </div>
+      </div>
+    )
+  }
+  return (
+    <div className={nextActionCardClass}>
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+        <Zap className="size-5" aria-hidden />
+      </div>
+      <div className="flex min-w-0 flex-col gap-1">
+        <p className="text-sm font-semibold text-foreground">Ready for another run?</p>
+        <p className="text-sm text-muted-foreground">
+          Regular practice builds pattern recognition. Try a new scenario.
+        </p>
+        <Link href="/practice" className="mt-2 text-sm font-medium text-primary hover:underline">
+          Start a run →
+        </Link>
+      </div>
+    </div>
+  )
+}
+
 function RunTooltip({ active, payload }: { active?: boolean; payload?: { payload: ChartPoint }[] }) {
   if (!active || !payload?.length) return null
   const r = payload[0]!.payload
+  if (!("id" in r) || r.id == null) return null
   return (
     <div className="rounded-lg border border-border bg-card px-3 py-2 text-xs shadow-md">
       <p className="font-semibold text-foreground">{new Date(r.played_at).toLocaleString()}</p>
@@ -248,6 +555,9 @@ export function RunAnalyticsClient({ initialResults }: { initialResults: GameRes
   }, [initialResults])
 
   const [gameTypeFilter, setGameTypeFilter] = useState<GameResultGameType>("sea_wolf")
+  const [dateRange, setDateRange] = useState<DateRangeKey>("all")
+  const [progressionView, setProgressionView] = useState<"chart" | "list">("chart")
+  const [showTrendLine, setShowTrendLine] = useState(true)
   const didInitGameType = useRef(false)
   const chartWrapperRef = useRef<HTMLDivElement>(null)
   const xBoundsRef = useRef({ min: 0, max: 1, span: 1 })
@@ -265,23 +575,57 @@ export function RunAnalyticsClient({ initialResults }: { initialResults: GameRes
     [initialResults, gameTypeFilter],
   )
 
+  const dateRangeFiltered = useMemo(
+    () => applyDateRange(filteredResults, dateRange),
+    [filteredResults, dateRange],
+  )
+
+  const showDateFallbackNotice =
+    dateRange !== "all" && filteredResults.length > 0 && dateRangeFiltered.length === 0
+
+  const displayRuns = useMemo(() => {
+    if (dateRange === "all") return filteredResults
+    if (dateRangeFiltered.length === 0 && filteredResults.length > 0) return filteredResults
+    return dateRangeFiltered
+  }, [dateRange, dateRangeFiltered, filteredResults])
+
+  /** `null` = full time range (default). Set when user zooms with scroll wheel. */
+  const [xZoomDomain, setXZoomDomain] = useState<[number, number] | null>(null)
+
   useEffect(() => {
     if (!selected) return
     if (normalizeRowGameType(selected) !== gameTypeFilter) setSelected(null)
   }, [gameTypeFilter, selected])
 
+  useEffect(() => {
+    setXZoomDomain(null)
+  }, [dateRange])
+
+  useEffect(() => {
+    setProgressionView("chart")
+  }, [gameTypeFilter])
+
   const chartData: ChartPoint[] = useMemo(
     () =>
-      filteredResults.map((r) => ({
+      displayRuns.map((r) => ({
         ...r,
         x: new Date(r.played_at).getTime(),
         y: Number(r.global_score),
       })),
-    [filteredResults],
+    [displayRuns],
   )
 
-  /** `null` = full time range (default). Set when user zooms with scroll wheel. */
-  const [xZoomDomain, setXZoomDomain] = useState<[number, number] | null>(null)
+  const trendModel = useMemo(() => {
+    const runs: TrendRun[] = chartData.map((d) => ({ x: d.x, y: d.y }))
+    const trendPoints = generateTrendPoints(runs)
+    if (!trendPoints) return null
+    const sessions = clusterIntoSessions(runs)
+    return {
+      trendPoints,
+      sessionCount: sessions.length,
+      usePolynomial: sessions.length >= 10,
+    }
+  }, [chartData])
 
   const xBounds = useMemo(() => chartTimeBounds(chartData), [chartData])
 
@@ -299,7 +643,7 @@ export function RunAnalyticsClient({ initialResults }: { initialResults: GameRes
 
   const hasAnyRuns = initialResults.length > 0
   const filterEmpty = hasAnyRuns && filteredResults.length === 0
-  const chartWheelActive = hasAnyRuns && !filterEmpty
+  const chartWheelActive = hasAnyRuns && !filterEmpty && progressionView === "chart"
 
   useLayoutEffect(() => {
     if (!chartWheelActive) return
@@ -374,7 +718,7 @@ export function RunAnalyticsClient({ initialResults }: { initialResults: GameRes
   }, [chartData])
 
   const summary = useMemo(() => {
-    if (filteredResults.length === 0) {
+    if (displayRuns.length === 0) {
       return {
         count: 0,
         best: null as number | null,
@@ -384,22 +728,59 @@ export function RunAnalyticsClient({ initialResults }: { initialResults: GameRes
         avgTime: null as number | null,
       }
     }
-    const scores = filteredResults.map((r) => Number(r.global_score))
+    const sortedNewestFirst = [...displayRuns].sort(
+      (a, b) => new Date(b.played_at).getTime() - new Date(a.played_at).getTime(),
+    )
+    const scores = sortedNewestFirst.map((r) => Number(r.global_score))
     const best = Math.max(...scores)
     const average = scores.reduce((a, b) => a + b, 0) / scores.length
-    const last5 = filteredResults.slice(0, 5)
+    const last5 = sortedNewestFirst.slice(0, 5)
     const last5Scores = last5.map((r) => Number(r.global_score))
     const last5Average = last5Scores.reduce((a, b) => a + b, 0) / last5Scores.length
-    const avgTime = filteredResults.reduce((a, r) => a + r.time_taken, 0) / filteredResults.length
+    const avgTime = displayRuns.reduce((a, r) => a + r.time_taken, 0) / displayRuns.length
     return {
-      count: filteredResults.length,
+      count: displayRuns.length,
       best,
       average,
       last5Average,
       last5SampleSize: last5.length,
       avgTime,
     }
-  }, [filteredResults])
+  }, [displayRuns])
+
+  const streakDays = useMemo(() => computeStreakFromRuns(displayRuns), [displayRuns])
+
+  const runsChronological = useMemo(
+    () =>
+      [...displayRuns].sort((a, b) => new Date(a.played_at).getTime() - new Date(b.played_at).getTime()),
+    [displayRuns],
+  )
+
+  const tableBestScore = useMemo(() => {
+    if (runsChronological.length === 0) return null
+    return Math.max(...runsChronological.map((r) => Number(r.global_score)))
+  }, [runsChronological])
+
+  const nextAction = useMemo((): NextAction => {
+    if (filteredResults.length === 0) return { priority: 1 }
+    const byDesc = [...filteredResults].sort(
+      (a, b) => new Date(b.played_at).getTime() - new Date(a.played_at).getTime(),
+    )
+    const last = byDesc[0]!
+    const daysSince = Math.floor((Date.now() - new Date(last.played_at).getTime()) / 86_400_000)
+    if (daysSince > 2) return { priority: 2, daysSince }
+    const p3 = meanPhase3Pct(displayRuns)
+    if (p3 != null && p3 < 70) return { priority: 3, phase3Avg: p3 }
+    if (
+      summary.count >= 2 &&
+      summary.last5Average != null &&
+      summary.average != null &&
+      summary.last5Average > summary.average + 0.5
+    ) {
+      return { priority: 4, diffPct: (summary.last5Average - summary.average).toFixed(1) }
+    }
+    return { priority: 5 }
+  }, [filteredResults, displayRuns, summary])
 
   const trendSentence = useMemo(() => {
     if (summary.count < 5) return null
@@ -490,10 +871,42 @@ export function RunAnalyticsClient({ initialResults }: { initialResults: GameRes
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
-            <div className={cardClass}>
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Best overall</p>
-              <p className="mt-2 text-3xl font-bold tabular-nums text-emerald-600">
+          <div className="space-y-2">
+            <div className="flex flex-row flex-wrap gap-2">
+              {(["7d", "30d", "90d", "all"] as const).map((key) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setDateRange(key)}
+                  className={cn(
+                    "cursor-pointer rounded-full px-3 py-1.5 text-sm transition-colors duration-150",
+                    dateRange === key
+                      ? "bg-primary text-primary-foreground"
+                      : "border border-border text-muted-foreground hover:border-foreground hover:text-foreground",
+                  )}
+                >
+                  {key === "all" ? "All time" : key}
+                </button>
+              ))}
+            </div>
+            {showDateFallbackNotice ? (
+              <p className="text-sm text-muted-foreground">
+                No runs in this period — showing all time data instead
+              </p>
+            ) : null}
+          </div>
+
+          <NextActionsCard action={nextAction} />
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
+            <div
+              className={cn(
+                "rounded-xl border p-5 shadow-sm",
+                "border-[#1a202c] bg-[#1a202c] text-white dark:border-[#1a202c]",
+              )}
+            >
+              <p className="text-xs font-medium uppercase tracking-wide text-white/60">Best overall</p>
+              <p className="mt-2 text-3xl font-bold tabular-nums text-emerald-400">
                 {summary.best != null ? `${summary.best.toFixed(1)}%` : "—"}
               </p>
             </div>
@@ -515,6 +928,22 @@ export function RunAnalyticsClient({ initialResults }: { initialResults: GameRes
             <div className={cardClass}>
               <p className="text-xs font-medium text-muted-foreground uppercase">Runs recorded</p>
               <p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{summary.count}</p>
+            </div>
+            <div className={cardClass}>
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Current streak</p>
+              <p
+                className={cn(
+                  "mt-2 text-2xl font-bold tabular-nums",
+                  streakDays >= 3 ? "text-emerald-600 dark:text-emerald-400" : streakDays === 0 ? "text-muted-foreground" : "text-foreground",
+                )}
+              >
+                {streakDays} days
+              </p>
+              {streakDays >= 1 ? (
+                <p className="mt-2 text-xs text-muted-foreground">consecutive active days</p>
+              ) : (
+                <p className="mt-2 text-xs text-amber-500">practice today to start one</p>
+              )}
             </div>
             <div className={cardClass}>
               <p className="text-xs font-medium text-muted-foreground uppercase">Avg. session time</p>
@@ -559,85 +988,305 @@ export function RunAnalyticsClient({ initialResults }: { initialResults: GameRes
               </p>
             </div>
           ) : (
-            <div className={cn(cardClass, "min-h-[380px]")}>
-              <h2 className="mb-3 text-lg font-semibold text-foreground">Score progression</h2>
-              <div
-                ref={chartWrapperRef}
-                className="relative h-[380px] w-full touch-pan-y"
-                role="presentation"
-                aria-label="Score chart — scroll to zoom the time axis"
-              >
-                <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart margin={{ top: 8, right: 48, bottom: 8, left: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                    <XAxis
-                      type="number"
-                      dataKey="x"
-                      domain={xAxisDomain}
-                      allowDataOverflow={true}
-                      tickFormatter={(ts) => new Date(ts).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
-                      className="text-xs text-muted-foreground"
-                    />
-                    <YAxis
-                      type="number"
-                      domain={[yAxisDomainMin, 100]}
-                      width={40}
-                      allowDataOverflow={true}
-                      tickFormatter={(v) => `${v}`}
-                      className="text-xs text-muted-foreground"
-                      label={{
-                        value: "Overall %",
-                        angle: -90,
-                        position: "insideLeft",
-                        className: "fill-muted-foreground text-xs",
-                      }}
-                    />
-                    {summary.average != null ? (
-                      <ReferenceLine
-                        y={summary.average}
-                        stroke="#718096"
-                        strokeDasharray="4 4"
-                        strokeOpacity={0.6}
-                        isFront={false}
-                        label={{
-                          value: "Your avg",
-                          position: "right",
-                          className: "fill-muted-foreground text-xs",
-                        }}
-                      />
+            <>
+              <div className={cn(cardClass, progressionView === "chart" && "min-h-[410px]")}>
+                <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <h2 className="text-lg font-semibold text-foreground">Score progression</h2>
+                  <div className="flex flex-wrap items-start justify-end gap-3 sm:gap-4">
+                    {progressionView === "chart" && trendModel ? (
+                      <div className="flex flex-col items-end gap-1">
+                        <button
+                          type="button"
+                          onClick={() => setShowTrendLine((v) => !v)}
+                          className={cn(
+                            "rounded-full border border-border px-3 py-1.5 text-sm transition-colors duration-150",
+                            showTrendLine
+                              ? "bg-primary text-primary-foreground"
+                              : "text-muted-foreground hover:border-foreground hover:text-foreground",
+                          )}
+                        >
+                          {showTrendLine
+                            ? trendModel.usePolynomial
+                              ? "Hide trend curve"
+                              : "Hide trend line"
+                            : trendModel.usePolynomial
+                              ? "Show trend curve"
+                              : "Show trend line"}
+                        </button>
+                        {showTrendLine ? (
+                          <p className="text-right text-xs text-muted-foreground">
+                            {trendModel.usePolynomial
+                              ? `Polynomial fit · ${trendModel.sessionCount} sessions`
+                              : `Linear fit · ${trendModel.sessionCount} sessions`}
+                          </p>
+                        ) : null}
+                      </div>
                     ) : null}
-                    <Tooltip content={<RunTooltip />} cursor={{ strokeDasharray: "3 3" }} />
-                    <Scatter
-                      data={chartData}
-                      dataKey="y"
-                      fill={SEA_WOLF_TEAL}
-                      fillOpacity={CHART_POINT_OPACITY}
-                      shape={(props: unknown) => {
-                        const { cx, cy, payload } = props as { cx?: number; cy?: number; payload?: ChartPoint }
-                        if (cx == null || cy == null || !payload) return <g />
-                        return (
-                          <circle
-                            cx={cx}
-                            cy={cy}
-                            r={7}
+                    <div className="flex items-center rounded-md border border-border p-0.5">
+                      <button
+                        type="button"
+                        onClick={() => setProgressionView("chart")}
+                        className={cn(
+                          "rounded px-3 py-1.5 text-sm transition-colors",
+                          progressionView === "chart"
+                            ? "bg-primary text-primary-foreground"
+                            : "text-muted-foreground hover:text-foreground",
+                        )}
+                      >
+                        Chart
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setProgressionView("list")}
+                        className={cn(
+                          "rounded px-3 py-1.5 text-sm transition-colors",
+                          progressionView === "list"
+                            ? "bg-primary text-primary-foreground"
+                            : "text-muted-foreground hover:text-foreground",
+                        )}
+                      >
+                        List
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                {progressionView === "chart" ? (
+                  <>
+                    <div
+                      className="flex h-[410px] w-full touch-pan-y flex-col"
+                      role="presentation"
+                      aria-label="Score chart — scroll to zoom the time axis"
+                    >
+                      <div ref={chartWrapperRef} className="relative min-h-0 flex-1">
+                        <ResponsiveContainer width="100%" height="100%">
+                        <ComposedChart margin={{ top: 8, right: 48, bottom: 8, left: 0 }}>
+                          <defs>
+                            <linearGradient id="analyticsTrendStroke" x1="0" y1="0" x2="1" y2="0" gradientUnits="objectBoundingBox">
+                              <stop offset="0%" stopColor="#4ECDC4" />
+                              <stop offset="100%" stopColor="#2563eb" />
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                          <XAxis
+                            type="number"
+                            dataKey="x"
+                            domain={xAxisDomain}
+                            allowDataOverflow={true}
+                            tickFormatter={(ts) =>
+                              new Date(ts).toLocaleDateString(undefined, { month: "short", day: "numeric" })
+                            }
+                            className="text-xs text-muted-foreground"
+                          />
+                          <YAxis
+                            type="number"
+                            domain={[yAxisDomainMin, 100]}
+                            width={40}
+                            allowDataOverflow={true}
+                            tickFormatter={(v) => `${v}`}
+                            className="text-xs text-muted-foreground"
+                            label={{
+                              value: "Overall %",
+                              angle: -90,
+                              position: "insideLeft",
+                              className: "fill-muted-foreground text-xs",
+                            }}
+                          />
+                          {summary.average != null ? (
+                            <ReferenceLine
+                              y={summary.average}
+                              stroke="#22c55e"
+                              strokeDasharray="10 6"
+                              strokeWidth={2.5}
+                              strokeOpacity={1}
+                              isFront={false}
+                            />
+                          ) : null}
+                          {showTrendLine && trendModel ? (
+                            <Line
+                              type="monotone"
+                              data={trendModel.trendPoints}
+                              dataKey="y"
+                              stroke="url(#analyticsTrendStroke)"
+                              strokeWidth={2.5}
+                              dot={false}
+                              isAnimationActive={false}
+                              connectNulls
+                              name="trend"
+                            />
+                          ) : null}
+                          <Scatter
+                            data={chartData}
+                            dataKey="y"
                             fill={SEA_WOLF_TEAL}
                             fillOpacity={CHART_POINT_OPACITY}
-                            stroke="rgba(42, 168, 160, 0.55)"
-                            strokeWidth={1.5}
-                            className="cursor-pointer"
-                            onClick={() => setSelected(payload)}
+                            shape={(props: unknown) => {
+                              const { cx, cy, payload } = props as { cx?: number; cy?: number; payload?: ChartPoint }
+                              if (cx == null || cy == null || !payload) return <g />
+                              return (
+                                <circle
+                                  cx={cx}
+                                  cy={cy}
+                                  r={7}
+                                  fill={SEA_WOLF_TEAL}
+                                  fillOpacity={CHART_POINT_OPACITY}
+                                  stroke="rgba(42, 168, 160, 0.55)"
+                                  strokeWidth={1.5}
+                                  className="cursor-pointer"
+                                  onClick={() => setSelected(payload)}
+                                />
+                              )
+                            }}
                           />
-                        )
-                      }}
-                    />
-                  </ComposedChart>
-                </ResponsiveContainer>
+                          <Tooltip
+                            cursor={{ strokeDasharray: "3 3" }}
+                            content={(props) => {
+                              if (!props.active || !props.payload?.length) return null
+                              const pl = props.payload[0]?.payload as ChartPoint | undefined
+                              if (!pl || !("id" in pl) || pl.id == null) return null
+                              return <RunTooltip active={props.active} payload={props.payload as { payload: ChartPoint }[]} />
+                            }}
+                          />
+                        </ComposedChart>
+                      </ResponsiveContainer>
+                    </div>
+                    {(summary.average != null || (showTrendLine && trendModel)) ? (
+                      <div
+                        className="flex shrink-0 flex-wrap items-center justify-end gap-x-5 gap-y-2 border-t border-border/50 bg-muted/15 px-2 py-2.5 dark:bg-muted/10"
+                        role="list"
+                        aria-label="Chart legend"
+                      >
+                        {summary.average != null ? (
+                          <div className="flex items-center gap-2" role="listitem">
+                            <svg width={36} height={10} viewBox="0 0 36 10" aria-hidden className="shrink-0">
+                              <line
+                                x1="0"
+                                y1="5"
+                                x2="36"
+                                y2="5"
+                                stroke="#22c55e"
+                                strokeWidth={2.5}
+                                strokeDasharray="8 5"
+                                strokeLinecap="round"
+                              />
+                            </svg>
+                            <span className="text-xs font-medium text-foreground">Your average</span>
+                          </div>
+                        ) : null}
+                        {showTrendLine && trendModel ? (
+                          <div className="flex items-center gap-2" role="listitem">
+                            <div
+                              className="h-1 w-9 shrink-0 rounded-full bg-gradient-to-r from-[#4ECDC4] to-[#2563eb]"
+                              aria-hidden
+                            />
+                            <span className="text-xs font-medium text-foreground">Trend</span>
+                          </div>
+                        ) : null}
+                      </div>
+                    ) : null}
+                    </div>
+                    <p className="mt-2 text-center text-xs text-muted-foreground">
+                      Click a point to open the full % breakdown. Scroll on the chart to zoom the time axis; switching
+                      simulator resets the view.
+                    </p>
+                  </>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="bg-muted/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
+                          <th className="whitespace-nowrap px-2 py-2 font-medium">#</th>
+                          <th className="whitespace-nowrap px-2 py-2 font-medium">Date</th>
+                          <th className="whitespace-nowrap px-2 py-2 font-medium">Overall Score</th>
+                          <th className="whitespace-nowrap px-2 py-2 font-medium">Phase 1</th>
+                          <th className="whitespace-nowrap px-2 py-2 font-medium">Phase 2</th>
+                          <th className="whitespace-nowrap px-2 py-2 font-medium">Phase 3</th>
+                          <th className="whitespace-nowrap px-2 py-2 font-medium">Phase 4</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {runsChronological.map((r, i) => {
+                          const overall = Number(r.global_score)
+                          const isBest = tableBestScore != null && overall === tableBestScore
+                          const rowBg = i % 2 === 1 ? "bg-muted/20" : ""
+                          const overallTone = scoreTone(overall).text
+                          const phaseCell = (v: number | null) => {
+                            if (v == null || Number.isNaN(Number(v))) {
+                              return <span className="text-muted-foreground">—</span>
+                            }
+                            const n = Number(v)
+                            return <span className={cn("font-semibold", scoreTone(n).text)}>{pct(n)}</span>
+                          }
+                          return (
+                            <tr
+                              key={r.id}
+                              className={cn(
+                                "border-b border-border/60",
+                                rowBg,
+                                isBest && "bg-emerald-50 dark:bg-emerald-950/30",
+                              )}
+                            >
+                              <td className="whitespace-nowrap px-2 py-2 tabular-nums text-muted-foreground">{i + 1}</td>
+                              <td className="whitespace-nowrap px-2 py-2 text-foreground">{formatRunTableDate(r.played_at)}</td>
+                              <td className={cn("whitespace-nowrap px-2 py-2 font-semibold tabular-nums", overallTone)}>
+                                {pct(overall)}
+                              </td>
+                              <td className="whitespace-nowrap px-2 py-2 tabular-nums">{phaseCell(r.phase1_avg)}</td>
+                              <td className="whitespace-nowrap px-2 py-2 tabular-nums">{phaseCell(r.phase2_avg)}</td>
+                              <td className="whitespace-nowrap px-2 py-2 tabular-nums">{phaseCell(r.phase3_avg)}</td>
+                              <td className="whitespace-nowrap px-2 py-2 tabular-nums">{phaseCell(r.phase4_avg)}</td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
+                    <p className="mt-3 text-xs text-muted-foreground">{runsChronological.length} runs recorded</p>
+                  </div>
+                )}
               </div>
-              <p className="mt-2 text-center text-xs text-muted-foreground">
-                Click a point to open the full % breakdown. Scroll on the chart to zoom the time axis; switching simulator
-                resets the view.
-              </p>
-            </div>
+
+              {/* PLACEHOLDER: wire real platform aggregate when enough user data exists */}
+              <div className="rounded-xl border border-border bg-card p-6 shadow-sm dark:bg-card/80">
+                <div className="flex items-start justify-between gap-3">
+                  <h3 className="text-lg font-semibold text-foreground">How you compare</h3>
+                  <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">Beta</span>
+                </div>
+                <div className="relative mt-6">
+                  <div className="h-3 w-full rounded-full bg-muted" />
+                  {summary.average != null ? (
+                    <div
+                      className="absolute top-1/2 size-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary shadow-sm ring-2 ring-background"
+                      style={{ left: `${Math.min(100, Math.max(0, summary.average))}%` }}
+                      title={`Your historic average (${summary.average.toFixed(1)}%)`}
+                    />
+                  ) : null}
+                  {/* PLACEHOLDER: 72% — replace with real platform avg when available */}
+                  <div
+                    className="absolute top-1/2 size-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#4ECDC4] shadow-sm ring-2 ring-background"
+                    style={{ left: "72%" }}
+                    title="SeaWolfPrep users avg (placeholder)"
+                  />
+                </div>
+                <div className="mt-2 flex justify-between text-xs text-muted-foreground">
+                  <span>0%</span>
+                  <span>100%</span>
+                </div>
+                <ul className="mt-4 space-y-1.5 text-sm text-foreground">
+                  <li className="flex items-center gap-2">
+                    <span className="size-2 shrink-0 rounded-full bg-primary" aria-hidden />
+                    <span>
+                      You ({summary.average != null ? `${summary.average.toFixed(1)}%` : "—"})
+                    </span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="size-2 shrink-0 rounded-full bg-[#4ECDC4]" aria-hidden />
+                    <span>SeaWolfPrep users avg (72%)</span>
+                  </li>
+                </ul>
+                <p className="mt-3 text-xs italic text-muted-foreground">
+                  Comparison data updates as more users complete runs. Currently showing estimated platform averages.
+                </p>
+              </div>
+            </>
           )}
         </>
       )}

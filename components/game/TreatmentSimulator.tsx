@@ -18,6 +18,7 @@ import {
   assignUniqueSvgIndices,
 } from "@/lib/game-visuals"
 import { GamePhase4TreatmentPanel } from "@/components/game/GamePhase4TreatmentPanel"
+import { GameWelcomeVignette } from "@/components/game/GameWelcomeVignette"
 import {
   buildGamePhase4Checklist,
   gameResultsOptimalScoreLineClass,
@@ -203,51 +204,54 @@ export function TreatmentSimulator() {
   if (screen === "difficulty") {
     return (
       <div className={SEA_WOLF_SESSION_BG}>
-        <div className="flex min-h-screen flex-col items-center justify-center px-6 text-center text-white">
-        <h1 className="mb-4 text-4xl font-bold tracking-tight md:text-5xl">Treatment Practice</h1>
-        <p className="mb-10 max-w-md text-lg text-white/95">
-          Select a difficulty to begin. You will have one Phase 4 round to find the optimal treatment combination.
-        </p>
+        <div className="relative flex min-h-screen flex-col items-center justify-center px-6 text-center text-white">
+          <GameWelcomeVignette />
+          <div className="relative z-10 flex w-full max-w-4xl flex-col items-center">
+            <h1 className="mb-4 text-4xl font-bold tracking-tight md:text-5xl">Treatment Practice</h1>
+            <p className="mb-10 max-w-md text-lg text-white/95">
+              Select a difficulty to begin. You will have one Phase 4 round to find the optimal treatment combination.
+            </p>
 
-        {loadState === "loading" ? (
-          <div className="flex flex-col items-center gap-4">
-            <Loader2 className="h-12 w-12 animate-spin text-white" aria-label="Loading" />
-            <p className="text-sm text-white/90">Loading scenario…</p>
-          </div>
-        ) : null}
+            {loadState === "loading" ? (
+              <div className="flex flex-col items-center gap-4">
+                <Loader2 className="h-12 w-12 animate-spin text-white" aria-label="Loading" />
+                <p className="text-sm text-white/90">Loading scenario…</p>
+              </div>
+            ) : null}
 
-        {loadState === "error" ? (
-          <div className="mb-8 max-w-md rounded-xl bg-[rgba(20,30,50,0.92)] px-6 py-4 text-left text-white shadow-lg">
-            <p className="font-semibold text-red-300">Could not start</p>
-            <p className="mt-1 text-sm text-white/90">{loadError}</p>
-            <button
-              type="button"
-              className="mt-4 rounded-lg bg-[#4ECDC4] px-4 py-2 text-sm font-semibold text-[#1a202c] hover:opacity-90"
-              onClick={() => {
-                setLoadState("idle")
-                setLoadError(null)
-              }}
-            >
-              Retry
-            </button>
-          </div>
-        ) : null}
+            {loadState === "error" ? (
+              <div className="mb-8 max-w-md rounded-xl bg-[rgba(20,30,50,0.92)] px-6 py-4 text-left text-white shadow-lg">
+                <p className="font-semibold text-red-300">Could not start</p>
+                <p className="mt-1 text-sm text-white/90">{loadError}</p>
+                <button
+                  type="button"
+                  className="mt-4 rounded-lg bg-[#4ECDC4] px-4 py-2 text-sm font-semibold text-[#1a202c] hover:opacity-90"
+                  onClick={() => {
+                    setLoadState("idle")
+                    setLoadError(null)
+                  }}
+                >
+                  Retry
+                </button>
+              </div>
+            ) : null}
 
-        {loadState === "idle" ? (
-          <div className="grid w-full max-w-lg gap-3 sm:grid-cols-2 sm:gap-4">
-            {DIFFICULTY_OPTIONS.map((opt) => (
-              <button
-                key={opt.tier}
-                type="button"
-                onClick={() => void handleDifficultySelect(opt.tier)}
-                className="flex flex-col rounded-xl bg-[rgba(20,30,50,0.95)] px-5 py-4 text-left text-white shadow-lg transition hover:bg-[rgba(30,45,65,1)]"
-              >
-                <span className="text-lg font-bold">{opt.label}</span>
-                <span className="mt-2 text-sm leading-snug text-white/85">{opt.description}</span>
-              </button>
-            ))}
+            {loadState === "idle" ? (
+              <div className="grid w-full max-w-lg gap-3 sm:grid-cols-2 sm:gap-4">
+                {DIFFICULTY_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.tier}
+                    type="button"
+                    onClick={() => void handleDifficultySelect(opt.tier)}
+                    className="flex flex-col rounded-xl bg-[rgba(20,30,50,0.95)] px-5 py-4 text-left text-white shadow-lg transition hover:bg-[rgba(30,45,65,1)]"
+                  >
+                    <span className="text-lg font-bold">{opt.label}</span>
+                    <span className="mt-2 text-sm leading-snug text-white/85">{opt.description}</span>
+                  </button>
+                ))}
+              </div>
+            ) : null}
           </div>
-        ) : null}
         </div>
       </div>
     )
