@@ -46,6 +46,24 @@ function gameTypeLabel(t: string): string {
 
 type ChartPoint = GameResultRow & { x: number; y: number }
 
+/** Narrowest time window when zoomed in (2 hours). */
+const MIN_ZOOM_SPAN_MS = 6 * 60 * 60 * 1000
+
+function chartTimeBounds(points: ChartPoint[]): { min: number; max: number; span: number } {
+  if (points.length === 0) return { min: 0, max: 1, span: 1 }
+  const xs = points.map((p) => p.x)
+  let min = Math.min(...xs)
+  let max = Math.max(...xs)
+  if (min === max) {
+    const pad = 86_400_000
+    min -= pad
+    max += pad
+  }
+  const rawSpan = max - min
+  const pad = rawSpan * 0.02
+  return { min: min - pad, max: max + pad, span: rawSpan + pad * 2 }
+}
+
 function pct(n: number | null | undefined, digits = 1) {
   if (n == null || Number.isNaN(n)) return "—"
   return `${n.toFixed(digits)}%`
@@ -227,6 +245,9 @@ export function RunAnalyticsClient({ initialResults }: { initialResults: GameRes
 
   const [gameTypeFilter, setGameTypeFilter] = useState<GameResultGameType>("sea_wolf")
   const didInitGameType = useRef(false)
+  const chartWrapperRef = useRef<HTMLDivElement>(null)
+  const xBoundsRef = useRef({ min: 0, max: 1, span: 1 })
+  const chartDataLengthRef = useRef(0)
   /** On first load, open the first game tab that has runs (avoids an empty default when there are no full Sea Wolf runs). */
   useEffect(() => {
     if (didInitGameType.current) return
@@ -254,6 +275,88 @@ export function RunAnalyticsClient({ initialResults }: { initialResults: GameRes
       })),
     [filteredResults],
   )
+
+  /** `null` = full time range (default). Set when user zooms with scroll wheel. */
+  const [xZoomDomain, setXZoomDomain] = useState<[number, number] | null>(null)
+
+  const xBounds = useMemo(() => chartTimeBounds(chartData), [chartData])
+
+  useEffect(() => {
+    setXZoomDomain(null)
+  }, [gameTypeFilter])
+
+  useEffect(() => {
+    xBoundsRef.current = xBounds
+  }, [xBounds])
+
+  useEffect(() => {
+    chartDataLengthRef.current = chartData.length
+  }, [chartData])
+
+  useEffect(() => {
+    const el = chartWrapperRef.current
+    if (!el) return
+
+    const handleWheel = (e: globalThis.WheelEvent) => {
+      if (chartDataLengthRef.current === 0) return
+      e.preventDefault()
+      e.stopPropagation()
+
+      const { min: dataMin, max: dataMax, span: fullSpan } = xBoundsRef.current
+      const minSpan = MIN_ZOOM_SPAN_MS
+
+      // Compute mouse anchor as a 0-1 fraction across the chart width
+      // so zoom centers on cursor position, not window midpoint
+      const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect()
+      const chartLeftOffset = 40 // approximate YAxis width in px
+      const chartWidth = rect.width - chartLeftOffset - 16 // subtract right margin
+      const mouseX = e.clientX - rect.left - chartLeftOffset
+      const anchorFraction = Math.max(0, Math.min(1, mouseX / chartWidth))
+
+      setXZoomDomain((prev) => {
+        const curLo = prev != null ? prev[0] : dataMin
+        const curHi = prev != null ? prev[1] : dataMax
+        const curSpan = curHi - curLo
+
+        const factor = e.deltaY < 0 ? 0.72 : 1 / 0.72
+        let newSpan = curSpan * factor
+        newSpan = Math.max(newSpan, minSpan)
+        newSpan = Math.min(newSpan, fullSpan * 1.001)
+
+        // Reset to full range if span grows to full data span
+        if (newSpan >= fullSpan * 0.999) return null
+
+        // Anchor zoom to mouse position:
+        // the time value under the cursor stays fixed as we zoom
+        const anchorTime = curLo + anchorFraction * curSpan
+        let nLo = anchorTime - anchorFraction * newSpan
+        let nHi = anchorTime + (1 - anchorFraction) * newSpan
+
+        // Allow the window to extend beyond data bounds so the user
+        // can pan to empty space and see individual clusters clearly.
+        // Only hard-clamp if the entire window is outside data range.
+        if (nHi < dataMin) {
+          nLo = dataMin
+          nHi = dataMin + newSpan
+        }
+        if (nLo > dataMax) {
+          nHi = dataMax
+          nLo = dataMax - newSpan
+        }
+
+        return [nLo, nHi]
+      })
+    }
+
+    el.addEventListener("wheel", handleWheel, { passive: false })
+    return () => el.removeEventListener("wheel", handleWheel)
+  }, [])
+
+  const xAxisDomain = useMemo((): [number, number] => {
+    if (chartData.length === 0) return [xBounds.min, xBounds.max]
+    if (xZoomDomain == null) return [xBounds.min, xBounds.max]
+    return [xZoomDomain[0], xZoomDomain[1]]
+  }, [chartData, xBounds.min, xBounds.max, xZoomDomain])
 
   const summary = useMemo(() => {
     if (filteredResults.length === 0) {
@@ -415,51 +518,67 @@ export function RunAnalyticsClient({ initialResults }: { initialResults: GameRes
         <div className={cn(cardClass, "min-h-[380px]")}>
           <h2 className="mb-1 text-lg font-semibold text-foreground">Score over time</h2>
           <p className="mb-4 text-xs text-muted-foreground">{gameResultGameTypeLabels[gameTypeFilter]}</p>
-          <ResponsiveContainer width="100%" height={320}>
-            <ScatterChart margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-              <XAxis
-                type="number"
-                dataKey="x"
-                domain={["dataMin", "dataMax"]}
-                tickFormatter={(ts) => new Date(ts).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
-                className="text-xs text-muted-foreground"
-              />
-              <YAxis
-                type="number"
-                dataKey="y"
-                domain={[0, 100]}
-                width={40}
-                tickFormatter={(v) => `${v}`}
-                className="text-xs text-muted-foreground"
-                label={{ value: "Overall %", angle: -90, position: "insideLeft", className: "fill-muted-foreground text-xs" }}
-              />
-              <Tooltip content={<RunTooltip />} cursor={{ strokeDasharray: "3 3" }} />
-              <Scatter
-                data={chartData}
-                fill={SEA_WOLF_TEAL}
-                fillOpacity={CHART_POINT_OPACITY}
-                shape={(props: unknown) => {
-                  const { cx, cy, payload } = props as { cx?: number; cy?: number; payload?: ChartPoint }
-                  if (cx == null || cy == null || !payload) return <g />
-                  return (
-                    <circle
-                      cx={cx}
-                      cy={cy}
-                      r={7}
-                      fill={SEA_WOLF_TEAL}
-                      fillOpacity={CHART_POINT_OPACITY}
-                      stroke="rgba(42, 168, 160, 0.55)"
-                      strokeWidth={1.5}
-                      className="cursor-pointer"
-                      onClick={() => setSelected(payload)}
-                    />
-                  )
-                }}
-              />
-            </ScatterChart>
-          </ResponsiveContainer>
-          <p className="mt-2 text-center text-xs text-muted-foreground">Click a point to open the full % breakdown.</p>
+          <div
+            ref={chartWrapperRef}
+            className="relative h-[320px] w-full touch-pan-y"
+            role="presentation"
+            aria-label="Score chart — scroll to zoom the time axis"
+          >
+            <ResponsiveContainer width="100%" height="100%">
+              <ScatterChart margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                <XAxis
+                  type="number"
+                  dataKey="x"
+                  domain={xAxisDomain}
+                  allowDataOverflow={true}
+                  tickFormatter={(ts) => new Date(ts).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                  className="text-xs text-muted-foreground"
+                />
+                <YAxis
+                  type="number"
+                  dataKey="y"
+                  domain={[0, 100]}
+                  width={40}
+                  tickFormatter={(v) => `${v}`}
+                  className="text-xs text-muted-foreground"
+                  label={{
+                    value: "Overall %",
+                    angle: -90,
+                    position: "insideLeft",
+                    className: "fill-muted-foreground text-xs",
+                  }}
+                />
+                <Tooltip content={<RunTooltip />} cursor={{ strokeDasharray: "3 3" }} />
+                <Scatter
+                  data={chartData}
+                  fill={SEA_WOLF_TEAL}
+                  fillOpacity={CHART_POINT_OPACITY}
+                  shape={(props: unknown) => {
+                    const { cx, cy, payload } = props as { cx?: number; cy?: number; payload?: ChartPoint }
+                    if (cx == null || cy == null || !payload) return <g />
+                    return (
+                      <circle
+                        cx={cx}
+                        cy={cy}
+                        r={7}
+                        fill={SEA_WOLF_TEAL}
+                        fillOpacity={CHART_POINT_OPACITY}
+                        stroke="rgba(42, 168, 160, 0.55)"
+                        strokeWidth={1.5}
+                        className="cursor-pointer"
+                        onClick={() => setSelected(payload)}
+                      />
+                    )
+                  }}
+                />
+              </ScatterChart>
+            </ResponsiveContainer>
+          </div>
+          <p className="mt-2 text-center text-xs text-muted-foreground">
+            Click a point to open the full % breakdown. Scroll on the chart to zoom the time axis; switching simulator
+            resets the view.
+          </p>
         </div>
       )}
 
