@@ -3,7 +3,7 @@ export const GAME_RESULT_GAME_TYPES = ["sea_wolf", "treatment", "redrock"] as co
 export type GameResultGameType = (typeof GAME_RESULT_GAME_TYPES)[number]
 
 export const gameResultGameTypeLabels: Record<GameResultGameType, string> = {
-  sea_wolf: "Sea Wolf (full)",
+  sea_wolf: "Sea Wolf - Full Game",
   treatment: "Sea Wolf — treatment",
   redrock: "Redrock",
 }

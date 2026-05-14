@@ -1,5 +1,4 @@
 import type { Metadata } from "next"
-import { AnnouncementBanner } from "@/components/landing/announcement-banner";
 import { Navbar } from "@/components/landing/navbar";
 import { Hero } from "@/components/landing/hero";
 import { TrustBadges } from "@/components/landing/trust-badges";
@@ -18,7 +17,6 @@ export const metadata: Metadata = {
 export default function Home() {
   return (
     <div className="min-h-screen">
-      <AnnouncementBanner />
       <Navbar />
       <main>
         <Hero />

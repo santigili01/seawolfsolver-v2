@@ -7,30 +7,13 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
   return (
-    <main className="prose mx-auto max-w-3xl px-4 py-12">
-      <p className="rounded-md border border-amber-200 bg-amber-50 p-3 font-mono text-sm text-amber-900">
-        {"<!-- TODO: Replace this content with real legal text generated via termly.io -->"}
-      </p>
-      <h1>Terms of Service</h1>
-      <p>
-        By accessing SeaWolfPrep, you agree to use the platform only for lawful purposes and in
-        accordance with these terms. You are responsible for maintaining account security and for
-        all activities performed under your credentials.
-      </p>
-      <p>
-        SeaWolfPrep provides educational simulation and training tools and does not guarantee
-        specific assessment outcomes, scores, or hiring results. Content and features may evolve
-        over time, and we reserve the right to modify or discontinue portions of the service.
-      </p>
-      <p>
-        You may not reverse engineer, redistribute proprietary content, or use automated systems to
-        scrape or misuse platform data beyond normal personal use. Violations may result in account
-        suspension or termination without prior notice.
-      </p>
-      <p>
-        To the maximum extent permitted by law, liability is limited for indirect or consequential
-        damages arising from platform use. Contact: support@seawolfprep.com
-      </p>
+    <main className="mx-auto flex min-h-[calc(100dvh-1px)] max-w-5xl flex-col px-4 py-8 md:px-6">
+      <h1 className="sr-only">Terms of Service</h1>
+      <iframe
+        title="Terms of Service"
+        src="/terms-of-service.html"
+        className="min-h-[85dvh] w-full flex-1 rounded-lg border border-border bg-background shadow-sm"
+      />
     </main>
   )
 }

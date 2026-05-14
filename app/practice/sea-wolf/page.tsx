@@ -12,6 +12,7 @@ import { GamePhase2Panel } from "@/components/game/GamePhase2Panel"
 import { GamePhase3PoolPanel } from "@/components/game/GamePhase3PoolPanel"
 import { GamePhase4TreatmentPanel } from "@/components/game/GamePhase4TreatmentPanel"
 import { GameResultsFull } from "@/components/game/GameResultsFull"
+import { GameWelcomeVignette } from "@/components/game/GameWelcomeVignette"
 import { PersistGameResultPost } from "@/components/game/PersistGameResultPost"
 import { computeBehaviouralScore, type PhaseBehaviourData } from "@/lib/behavioural-scoring"
 
@@ -259,31 +260,34 @@ export default function FullGamePage() {
       ) : null}
 
       {step === "start" ? (
-        <div className="flex min-h-screen flex-col items-center justify-center px-6 text-center text-white">
-          <h1 className="mb-4 text-4xl font-bold tracking-tight md:text-5xl">Seawolf Simulator</h1>
-          <p className="mb-10 max-w-md text-lg text-white/95">
-            Practice all 4 phases across 3 sites in a full 30-minute session
-          </p>
-          <button
-            type="button"
-            disabled={pickingChains}
-            onClick={() => void handleStartGame()}
-            className={`rounded-xl px-14 py-4 text-lg font-semibold shadow-lg transition ${
-              pickingChains ? "cursor-wait bg-gray-600 text-gray-300" : "cursor-pointer bg-[rgba(20,30,50,0.95)] text-white hover:bg-[rgba(30,45,65,1)]"
-            }`}
-          >
-            {pickingChains ? "Loading…" : "Start Game"}
-          </button>
-          {DEV_MODE ? (
+        <div className="relative flex min-h-screen flex-col items-center justify-center px-6 text-center text-white">
+          <GameWelcomeVignette />
+          <div className="relative z-10 flex flex-col items-center">
+            <h1 className="mb-4 text-4xl font-bold tracking-tight md:text-5xl">Seawolf Simulator</h1>
+            <p className="mb-10 max-w-md text-lg text-white/95">
+              Practice all 4 phases across 3 sites in a full 30-minute session
+            </p>
             <button
               type="button"
               disabled={pickingChains}
-              onClick={() => void handleSkipToResults()}
-              className="mt-6 rounded-xl bg-orange-500 px-6 py-3 text-sm font-bold text-white shadow-lg transition hover:bg-orange-600 disabled:cursor-wait disabled:opacity-70"
+              onClick={() => void handleStartGame()}
+              className={`rounded-xl px-14 py-4 text-lg font-semibold shadow-lg transition ${
+                pickingChains ? "cursor-wait bg-gray-600 text-gray-300" : "cursor-pointer bg-[rgba(20,30,50,0.95)] text-white hover:bg-[rgba(30,45,65,1)]"
+              }`}
             >
-              → Skip to Results
+              {pickingChains ? "Loading…" : "Start Game"}
             </button>
-          ) : null}
+            {DEV_MODE ? (
+              <button
+                type="button"
+                disabled={pickingChains}
+                onClick={() => void handleSkipToResults()}
+                className="mt-6 rounded-xl bg-orange-500 px-6 py-3 text-sm font-bold text-white shadow-lg transition hover:bg-orange-600 disabled:cursor-wait disabled:opacity-70"
+              >
+                → Skip to Results
+              </button>
+            ) : null}
+          </div>
         </div>
       ) : null}
 

@@ -1,41 +1,54 @@
 import { Monitor, LayoutGrid, Lightbulb } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { SocialProof } from "@/components/landing/social-proof"
 
 const badges = [
   {
     icon: Monitor,
     title: "Browser-Native",
-    description: "No Excel. No macros. No malware risk. Open a tab and practice.",
+    description:
+      "No Excel. No macros. No malware risk. Open a tab and start practicing.",
   },
   {
     icon: LayoutGrid,
-    title: "All 4 Phases. Simulator + Solver.",
-    description: "Practice all 4 phases and get the optimal solution for each. Most tools only cover the final phase.",
+    title: "All 4 Phases. Every Tool.",
+    description:
+      "Simulator and solver both cover all 4 phases. We're the only prep tool on the market that does.",
   },
   {
     icon: Lightbulb,
     title: "Deepest Insights on the Market",
-    description: "Full per-phase score breakdown with specific feedback on every decision. Know exactly what to fix.",
+    description:
+      "Full decision-level feedback after every run. See exactly which move cost you points and what the optimal play was.",
   },
 ]
 
 export function TrustBadges() {
   return (
-    <section className="bg-[#f8fafc] px-4 py-12 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-6xl">
-        <div className="grid gap-8 md:grid-cols-3">
-          {badges.map((badge) => (
-            <div key={badge.title} className="flex items-start gap-3">
-              <div className="mt-0.5 rounded-md bg-primary/10 p-2 text-primary">
-                <badge.icon className="size-4" />
-              </div>
-              <div>
-                <h3 className="text-base font-semibold text-foreground">{badge.title}</h3>
-                <p className="mt-1 text-sm text-muted-foreground">{badge.description}</p>
-              </div>
-            </div>
-          ))}
+    <>
+      <section className="relative z-0 scroll-mt-20 bg-[#f8fafc] px-4 py-16 sm:px-6 sm:py-24 lg:px-8 dark:bg-slate-950/80">
+        <div className="mx-auto max-w-6xl">
+          <div className="grid gap-6 md:grid-cols-3 md:items-stretch">
+            {badges.map((badge) => (
+              <Card
+                key={badge.title}
+                className="flex h-full flex-col rounded-xl border border-border border-t-2 border-t-primary bg-card p-8 shadow-sm"
+              >
+                <CardHeader className="px-0 pb-3 pt-0">
+                  <div className="mb-2 inline-flex w-fit rounded-md bg-primary/10 p-2">
+                    <badge.icon className="size-8 text-primary" />
+                  </div>
+                  <CardTitle className="text-base font-semibold">{badge.title}</CardTitle>
+                </CardHeader>
+                <CardContent className="px-0 pt-0">
+                  <p className="text-base text-muted-foreground">{badge.description}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+      <SocialProof />
+    </>
   )
 }

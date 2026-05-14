@@ -17,6 +17,7 @@ import { GamePhase2Panel } from "@/components/game/GamePhase2Panel"
 import { GamePhase3PoolPanel } from "@/components/game/GamePhase3PoolPanel"
 import { GamePhase4TreatmentPanel } from "@/components/game/GamePhase4TreatmentPanel"
 import { GameResultsFull } from "@/components/game/GameResultsFull"
+import { GameWelcomeVignette } from "@/components/game/GameWelcomeVignette"
 import { computeBehaviouralScore, type PhaseBehaviourData } from "@/lib/behavioural-scoring"
 
 import { useCallback, useEffect, useRef, useState } from "react"
@@ -191,22 +192,25 @@ export default function SeaWolfDemoPage() {
       ) : null}
 
       {step === "start" ? (
-        <div className="flex min-h-screen flex-col items-center justify-center px-6 text-center text-white">
-          <p className="mb-2 text-xs font-semibold tracking-widest text-white/90 uppercase">Free demo</p>
-          <h1 className="mb-4 text-4xl font-bold tracking-tight md:text-5xl">Sea Wolf Demo</h1>
-          <p className="mb-10 max-w-md text-lg text-white/95">
-            One site, four phases, fixed scenario—try the simulator with no account. Same mechanics as the full practice run.
-          </p>
-          <button
-            type="button"
-            disabled={pickingChains}
-            onClick={() => void handleStartGame()}
-            className={`rounded-xl px-14 py-4 text-lg font-semibold shadow-lg transition ${
-              pickingChains ? "cursor-wait bg-gray-600 text-gray-300" : "cursor-pointer bg-[rgba(20,30,50,0.95)] text-white hover:bg-[rgba(30,45,65,1)]"
-            }`}
-          >
-            {pickingChains ? "Loading…" : "Start Demo"}
-          </button>
+        <div className="relative flex min-h-screen flex-col items-center justify-center px-6 text-center text-white">
+          <GameWelcomeVignette />
+          <div className="relative z-10 flex flex-col items-center">
+            <p className="mb-2 text-xs font-semibold tracking-widest text-white/90 uppercase">Free demo</p>
+            <h1 className="mb-4 text-4xl font-bold tracking-tight md:text-5xl">Sea Wolf Demo</h1>
+            <p className="mb-10 max-w-md text-lg text-white/95">
+              One site, four phases, fixed scenario—try the simulator with no account. Same mechanics as the full practice run.
+            </p>
+            <button
+              type="button"
+              disabled={pickingChains}
+              onClick={() => void handleStartGame()}
+              className={`rounded-xl px-14 py-4 text-lg font-semibold shadow-lg transition ${
+                pickingChains ? "cursor-wait bg-gray-600 text-gray-300" : "cursor-pointer bg-[rgba(20,30,50,0.95)] text-white hover:bg-[rgba(30,45,65,1)]"
+              }`}
+            >
+              {pickingChains ? "Loading…" : "Start Demo"}
+            </button>
+          </div>
         </div>
       ) : null}
 

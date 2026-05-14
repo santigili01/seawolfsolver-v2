@@ -76,5 +76,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Could not save result" }, { status: 500 })
   }
 
+  const { error: progressErr } = await supabaseAdmin.from("user_progress").upsert(
+    { user_id: userId, has_completed_first_run: true },
+    { onConflict: "user_id" },
+  )
+  if (progressErr) {
+    console.error("[api/results POST] user_progress upsert", progressErr)
+  }
+
   return NextResponse.json({ id: data?.id as string }, { status: 201 })
 }

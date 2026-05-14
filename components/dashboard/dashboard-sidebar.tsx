@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { BarChart3, Gamepad2, Home, Inbox, Settings, Sparkles } from "lucide-react"
+import { BarChart3, Gamepad2, Home, Settings, Sparkles } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { DashboardSidebarThemeToggle } from "@/components/dashboard/dashboard-sidebar-theme-toggle"
 import {
@@ -52,10 +52,6 @@ export function DashboardSidebar({
           <Link href="/dashboard/analytics" className={itemClasses(pathname === "/dashboard/analytics")}>
             <BarChart3 className="h-4 w-4 shrink-0" />
             Analytics
-          </Link>
-          <Link href="/dashboard/inbox" className={itemClasses(pathname === "/dashboard/inbox")}>
-            <Inbox className="h-4 w-4 shrink-0" />
-            Inbox
           </Link>
           <Link href="/dashboard/settings" className={itemClasses(pathname === "/dashboard/settings")}>
             <Settings className="h-4 w-4 shrink-0" />

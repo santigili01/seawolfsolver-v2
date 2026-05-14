@@ -1,6 +1,5 @@
 import type { Metadata } from "next"
 import { currentUser } from "@clerk/nextjs/server"
-import { AnnouncementBanner } from "@/components/landing/announcement-banner"
 import { Footer } from "@/components/landing/footer"
 import { Navbar } from "@/components/landing/navbar"
 import { Pricing } from "@/components/landing/pricing"
@@ -29,7 +28,6 @@ export default async function PricingPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <AnnouncementBanner />
       <Navbar />
       <main>
         <Pricing ctaLinks={ctaLinks} sectionId={false} />

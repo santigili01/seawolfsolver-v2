@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
-import { ClerkProvider, Show, SignInButton, SignUpButton, UserButton } from '@clerk/nextjs'
+import { ClerkProvider } from '@clerk/nextjs'
 import { ThemeProvider } from '@/components/theme-provider'
 import './globals.css'
 
@@ -28,15 +28,6 @@ export default function RootLayout({
       <body className="font-sans antialiased bg-background">
         <ClerkProvider>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-            <header className="flex items-center justify-end gap-3 border-b border-border px-4 py-3 dark:border-gray-800 dark:bg-gray-950">
-              <Show when="signed-out">
-                <SignInButton />
-                <SignUpButton />
-              </Show>
-              <Show when="signed-in">
-                <UserButton />
-              </Show>
-            </header>
             {children}
             {process.env.NODE_ENV === 'production' && <Analytics />}
           </ThemeProvider>

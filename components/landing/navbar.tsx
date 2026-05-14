@@ -1,9 +1,9 @@
 "use client"
 
+import { useAuth, UserButton } from "@clerk/nextjs"
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
 import {
   SiteLogoMark,
   SITE_BRAND_LOCKUP_ROOT_CLASS,
@@ -13,10 +13,13 @@ import {
 const navLinks = [
   { href: "#how-it-works", label: "How It Works" },
   { href: "#pricing", label: "Pricing" },
+  { href: "/blog", label: "Blog" },
+  { href: "/practice", label: "Practice" },
 ]
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false)
+  const { userId, isLoaded } = useAuth()
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8)
@@ -27,11 +30,12 @@ export function Navbar() {
 
   return (
     <nav
-      className={`sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85 ${
-        scrolled ? "border-b border-border" : "border-b border-transparent"
-      }`}
+      className={cn(
+        "sticky top-0 z-50 isolate border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85",
+        scrolled ? "border-border/80" : "border-transparent",
+      )}
     >
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+      <div className="flex w-full min-w-0 flex-wrap items-center justify-between gap-x-3 gap-y-3 py-3.5 pl-2 pr-2 sm:gap-x-4 sm:py-4 sm:pl-3 sm:pr-3 md:pl-4 md:pr-4">
         <Link
           href="/"
           className={cn(
@@ -43,7 +47,7 @@ export function Navbar() {
           <span className={cn(SITE_BRAND_WORDMARK_CLASS, "text-foreground")}>SeaWolfPrep</span>
         </Link>
 
-        <div className="flex items-center gap-4 sm:gap-6">
+        <div className="flex flex-wrap items-center justify-end gap-x-4 gap-y-2 sm:gap-x-6">
           {navLinks.map((link) => (
             <Link
               key={link.href}
@@ -53,9 +57,27 @@ export function Navbar() {
               {link.label}
             </Link>
           ))}
-          <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90">
-            <Link href="/sea-wolf-demo">Free Demo</Link>
-          </Button>
+          {isLoaded && !userId ? (
+            <>
+              <a href="/sign-in" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
+                Log In
+              </a>
+              <Link
+                href="/sea-wolf-demo"
+                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+              >
+                Free Demo
+              </Link>
+            </>
+          ) : null}
+          {isLoaded && userId ? (
+            <>
+              <a href="/dashboard" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
+                Dashboard
+              </a>
+              <UserButton />
+            </>
+          ) : null}
         </div>
       </div>
     </nav>

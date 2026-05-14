@@ -23,104 +23,123 @@ export function Pricing({ ctaLinks, sectionId = "pricing" }: PricingProps) {
   return (
     <section
       {...(sectionId === false ? {} : { id: sectionId })}
-      className="scroll-mt-20 px-4 py-16 sm:px-6 sm:py-24 lg:px-8"
+      className="relative z-0 scroll-mt-20 bg-[linear-gradient(to_bottom,rgba(255,255,255,0)_0px,rgba(255,255,255,0)_100px,#f8fafc_120px,#e8ecfc_48%,#c9d5f8_100%)] px-4 py-16 sm:px-6 sm:py-24 lg:px-8 dark:bg-[linear-gradient(to_bottom,transparent_0px,transparent_100px,#0f172a_120px,#1e293b_50%,#1e293b_100%)]"
     >
       <div className="mx-auto max-w-5xl">
         <div className="text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-            Simple pricing. No subscriptions.
+          <h2 className="mt-0 mb-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+            Pass for the price of a textbook, not a coach.
           </h2>
-          <p className="mt-4 text-lg text-muted-foreground">
-            Launch pricing — available for a limited time.
-          </p>
+          <p className="mb-12 text-lg text-muted-foreground">Transparent product. Transparent prices.</p>
         </div>
 
-        <div className="mx-auto mt-12 grid max-w-3xl gap-4 md:grid-cols-2">
-          <Card className="border-border shadow-sm">
-            <CardHeader className="space-y-2">
-              <Badge variant="secondary" className="w-fit">
-                For serious practice
-              </Badge>
-              <CardTitle className="text-xl">Simulator</CardTitle>
-              <div className="text-4xl font-bold text-foreground">$15</div>
-              <p className="text-sm text-muted-foreground">One-time · Lifetime access</p>
+        <div className="mx-auto grid max-w-4xl grid-cols-1 items-stretch gap-4 md:grid-cols-2">
+          <Card className="flex h-full flex-col border-border shadow-sm">
+            <CardHeader className="flex flex-col gap-2 space-y-0 text-center">
+              <div className="mx-auto flex w-full max-w-sm flex-col items-center gap-2 text-center">
+                <div className="flex h-11 w-full flex-col justify-center sm:h-12">
+                  <p className="text-center text-[11px] font-medium leading-snug text-muted-foreground sm:text-xs">
+                    Guarantee your best score
+                  </p>
+                </div>
+                <CardTitle className="w-full text-center text-xl">Sea Wolf Simulator</CardTitle>
+                <div className="flex w-full flex-col items-center gap-1 text-center">
+                  <span className="text-lg text-muted-foreground line-through">$30</span>
+                  <div className="flex flex-wrap items-center justify-center gap-x-1">
+                    <span className="text-4xl font-bold text-foreground">$15</span>
+                    <span className="ml-2 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-600">
+                      50% off — launch pricing
+                    </span>
+                  </div>
+                </div>
+                <p className="text-sm text-muted-foreground">One-time · Lifetime access</p>
+              </div>
             </CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              <ul className="space-y-2">
+            <CardContent className="flex min-h-0 flex-1 flex-col gap-8 text-sm">
+              <ul className="flex-1 space-y-2.5">
                 {[
                   "All 4 phases simulated",
                   "300+ unique scenarios",
-                  "Full per-phase scoring",
                   "Deepest insights on the market",
+                  "Behavioural tracking",
                   "Lifetime access & updates",
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-2 text-foreground">
-                    <Check className="mt-0.5 size-4 text-emerald-600" />
+                    <Check className="mt-0.5 size-4 shrink-0 text-emerald-600" />
                     <span>{item}</span>
                   </li>
                 ))}
                 <li className="flex items-start gap-2 text-muted-foreground">
-                  <X className="mt-0.5 size-4 text-red-500" />
-                  <span>Phase 3 & 4 solver not included</span>
+                  <X className="mt-0.5 size-4 shrink-0 text-red-500" />
+                  <span>4-phase solver not included</span>
                 </li>
               </ul>
-              <Button asChild className="mt-2 w-full">
-                <Link href={simHref}>Get Simulator — $15</Link>
+              <Button asChild className="mt-auto w-full shrink-0">
+                <Link href={simHref}>Get Sea Wolf Simulator — $15</Link>
               </Button>
             </CardContent>
           </Card>
 
-          <Card className="border-primary/40 shadow-md ring-1 ring-primary/20">
-            <CardHeader className="space-y-2">
-              <Badge className="w-fit bg-primary text-primary-foreground">
-                Most popular · Best value
-              </Badge>
-              <p className="text-xs font-medium text-muted-foreground">
-                Leading prep tools charge $50+ for solver alone — without the simulator.
-              </p>
-              <CardTitle className="text-xl">Simulator + Solver</CardTitle>
-              <div className="text-4xl font-bold text-foreground">$25</div>
-              <p className="text-sm text-muted-foreground">One-time · Lifetime access</p>
+          <Card className="relative flex h-full flex-col overflow-visible border-primary/40 shadow-md ring-1 ring-primary/20">
+            <Badge className="absolute -top-4 left-1/2 z-10 w-max max-w-[calc(100%-2rem)] -translate-x-1/2 whitespace-normal rounded-full border border-primary/30 bg-primary px-3 py-1 text-center text-xs font-semibold leading-tight text-primary-foreground shadow-sm sm:px-4 sm:py-1.5 sm:text-sm sm:leading-none">
+              Most Popular · Best Value
+            </Badge>
+            <CardHeader className="flex flex-col gap-2 space-y-0 text-center">
+              <div className="mx-auto flex w-full max-w-sm flex-col items-center gap-2 text-center">
+                <div className="flex h-11 w-full flex-col justify-center sm:h-12">
+                  <p className="text-center text-[11px] font-medium leading-snug text-muted-foreground sm:text-xs">
+                    Leading prep tools charge $150–240.
+                    <br />
+                    We charge $25.
+                  </p>
+                </div>
+                <CardTitle className="w-full text-center text-xl">Sea Wolf Simulator + Solver</CardTitle>
+                <div className="flex w-full flex-col items-center gap-1 text-center">
+                  <span className="text-lg text-muted-foreground line-through">$50</span>
+                  <div className="flex flex-wrap items-center justify-center gap-x-1">
+                    <span className="text-4xl font-bold text-foreground">$25</span>
+                    <span className="ml-2 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-600">
+                      50% off — launch pricing
+                    </span>
+                  </div>
+                </div>
+                <p className="text-sm text-muted-foreground">One-time · Lifetime access</p>
+              </div>
             </CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              <ul className="space-y-2">
+            <CardContent className="flex min-h-0 flex-1 flex-col gap-8 text-sm">
+              <ul className="flex-1 space-y-2.5">
                 {[
                   "Everything in Simulator",
-                  "Phase 3 Prospect Pool solver",
-                  "Phase 4 Treatment solver",
-                  "Optimal solution with full explanation",
+                  "The only 4-phase solver on the market",
+                  "Optimal solution for every phase, every step",
+                  "Future tools included free (Redrock, SFL) — limited time",
                   "Lifetime access & updates",
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-2 text-foreground">
-                    <Check className="mt-0.5 size-4 text-emerald-600" />
+                    <Check className="mt-0.5 size-4 shrink-0 text-emerald-600" />
                     <span>{item}</span>
                   </li>
                 ))}
               </ul>
-              <Button asChild className="mt-2 w-full bg-primary text-primary-foreground hover:bg-primary/90">
-                <Link href={bundleHref}>Get Simulator + Solver — $25</Link>
+              <Button asChild className="mt-auto w-full shrink-0 bg-primary text-primary-foreground hover:bg-primary/90">
+                <Link href={bundleHref}>Get Sea Wolf Simulator + Solver — $25</Link>
               </Button>
             </CardContent>
           </Card>
         </div>
 
-        <div className="mt-6 text-center">
-          <div className="flex flex-wrap items-center justify-center gap-2 text-xs text-muted-foreground">
+        <div className="mt-12 text-center">
+          <div className="flex flex-wrap items-center justify-center gap-2 text-sm text-muted-foreground">
             {["Visa", "Mastercard", "PayPal", "Amex", "Apple Pay", "Google Pay"].map((m) => (
               <span key={m} className="rounded-full border border-border bg-card px-2.5 py-1">
                 {m}
               </span>
             ))}
           </div>
-          <p className="mt-3 text-xs text-muted-foreground">
-            🔒 Secure checkout · 14-day refund if unused · Not affiliated with McKinsey & Company
+          <p className="mt-3 text-sm text-foreground/70">
+            🔒 Secure checkout · 14-day refund* · Not affiliated with McKinsey & Company
           </p>
-          <p className="mt-4 text-sm text-muted-foreground">
-            Not ready to buy? Play one full Sea Wolf scenario free — no signup, full insights included.{" "}
-            <Link href="/sea-wolf-demo" className="font-medium text-primary hover:underline">
-              → Try Free Demo
-            </Link>
-          </p>
+          <p className="mt-2 text-center text-sm text-muted-foreground">*Conditions apply.</p>
         </div>
       </div>
     </section>
