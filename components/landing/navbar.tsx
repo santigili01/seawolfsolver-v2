@@ -13,6 +13,7 @@ import {
 const navLinks = [
   { href: "#how-it-works", label: "How It Works" },
   { href: "#pricing", label: "Pricing" },
+  { href: "/blog", label: "Blog" },
   { href: "/practice", label: "Practice" },
 ]
 
@@ -34,7 +35,7 @@ export function Navbar() {
         scrolled ? "border-border/80" : "border-transparent",
       )}
     >
-      <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-x-4 gap-y-3 py-4 pl-4 pr-4 sm:pl-6 sm:pr-6 lg:pl-4 lg:pr-8">
+      <div className="flex w-full min-w-0 flex-wrap items-center justify-between gap-x-3 gap-y-3 py-3.5 pl-2 pr-2 sm:gap-x-4 sm:py-4 sm:pl-3 sm:pr-3 md:pl-4 md:pr-4">
         <Link
           href="/"
           className={cn(

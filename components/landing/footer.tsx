@@ -9,6 +9,7 @@ import {
 const topLinks = [
   { href: "#how-it-works", label: "How It Works" },
   { href: "#pricing", label: "Pricing" },
+  { href: "/blog", label: "Blog" },
   { href: "/practice", label: "Practice" },
   { href: "/sign-in", label: "Log In" },
   { href: "/sea-wolf-demo", label: "Free Demo" },
