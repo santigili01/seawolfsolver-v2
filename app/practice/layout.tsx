@@ -5,7 +5,7 @@ import { requireSimulatorAccess } from "@/lib/require-simulator-access"
 
 export default async function PracticeLayout({ children }: { children: React.ReactNode }) {
   await requireSimulatorAccess("/practice")
-  const { displayName, accessTier, hasPurchases } = await getDashboardSidebarPayload({
+  const { displayName, accessTier, hasPurchases, clerkUserId, latestRunPlayedAt } = await getDashboardSidebarPayload({
     redirectPath: "/practice",
   })
 
@@ -14,6 +14,8 @@ export default async function PracticeLayout({ children }: { children: React.Rea
       displayName={displayName}
       planShortLabel={membershipShortLabel(accessTier)}
       showUpgrade={!hasPurchases}
+      clerkUserId={clerkUserId}
+      latestRunPlayedAt={latestRunPlayedAt}
     >
       {children}
     </PracticeAreaLayout>

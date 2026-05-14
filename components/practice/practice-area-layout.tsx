@@ -9,11 +9,15 @@ export function PracticeAreaLayout({
   displayName,
   planShortLabel,
   showUpgrade,
+  clerkUserId,
+  latestRunPlayedAt,
 }: {
   children: React.ReactNode
   displayName: string
   planShortLabel: string
   showUpgrade: boolean
+  clerkUserId: string
+  latestRunPlayedAt: string | null
 }) {
   const pathname = usePathname()
   const normalized = pathname.replace(/\/$/, "") || "/"
@@ -21,19 +25,27 @@ export function PracticeAreaLayout({
 
   if (hub) {
     return (
-      <div className="flex min-h-screen bg-gray-50 dark:bg-gray-950">
+      <div className="min-h-screen bg-gray-50 pl-64 dark:bg-gray-950">
         <DashboardSidebar
           displayName={displayName}
           planShortLabel={planShortLabel}
           showUpgrade={showUpgrade}
+          clerkUserId={clerkUserId}
+          latestRunPlayedAt={latestRunPlayedAt}
         />
-        <div className="min-w-0 flex-1">{children}</div>
+        <div className="min-w-0">{children}</div>
       </div>
     )
   }
 
   return (
-    <PracticeShell displayName={displayName} planShortLabel={planShortLabel} showUpgrade={showUpgrade}>
+    <PracticeShell
+      displayName={displayName}
+      planShortLabel={planShortLabel}
+      showUpgrade={showUpgrade}
+      clerkUserId={clerkUserId}
+      latestRunPlayedAt={latestRunPlayedAt}
+    >
       {children}
     </PracticeShell>
   )

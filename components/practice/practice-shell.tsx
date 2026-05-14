@@ -9,11 +9,15 @@ export function PracticeShell({
   displayName,
   planShortLabel,
   showUpgrade,
+  clerkUserId,
+  latestRunPlayedAt,
 }: {
   children: React.ReactNode
   displayName: string
   planShortLabel: string
   showUpgrade: boolean
+  clerkUserId: string
+  latestRunPlayedAt: string | null
 }) {
   const [navOpen, setNavOpen] = useState(false)
 
@@ -70,9 +74,12 @@ export function PracticeShell({
             aria-label="Navigation"
           >
             <DashboardSidebar
+              embedded
               displayName={displayName}
               planShortLabel={planShortLabel}
               showUpgrade={showUpgrade}
+              clerkUserId={clerkUserId}
+              latestRunPlayedAt={latestRunPlayedAt}
             />
           </div>
         </>
