@@ -5,12 +5,28 @@ import { supabaseAdmin } from "@/utils/supabase/admin"
 
 export async function getDashboardSidebarPayload(options: {
   redirectPath: string
-}): Promise<{ displayName: string; accessTier: AccessTier; hasPurchases: boolean }> {
+}): Promise<{
+  displayName: string
+  accessTier: AccessTier
+  hasPurchases: boolean
+  clerkUserId: string
+  latestRunPlayedAt: string | null
+}> {
   const { redirectPath } = options
   const { userId } = await auth()
   if (!userId) {
     redirect(`/sign-in?redirect_url=${encodeURIComponent(redirectPath)}`)
   }
+
+  const { data: latestRunRow } = await supabaseAdmin
+    .from("game_results")
+    .select("played_at")
+    .eq("user_id", userId)
+    .order("played_at", { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  const latestRunPlayedAt = latestRunRow?.played_at != null ? String(latestRunRow.played_at) : null
 
   const user = await currentUser()
   const email = user?.primaryEmailAddress?.emailAddress ?? ""
@@ -30,5 +46,5 @@ export async function getDashboardSidebarPayload(options: {
   const variantIds = rows.map((p) => p.variant_id).filter(Boolean)
   const accessTier = resolveTier(variantIds)
 
-  return { displayName, accessTier, hasPurchases }
+  return { displayName, accessTier, hasPurchases, clerkUserId: userId, latestRunPlayedAt }
 }
